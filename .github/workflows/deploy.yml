@@ -1,0 +1,68 @@
+name: Deploy server (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      image:
+        description: 'Immutable GHCR reference: ghcr.io/owner/repo@sha256:... or :sha-<full commit>'
+        required: true
+        type: string
+
+permissions: {}
+
+concurrency:
+  group: production-deployment
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Update configured server
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: production
+    steps:
+      - name: Validate deployment inputs
+        env:
+          IMAGE: ${{ inputs.image }}
+          SSH_HOST: ${{ secrets.DEPLOY_HOST }}
+          SSH_USER: ${{ secrets.DEPLOY_USER }}
+          SSH_PORT: ${{ secrets.DEPLOY_PORT }}
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$IMAGE" =~ ^ghcr\.io/[a-z0-9._/-]+(@sha256:[a-f0-9]{64}|:sha-[a-f0-9]{40})$ ]] || { echo 'Use a GHCR digest or full commit tag.' >&2; exit 1; }
+          expected="ghcr.io/${GITHUB_REPOSITORY,,}"
+          [[ "$IMAGE" == "$expected"@sha256:* || "$IMAGE" == "$expected":sha-* ]] || { echo 'Use an image produced by this repository.' >&2; exit 1; }
+          [[ "$SSH_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.:-]*$ ]] || { echo 'Configure DEPLOY_HOST.' >&2; exit 1; }
+          [[ "$SSH_USER" =~ ^[a-zA-Z_][a-zA-Z0-9_-]*$ ]] || { echo 'Configure DEPLOY_USER.' >&2; exit 1; }
+          [[ -n "$SSH_KEY" && -n "$KNOWN_HOSTS" ]] || { echo 'Configure the deployment key and verified known_hosts.' >&2; exit 1; }
+          port="${SSH_PORT:-22}"
+          [[ "$port" =~ ^[1-9][0-9]{0,4}$ ]] && (( port < 65536 )) || { echo 'Invalid DEPLOY_PORT.' >&2; exit 1; }
+          [[ "${DEPLOY_PATH:-/opt/renewly}" =~ ^/[a-zA-Z0-9_./-]+$ ]] || { echo 'Invalid DEPLOY_PATH.' >&2; exit 1; }
+      - name: Run server update
+        env:
+          IMAGE: ${{ inputs.image }}
+          SSH_HOST: ${{ secrets.DEPLOY_HOST }}
+          SSH_USER: ${{ secrets.DEPLOY_USER }}
+          SSH_PORT: ${{ secrets.DEPLOY_PORT }}
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          key="$RUNNER_TEMP/renewly-deploy-key"
+          hosts="$RUNNER_TEMP/renewly-known-hosts"
+          trap 'rm -f "$key" "$hosts"' EXIT
+          printf '%s\n' "$SSH_KEY" > "$key"
+          printf '%s\n' "$KNOWN_HOSTS" > "$hosts"
+          printf -v image_arg '%q' "$IMAGE"
+          ssh -i "$key" -p "${SSH_PORT:-22}" \
+            -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile="$hosts" \
+            "$SSH_USER@$SSH_HOST" \
+            "bash '${DEPLOY_PATH:-/opt/renewly}/deploy/update.sh' $image_arg"
