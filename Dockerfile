@@ -26,6 +26,19 @@ COPY --from=build --chown=node:node /app/package.json /app/package-lock.json ./
 COPY --from=build --chown=node:node /app/node_modules ./node_modules
 COPY --from=build --chown=node:node /app/dist ./dist
 USER node
+RUN node --input-type=module <<'JS'
+import Database from 'better-sqlite3';
+
+const database = new Database(':memory:');
+try {
+  const result = database.prepare('SELECT 1 AS value').get();
+  if (result.value !== 1) {
+    throw new Error('SQLite runtime verification failed.');
+  }
+} finally {
+  database.close();
+}
+JS
 VOLUME ["/app/data"]
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
