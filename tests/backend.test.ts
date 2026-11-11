@@ -4,7 +4,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createApp } from "../server/app.js";
-import { addMonths, serializeSubscription, subscriptionSchema } from "../server/domain.js";
+import { addMonths, serializeSubscription, subscriptionSchema, totals } from "../server/domain.js";
 import { createSession, hashPassword, sessionUser } from "../server/auth.js";
 import { openDatabase, migrate } from "../server/db.js";
 import { createFx } from "../server/fx.js";
@@ -324,9 +324,115 @@ test("v1 migration preserves existing subscription and user data and is repeatab
     assert.equal(subscription.bandwidthUnit, "Mbps");
     assert.equal(subscription.nextRenewal, "2027-01-01T00:00");
     assert.equal(subscription.periodStart, "2026-01-01T00:00");
+    assert.equal(subscription.model, "2C2G");
+    assert.equal(subscription.cpuCores, null);
+    assert.equal(subscription.memoryValue, null);
+    assert.equal(subscription.diskValue, null);
+    assert.deepEqual(subscription.ipAddresses, []);
     assert.equal((db.prepare("SELECT due_date FROM reminder_deliveries").get() as any).due_date, "2027-01-01T00:00");
-    assert.deepEqual(db.prepare("SELECT version FROM schema_migrations ORDER BY version").all(), [{ version: 1 }, { version: 2 }, { version: 3 }]);
+    assert.deepEqual(db.prepare("SELECT version FROM schema_migrations ORDER BY version").all(), [{ version: 1 }, { version: 2 }, { version: 3 }, { version: 4 }]);
   } finally { db.close(); }
+});
+
+test("structured server configuration and static or dynamic IPs round trip and survive older clients", async () => {
+  const f = await fixture();
+  try {
+    const cookie = await f.login("admin@example.com", "test-admin-password-strong-2026");
+    const configuration = {
+      cpuCores: 0.5,
+      memoryValue: 512,
+      memoryUnit: "MB",
+      diskValue: 1.5,
+      diskUnit: "TB",
+      ipAddresses: [
+        { type: "static", address: "203.0.113.10" },
+        { type: "static", address: "2001:db8::1" },
+        { type: "dynamic", address: "" },
+        { type: "dynamic", address: "198.51.100.8" },
+      ],
+    };
+    const created = await f.request("/subscriptions", "POST", { ...input, ...configuration }, cookie);
+    assert.equal(created.status, 201, await created.clone().text());
+    const item = (await created.json() as any).subscription;
+    for (const [key, value] of Object.entries(configuration)) assert.deepEqual(item[key], value);
+
+    const legacyUpdate = await f.request(`/subscriptions/${item.id}`, "PUT", { ...input, name: "旧客户端修改名称" }, cookie);
+    assert.equal(legacyUpdate.status, 200, await legacyUpdate.clone().text());
+    const preserved = (await legacyUpdate.json() as any).subscription;
+    for (const [key, value] of Object.entries(configuration)) assert.deepEqual(preserved[key], value);
+    const cleared = await f.request(`/subscriptions/${item.id}`, "PUT", {
+      ...input, cpuCores: null, memoryValue: null, diskValue: null, ipAddresses: [],
+    }, cookie);
+    assert.equal(cleared.status, 200, await cleared.clone().text());
+    const empty = (await cleared.json() as any).subscription;
+    assert.equal(empty.cpuCores, null);
+    assert.equal(empty.memoryValue, null);
+    assert.equal(empty.diskValue, null);
+    assert.deepEqual(empty.ipAddresses, []);
+    assert.equal(empty.model, input.model);
+
+    for (const address of ["", "999.1.1.1", "203.0.113", "2001:db8:::1", "host.example", "https://203.0.113.1"])
+      assert.equal(subscriptionSchema.safeParse({ ...input, ipAddresses: [{ type: "static", address }] }).success, false);
+    assert.equal(subscriptionSchema.safeParse({ ...input, ipAddresses: [{ type: "dynamic", address: "invalid" }] }).success, false);
+    assert.equal(subscriptionSchema.safeParse({ ...input, ipAddresses: Array(21).fill({ type: "dynamic", address: "" }) }).success, false);
+    for (const key of ["cpuCores", "memoryValue", "diskValue"])
+      for (const value of [0, -1, Infinity, 1e10, "2"])
+        assert.equal(subscriptionSchema.safeParse({ ...input, [key]: value }).success, false);
+    assert.equal(subscriptionSchema.safeParse({ ...input, memoryUnit: "TB" }).success, false);
+    assert.equal(subscriptionSchema.safeParse({ ...input, diskUnit: "MB" }).success, false);
+
+    const registration = await f.request("/auth/register", "POST", {
+      name: "其他用户", email: "other-ip@example.com", password: "normal-user-password-2026",
+    });
+    const other = registration.headers.get("set-cookie")!.split(";")[0]!;
+    assert.equal((await f.request(`/subscriptions/${item.id}`, "PUT", { ...input, ...configuration }, other)).status, 404);
+    assert.equal((await f.request("/subscriptions", "GET", undefined, other).then(r => r.json()) as any).subscriptions.length, 0);
+  } finally { f.cleanup(); }
+});
+
+test("category dashboards scope budgets, paid value and due items while the overview includes future types", async () => {
+  const f = await fixture();
+  try {
+    const cookie = await f.login("admin@example.com", "test-admin-password-strong-2026");
+    const create = async (name: string, amount: number, currency = "CNY") => {
+      const response = await f.request("/subscriptions", "POST", {
+        ...input, name, currency, purchasePrice: amount, renewalPrice: amount, paidAmount: amount,
+        billingMonths: 1, periodStart: "2026-11-01T20:00", nextRenewal: "2026-12-01T20:00",
+      }, cookie);
+      assert.equal(response.status, 201, await response.clone().text());
+      return (await response.json() as any).subscription;
+    };
+    const cloud = await create("云服务器", 30);
+    const otherType = await create("未来域名类别", 60);
+    // Exercise the generic aggregate with a future registered subscription type.
+    f.runtime.db.prepare("UPDATE subscriptions SET type_key='domain' WHERE id=?").run(otherType.id);
+    const archived = await create("已归档云服务器", 100);
+    await f.request(`/subscriptions/${archived.id}`, "DELETE", undefined, cookie);
+
+    const all = await f.request("/dashboard", "GET", undefined, cookie).then(r => r.json()) as any;
+    const category = await f.request("/dashboard?type=cloud", "GET", undefined, cookie).then(r => r.json()) as any;
+    assert.equal(all.annualTotal, 1080);
+    assert.equal(all.remainingValue, 60);
+    assert.equal(all.upcomingTotal, 90);
+    assert.equal(all.activeCount, 2);
+    assert.equal(all.dueCount, 2);
+    assert.equal(category.annualTotal, 360);
+    assert.equal(category.remainingValue, 20);
+    assert.equal(category.upcomingTotal, 30);
+    assert.equal(category.activeCount, 1);
+    assert.deepEqual(category.nextDue.map((item: any) => item.id), [cloud.id]);
+    assert.ok(category.subscriptions.every((item: any) => item.type === "cloud"));
+    assert.equal((await f.request("/dashboard?type=unknown", "GET", undefined, cookie)).status, 400);
+
+    const owner = (f.runtime.db.prepare("SELECT user_id FROM subscriptions WHERE id=?").get(cloud.id) as any).user_id;
+    f.runtime.db.prepare("UPDATE subscriptions SET currency='GBP' WHERE id=?").run(otherType.id);
+    f.runtime.db.prepare("UPDATE billing_periods SET currency='GBP' WHERE subscription_id=?").run(otherType.id);
+    assert.equal(totals(f.runtime.db, owner, "Asia/Shanghai", "CNY", {}, testNow, "cloud").totalsPartial, false);
+    const partial = totals(f.runtime.db, owner, "Asia/Shanghai", "CNY", {}, testNow);
+    assert.equal(partial.totalsPartial, true);
+    assert.deepEqual(partial.unconvertedCurrencies, ["GBP"]);
+    assert.equal(partial.remainingValue, 20);
+  } finally { f.cleanup(); }
 });
 
 test("server bandwidth and auto renewal persist without automatically extending the billing period", async () => {
@@ -797,7 +903,9 @@ test("minute reminders wait for the matching local time and preserve midnight de
     assert.doesNotMatch(messages[1].subject, /已到续费时间/);
 
     // Recreate the old date-only database representation and its sent delivery.
-    f.runtime.db.exec("UPDATE subscriptions SET next_renewal=substr(next_renewal,1,10); UPDATE billing_periods SET starts_at=substr(starts_at,1,10),ends_at=substr(ends_at,1,10); UPDATE reminder_deliveries SET due_date=substr(due_date,1,10); DELETE FROM schema_migrations WHERE version=3;");
+    for (const column of ["cpu_cores", "memory_value", "memory_unit", "disk_value", "disk_unit", "ip_addresses"])
+      f.runtime.db.exec(`ALTER TABLE server_details DROP COLUMN ${column}`);
+    f.runtime.db.exec("UPDATE subscriptions SET next_renewal=substr(next_renewal,1,10); UPDATE billing_periods SET starts_at=substr(starts_at,1,10),ends_at=substr(ends_at,1,10); UPDATE reminder_deliveries SET due_date=substr(due_date,1,10); DELETE FROM schema_migrations WHERE version>=3;");
     migrate(f.runtime.db);
     migrate(f.runtime.db);
     assert.equal((f.runtime.db.prepare("SELECT due_date FROM reminder_deliveries WHERE kind='reminder'").get() as any).due_date, "2026-11-14T00:00");
