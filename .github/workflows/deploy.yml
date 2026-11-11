@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       image:
-        description: 'Immutable GHCR reference: ghcr.io/owner/repo@sha256:... or :sha-<full commit>'
+        description: 'GHCR reference: ghcr.io/owner/repo:latest, @sha256:... or :sha-<full commit>'
         required: true
         type: string
 
@@ -33,9 +33,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          [[ "$IMAGE" =~ ^ghcr\.io/[a-z0-9._/-]+(@sha256:[a-f0-9]{64}|:sha-[a-f0-9]{40})$ ]] || { echo 'Use a GHCR digest or full commit tag.' >&2; exit 1; }
+          [[ "$IMAGE" =~ ^ghcr\.io/[a-z0-9._/-]+(@sha256:[a-f0-9]{64}|:sha-[a-f0-9]{40}|:latest)$ ]] || { echo 'Use a GHCR latest tag, digest or full commit tag.' >&2; exit 1; }
           expected="ghcr.io/${GITHUB_REPOSITORY,,}"
-          [[ "$IMAGE" == "$expected"@sha256:* || "$IMAGE" == "$expected":sha-* ]] || { echo 'Use an image produced by this repository.' >&2; exit 1; }
+          [[ "$IMAGE" == "$expected"@sha256:* || "$IMAGE" == "$expected":sha-* || "$IMAGE" == "$expected":latest ]] || { echo 'Use an image produced by this repository.' >&2; exit 1; }
           [[ "$SSH_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.:-]*$ ]] || { echo 'Configure DEPLOY_HOST.' >&2; exit 1; }
           [[ "$SSH_USER" =~ ^[a-zA-Z_][a-zA-Z0-9_-]*$ ]] || { echo 'Configure DEPLOY_USER.' >&2; exit 1; }
           [[ -n "$SSH_KEY" && -n "$KNOWN_HOSTS" ]] || { echo 'Configure the deployment key and verified known_hosts.' >&2; exit 1; }

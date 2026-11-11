@@ -57,7 +57,9 @@ jobs:
         id: meta
         with:
           images: ${{ steps.image.outputs.name }}
+          flavor: latest=false
           tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
             type=sha,format=long,prefix=sha-
             type=ref,event=branch
             type=semver,pattern={{version}}
@@ -77,11 +79,16 @@ jobs:
         env:
           IMAGE: ${{ steps.image.outputs.name }}
           DIGEST: ${{ steps.build.outputs.digest }}
+          TAGS: ${{ steps.meta.outputs.tags }}
         run: |
           {
             echo '### Published container'
             echo
             echo "\`$IMAGE@$DIGEST\`"
             echo
-            echo 'Use this immutable reference as RENEWLY_IMAGE on your server.'
+            echo 'Published tags:'
+            echo
+            while IFS= read -r tag; do
+              printf -- '- `%s`\n' "$tag"
+            done <<< "$TAGS"
           } >> "$GITHUB_STEP_SUMMARY"
