@@ -6,12 +6,12 @@ root_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$root_dir"
 
 if [[ $# -ne 1 ]]; then
-  echo 'Usage: bash deploy/update.sh ghcr.io/owner/renewly@sha256:<digest>' >&2
+  echo 'Usage: bash deploy/update.sh ghcr.io/owner/renewly:latest (also accepts @sha256:<digest> or :sha-<commit>)' >&2
   exit 2
 fi
 image="$1"
-if [[ ! "$image" =~ ^ghcr\.io/[a-z0-9._/-]+(@sha256:[a-f0-9]{64}|:sha-[a-f0-9]{40})$ ]]; then
-  echo 'Use an immutable GHCR digest or a full sha-<commit> tag.' >&2
+if [[ ! "$image" =~ ^ghcr\.io/[a-z0-9._/-]+(:latest|@sha256:[a-f0-9]{64}|:sha-[a-f0-9]{40})$ ]]; then
+  echo 'Use a GHCR latest tag, digest, or full sha-<commit> tag.' >&2
   exit 2
 fi
 [[ -f .env ]] || { echo 'Create and configure .env before deployment.' >&2; exit 2; }
@@ -28,7 +28,7 @@ previous_image=''
 running='false'
 if [[ -n "$container_id" ]]; then
   [[ "$container_id" != *$'\n'* ]] || { echo 'Only a single app instance is supported.' >&2; exit 1; }
-  previous_image="$(docker inspect --format '{{.Config.Image}}' "$container_id")"
+  previous_image="$(docker inspect --format '{{.Image}}' "$container_id")"
   running="$(docker inspect --format '{{.State.Running}}' "$container_id")"
 fi
 
@@ -71,7 +71,7 @@ if ! docker compose up -d --no-deps --wait --wait-timeout 120 app; then
   echo 'The new application did not become healthy.' >&2
   if [[ -n "$previous_image" ]]; then
     echo 'Attempting to restart the previous application image.' >&2
-    if RENEWLY_IMAGE="$previous_image" docker compose up -d --no-deps --wait --wait-timeout 120 app; then
+    if RENEWLY_IMAGE="$previous_image" docker compose up -d --no-deps --pull never --wait --wait-timeout 120 app; then
       echo 'Previous image is running. Database changes were not rolled back.' >&2
     else
       echo 'Previous image is also unhealthy. Inspect logs and the pre-deployment database backup.' >&2
