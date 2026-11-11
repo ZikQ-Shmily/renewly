@@ -627,7 +627,47 @@ function Management({
                     {item.autoRenew && <span className="auto-renew-tag">自动续费</span>}
                   </div>
                   <span className="management-vendor">{item.vendor}</span>
-                  <DueBadge item={item} timeZone={user.timeZone} />
+                </div>
+                <DueBadge item={item} timeZone={user.timeZone} />
+              </div>
+              <div className="management-body">
+                <div className="management-details">
+                  <dl className="management-meta">
+                    <div>
+                      <dt>地区</dt>
+                      <dd>{item.region || "未填写"}</dd>
+                    </div>
+                    <div>
+                      <dt>型号 / 配置</dt>
+                      <dd>{configurationLabel(item)}</dd>
+                    </div>
+                    <div>
+                      <dt>购买价格</dt>
+                      <dd>{money(item.purchasePrice, item.currency)}</dd>
+                    </div>
+                    <div>
+                      <dt>续费价格</dt>
+                      <dd>{money(item.renewalPrice, item.currency)} / {periodLabel(item.billingMonths)}</dd>
+                    </div>
+                    <div>
+                      <dt>下次续费</dt>
+                      <dd><time dateTime={item.nextRenewal}>{formatDateTime(item.nextRenewal)}</time></dd>
+                    </div>
+                    <div>
+                      <dt>套餐流量</dt>
+                      <dd>{trafficLabel(item)}</dd>
+                    </div>
+                    <div>
+                      <dt>套餐带宽</dt>
+                      <dd>{bandwidthLabel(item)}</dd>
+                    </div>
+                  </dl>
+                  {item.model && (item.cpuCores != null || item.memoryValue != null || item.diskValue != null) &&
+                    <p className="item-notes">原配置：{item.model}</p>}
+                  {!!item.ipAddresses?.length && <div className="server-ip-list">{item.ipAddresses.map((ip, index) => (
+                    <span className="server-ip" key={index}><span>{ip.type === "dynamic" ? "动态 IP" : "静态 IP"}</span><code>{ip.address || "当前地址未填写"}</code></span>
+                  ))}</div>}
+                  {item.notes && <p className="item-notes">{item.notes}</p>}
                 </div>
                 <div className="row-actions">
                   <Button
@@ -672,42 +712,6 @@ function Management({
                   )}
                 </div>
               </div>
-              <dl className="management-meta">
-                <div>
-                  <dt>地区</dt>
-                  <dd>{item.region || "未填写"}</dd>
-                </div>
-                <div>
-                  <dt>型号 / 配置</dt>
-                  <dd>{configurationLabel(item)}</dd>
-                </div>
-                <div>
-                  <dt>购买价格</dt>
-                  <dd>{money(item.purchasePrice, item.currency)}</dd>
-                </div>
-                <div>
-                  <dt>续费价格</dt>
-                  <dd>{money(item.renewalPrice, item.currency)} / {periodLabel(item.billingMonths)}</dd>
-                </div>
-                <div>
-                  <dt>下次续费</dt>
-                  <dd><time dateTime={item.nextRenewal}>{formatDateTime(item.nextRenewal)}</time></dd>
-                </div>
-                <div>
-                  <dt>套餐流量</dt>
-                  <dd>{trafficLabel(item)}</dd>
-                </div>
-                <div>
-                  <dt>套餐带宽</dt>
-                  <dd>{bandwidthLabel(item)}</dd>
-                </div>
-              </dl>
-              {item.model && (item.cpuCores != null || item.memoryValue != null || item.diskValue != null) &&
-                <p className="item-notes">原配置：{item.model}</p>}
-              {!!item.ipAddresses?.length && <div className="server-ip-list">{item.ipAddresses.map((ip, index) => (
-                <span className="server-ip" key={index}><span>{ip.type === "dynamic" ? "动态 IP" : "静态 IP"}</span><code>{ip.address || "当前地址未填写"}</code></span>
-              ))}</div>}
-              {item.notes && <p className="item-notes">{item.notes}</p>}
               <TermProgress item={item} timeZone={user.timeZone} />
             </article>
           ))
