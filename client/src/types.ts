@@ -47,6 +47,7 @@ export interface SubscriptionInput {
   diskUnit?: "GB" | "TB";
   ipAddresses?: ServerIpAddress[];
   trafficMode: "limited" | "unlimited" | "unknown";
+  trafficDirection?: "one_way" | "two_way" | "unknown";
   trafficQuota: number | null;
   trafficUnit: "GB" | "TB";
   bandwidthValue: number | null;

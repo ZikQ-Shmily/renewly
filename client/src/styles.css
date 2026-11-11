@@ -1182,37 +1182,57 @@ fieldset {
 }
 .management-row {
   padding: 19px 20px;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 15px;
   border-bottom: 1px solid var(--line);
 }
 .management-row:last-child {
   border: 0;
 }
+.management-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 215px;
+  gap: 16px;
+  align-items: center;
+}
 .management-name {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(90px, .4fr) 150px;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.management-title {
   display: flex;
   align-items: center;
-  gap: 8px 12px;
+  gap: 6px 10px;
   flex-wrap: wrap;
+  min-width: 0;
 }
 .management-name strong {
   font-size: 13px;
   overflow-wrap: anywhere;
 }
-.management-name > span:not(.badge) {
+.management-vendor {
   font-size: 11px;
   color: #8d9fbd;
+  overflow-wrap: anywhere;
+}
+.management-name > .badge {
+  justify-self: end;
+  text-align: right;
+  white-space: normal;
+  margin-left: 0;
 }
 .management-meta {
-  display: flex;
-  gap: 5px 16px;
-  flex-wrap: wrap;
-  margin-top: 10px;
-  color: #95a8c7;
+  display: grid;
+  grid-template-columns: minmax(0, .9fr) minmax(0, 1.5fr) minmax(0, .8fr) minmax(0, 1fr) minmax(0, 1.35fr) minmax(0, 1.1fr) minmax(0, .8fr);
+  gap: 16px;
+  margin: 18px 0 0;
   font-size: 11px;
   line-height: 1.8;
 }
+.management-meta > div { min-width: 0; }
+.management-meta dt { color: #8193b1; margin-bottom: 3px; }
+.management-meta dd { margin: 0; color: #bdcbe2; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
 .item-notes {
   font-size: 11px;
   color: #7f94b5;
@@ -2041,10 +2061,16 @@ fieldset {
 .term-progress > span:first-child { flex: none; }
 .term-track { height: 4px; background: #2b354c; border-radius: 3px; flex: 1; overflow: hidden; }
 .term-track > span { display: block; height: 100%; background: linear-gradient(100deg,#5889f0,#9d97df); border-radius: 3px; }
-.term-progress.soon .term-track > span { background: #cf9c6f; }
+.term-progress.warning .term-track > span { background: linear-gradient(100deg,#d3af61,#e5c17c); }
+.term-progress.soon .term-track > span { background: linear-gradient(100deg,#d08a50,#e9a676); }
+.term-progress.urgent .term-track > span,
+.term-progress.expired .term-track > span { background: linear-gradient(100deg,#d7687d,#ef8d91); }
+.term-progress.expired .term-track { background: #54303d; }
 .term-note { flex: none; min-width: 4ch; text-align: right; font-variant-numeric: tabular-nums; }
 input[type="datetime-local"] { min-width: 0; width: 100%; }
 .term-progress.soon .term-note { color: #edb68c; }
+.term-progress.warning .term-note { color: #e5c17c; }
+.term-progress.urgent .term-note,
 .term-progress.expired .term-note { color: #f19a9e; }
 .management-row .term-progress { margin-left: 0; }
 .field-combo { display: grid; grid-template-columns: minmax(0,1fr) 90px; gap: 8px; }
@@ -2141,4 +2167,18 @@ html[data-input-mode="keyboard"] .switch-control input:focus + .switch-track { o
   .upcoming-row > .badge { grid-column: 2; }
   .cloud-ip-row { grid-template-columns: minmax(0,1fr); }
   .cloud-ip-remove { grid-column: 1; }
+}
+
+@media (max-width: 1250px) {
+  .management-meta { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@media (max-width: 1150px) {
+  .management-header { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .management-name > .badge { margin-left: 0; }
+}
+@media (max-width: 700px) {
+  .management-name { grid-template-columns: minmax(0, 1fr) auto; gap: 8px 12px; }
+  .management-title { grid-column: 1 / -1; }
+  .management-name > .badge { max-width: 170px; }
+  .management-meta { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 16px; }
 }

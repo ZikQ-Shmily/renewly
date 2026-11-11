@@ -619,77 +619,97 @@ function Management({
       <div className="panel">
         {list.length ? (
           list.map((item) => (
-            <div className="management-row" key={item.id}>
-              <div>
+            <article className="management-row" key={item.id}>
+              <div className="management-header">
                 <div className="management-name">
-                  <strong>{item.name}</strong>
-                  <span>{item.vendor}</span>
-                  {item.autoRenew && <span className="auto-renew-tag">自动续费</span>}
+                  <div className="management-title">
+                    <strong>{item.name}</strong>
+                    {item.autoRenew && <span className="auto-renew-tag">自动续费</span>}
+                  </div>
+                  <span className="management-vendor">{item.vendor}</span>
                   <DueBadge item={item} timeZone={user.timeZone} />
                 </div>
-                <div className="management-meta">
-                  <span>{item.region}</span>
-                  <span>{configurationLabel(item)}</span>
-                  <span>购买 {money(item.purchasePrice, item.currency)}</span>
-                  <span>
-                    续费 {money(item.renewalPrice, item.currency)} /{" "}
-                    {periodLabel(item.billingMonths)}
-                  </span>
-                  <span>{formatDateTime(item.nextRenewal)} 到期</span>
-                  <span>流量 {trafficLabel(item)}</span>
-                  <span>带宽 {bandwidthLabel(item)}</span>
-                </div>
-                {item.model && (item.cpuCores != null || item.memoryValue != null || item.diskValue != null) &&
-                  <p className="item-notes">原配置：{item.model}</p>}
-                {!!item.ipAddresses?.length && <div className="server-ip-list">{item.ipAddresses.map((ip, index) => (
-                  <span className="server-ip" key={index}><span>{ip.type === "dynamic" ? "动态 IP" : "静态 IP"}</span><code>{ip.address || "当前地址未填写"}</code></span>
-                ))}</div>}
-                {item.notes && <p className="item-notes">{item.notes}</p>}
-                <TermProgress item={item} timeZone={user.timeZone} />
-              </div>
-              <div className="row-actions">
-                <Button
-                  variant="ghost"
-                  onClick={() => onEdit(item)}
-                  disabled={!!busy}
-                >
-                  {item.status === "archived" ? "编辑 / 恢复" : "编辑"}
-                </Button>
-                {item.status !== "archived" && (
-                  <>
-                    <Button onClick={() => onRenew(item)} disabled={!!busy}>
-                      登记续费
-                    </Button>
-                    {confirmId === item.id ? (
-                      <>
-                        <Button
-                          variant="danger"
-                          busy={busy === item.id}
-                          onClick={() => archive(item)}
-                        >
-                          确认归档
-                        </Button>
+                <div className="row-actions">
+                  <Button
+                    variant="ghost"
+                    onClick={() => onEdit(item)}
+                    disabled={!!busy}
+                  >
+                    {item.status === "archived" ? "编辑 / 恢复" : "编辑"}
+                  </Button>
+                  {item.status !== "archived" && (
+                    <>
+                      <Button onClick={() => onRenew(item)} disabled={!!busy}>
+                        登记续费
+                      </Button>
+                      {confirmId === item.id ? (
+                        <>
+                          <Button
+                            variant="danger"
+                            busy={busy === item.id}
+                            onClick={() => archive(item)}
+                          >
+                            确认归档
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            onClick={() => setConfirmId(null)}
+                            disabled={!!busy}
+                          >
+                            取消
+                          </Button>
+                        </>
+                      ) : (
                         <Button
                           variant="ghost"
-                          onClick={() => setConfirmId(null)}
+                          onClick={() => setConfirmId(item.id)}
                           disabled={!!busy}
                         >
-                          取消
+                          归档
                         </Button>
-                      </>
-                    ) : (
-                      <Button
-                        variant="ghost"
-                        onClick={() => setConfirmId(item.id)}
-                        disabled={!!busy}
-                      >
-                        归档
-                      </Button>
-                    )}
-                  </>
-                )}
+                      )}
+                    </>
+                  )}
+                </div>
               </div>
-            </div>
+              <dl className="management-meta">
+                <div>
+                  <dt>地区</dt>
+                  <dd>{item.region || "未填写"}</dd>
+                </div>
+                <div>
+                  <dt>型号 / 配置</dt>
+                  <dd>{configurationLabel(item)}</dd>
+                </div>
+                <div>
+                  <dt>购买价格</dt>
+                  <dd>{money(item.purchasePrice, item.currency)}</dd>
+                </div>
+                <div>
+                  <dt>续费价格</dt>
+                  <dd>{money(item.renewalPrice, item.currency)} / {periodLabel(item.billingMonths)}</dd>
+                </div>
+                <div>
+                  <dt>下次续费</dt>
+                  <dd><time dateTime={item.nextRenewal}>{formatDateTime(item.nextRenewal)}</time></dd>
+                </div>
+                <div>
+                  <dt>套餐流量</dt>
+                  <dd>{trafficLabel(item)}</dd>
+                </div>
+                <div>
+                  <dt>套餐带宽</dt>
+                  <dd>{bandwidthLabel(item)}</dd>
+                </div>
+              </dl>
+              {item.model && (item.cpuCores != null || item.memoryValue != null || item.diskValue != null) &&
+                <p className="item-notes">原配置：{item.model}</p>}
+              {!!item.ipAddresses?.length && <div className="server-ip-list">{item.ipAddresses.map((ip, index) => (
+                <span className="server-ip" key={index}><span>{ip.type === "dynamic" ? "动态 IP" : "静态 IP"}</span><code>{ip.address || "当前地址未填写"}</code></span>
+              ))}</div>}
+              {item.notes && <p className="item-notes">{item.notes}</p>}
+              <TermProgress item={item} timeZone={user.timeZone} />
+            </article>
           ))
         ) : (
           <EmptyState

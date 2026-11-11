@@ -36,6 +36,7 @@ type Draft = Omit<
   | "billingMonths"
   | "paidAmount"
   | "trafficQuota"
+  | "trafficDirection"
   | "bandwidthValue"
   | "cpuCores"
   | "memoryValue"
@@ -49,6 +50,7 @@ type Draft = Omit<
   billingMonths: string;
   paidAmount: string;
   trafficQuota: string;
+  trafficDirection: "one_way" | "two_way" | "unknown";
   bandwidthValue: string;
   cpuCores: string;
   memoryValue: string;
@@ -74,6 +76,7 @@ function initialDraft(
         billingMonths: String(item.billingMonths),
         trafficQuota:
           item.trafficQuota == null ? "" : String(item.trafficQuota),
+        trafficDirection: item.trafficDirection || "unknown",
         bandwidthValue:
           item.bandwidthValue == null ? "" : String(item.bandwidthValue),
         bandwidthUnit: item.bandwidthUnit || "Mbps",
@@ -107,6 +110,7 @@ function initialDraft(
         diskUnit: "GB",
         ipAddresses: [],
         trafficMode: "unknown",
+        trafficDirection: "unknown",
         trafficQuota: "",
         trafficUnit: "GB",
         bandwidthValue: "",
@@ -452,6 +456,22 @@ export function SubscriptionEditor({
               ]}
               aria-label="流量额度类型"
               name="trafficMode"
+              disabled={busy}
+            />
+          </Field>
+          <Field label="流量计费方向">
+            <Select
+              value={draft.trafficDirection}
+              onValueChange={(value) =>
+                field("trafficDirection", value as Draft["trafficDirection"])
+              }
+              options={[
+                { value: "unknown", label: "未填写" },
+                { value: "one_way", label: "单向" },
+                { value: "two_way", label: "双向" },
+              ]}
+              aria-label="流量计费方向"
+              name="trafficDirection"
               disabled={busy}
             />
           </Field>

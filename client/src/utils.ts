@@ -52,16 +52,18 @@ export function dueLabel(subscription: Subscription, timeZone: string) {
 export function trafficLabel(
   subscription: Pick<
     Subscription,
-    "trafficMode" | "trafficQuota" | "trafficUnit"
+    "trafficMode" | "trafficQuota" | "trafficUnit" | "trafficDirection"
   >,
 ) {
-  if (subscription.trafficMode === "unlimited") return "不限流量";
+  const direction = subscription.trafficDirection === "one_way" ? "单向" : subscription.trafficDirection === "two_way" ? "双向" : "";
+  if (subscription.trafficMode === "unlimited") return ["不限流量", direction].filter(Boolean).join(" · ");
   if (
     subscription.trafficMode !== "limited" ||
     subscription.trafficQuota == null
   )
-    return "未填写";
-  return `${subscription.trafficQuota.toLocaleString("zh-CN", { maximumFractionDigits: 3 })} ${subscription.trafficUnit}`;
+    return direction || "未填写";
+  const quota = `${subscription.trafficQuota.toLocaleString("zh-CN", { maximumFractionDigits: 3 })} ${subscription.trafficUnit}`;
+  return [quota, direction].filter(Boolean).join(" · ");
 }
 export function bandwidthLabel(
   subscription: Pick<Subscription, "bandwidthValue" | "bandwidthUnit">,
@@ -91,14 +93,27 @@ export function termProgress(item: Subscription, timeZone: string, currentTime?:
     end = dateTimeInstant(period.endsAt, timeZone);
     current = currentTime instanceof Date ? currentTime.getTime() : currentTime ? dateTimeInstant(currentTime, timeZone) : Date.now();
   } catch { return { percent: 0, label: "暂无有效账期", tone: "muted" }; }
-  if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start)
+  if (!Number.isFinite(start) || !Number.isFinite(end) || !Number.isFinite(current) || end <= start)
     return { percent: 0, label: "暂无有效账期", tone: "muted" };
   const remaining = end - current;
-  const percent = Math.round(Math.max(0, Math.min(1, (end - current) / (end - start))) * 100);
+  const remainingRatio = Math.max(0, Math.min(1, remaining / (end - start)));
+  const percent = Math.round(remainingRatio * 100);
+  let tone = "normal";
+  if (remaining <= 0) {
+    tone = "expired";
+  } else if (start <= current) {
+    if (remainingRatio <= 0.1 || remaining <= 86_400_000) {
+      tone = "urgent";
+    } else if (remainingRatio <= 0.2 || remaining <= 7 * 86_400_000) {
+      tone = "soon";
+    } else if (remainingRatio <= 0.5) {
+      tone = "warning";
+    }
+  }
   return {
     percent,
     label: start > current ? "尚未开始" : remaining <= 0 ? "已到期" : `剩余 ${durationLabel(remaining)}`,
-    tone: start > current ? "normal" : remaining <= 0 ? "expired" : remaining <= 7 * 86_400_000 ? "soon" : "normal",
+    tone,
   };
 }
 export function timestamp(value: string | undefined, timeZone: string) {
