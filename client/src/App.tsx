@@ -23,6 +23,7 @@ import { Auth } from "./Auth";
 import { Banner, Button, DueBadge, EmptyState } from "./components";
 import { SubscriptionEditor, RenewalForm } from "./SubscriptionEditor";
 import { AdminMail, ReminderSettings } from "./Settings";
+import { Select } from "./Select";
 import type {
   AuthConfig,
   Currency,
@@ -390,20 +391,15 @@ export default function App() {
             </span>
             <label className="currency-control">
               <span>汇总币种</span>
-              <select
+              <Select
                 value={user.currency}
-                onChange={(e) =>
-                  void changeCurrency(e.target.value as Currency)
+                onValueChange={(value) =>
+                  void changeCurrency(value as Currency)
                 }
+                options={currencies}
                 disabled={preferencesBusy}
                 aria-label="汇总币种"
-              >
-                {currencies.map((c) => (
-                  <option key={c.value} value={c.value}>
-                    {c.label}
-                  </option>
-                ))}
-              </select>
+              />
             </label>
             <button
               type="button"
@@ -773,17 +769,18 @@ function Management({
             aria-label="搜索订阅"
           />
         </label>
-        <select
+        <Select
           value={status}
-          onChange={(e) => setStatus(e.target.value)}
+          onValueChange={setStatus}
           aria-label="按订阅状态筛选"
-        >
-          <option value="current">当前订阅</option>
-          <option value="active">生效中</option>
-          <option value="paused">已暂停</option>
-          <option value="archived">已归档</option>
-          <option value="all">全部记录</option>
-        </select>
+          options={[
+            { value: "current", label: "当前订阅" },
+            { value: "active", label: "生效中" },
+            { value: "paused", label: "已暂停" },
+            { value: "archived", label: "已归档" },
+            { value: "all", label: "全部记录" },
+          ]}
+        />
       </div>
       <div className="panel">
         {list.length ? (

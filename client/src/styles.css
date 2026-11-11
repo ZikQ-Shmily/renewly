@@ -329,7 +329,7 @@ code {
   font-size: 11px;
   color: var(--muted);
 }
-.currency-control select {
+.currency-control .select-trigger {
   padding: 7px 9px;
   min-height: 34px;
   font-size: 12px;
@@ -816,6 +816,108 @@ textarea {
   max-width: 100%;
   min-height: 40px;
 }
+.select-trigger {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 40px;
+  border: 1px solid #34435f;
+  border-radius: 8px;
+  background: var(--input);
+  color: #e1eafa;
+  padding: 10px 36px 10px 11px;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+.select-trigger > span:first-child {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.select-trigger[data-state="open"] {
+  border-color: #6d8bbd;
+}
+.select-trigger[data-disabled] {
+  cursor: default;
+}
+.select-chevron {
+  display: inline-flex;
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #91a7c9;
+  pointer-events: none;
+}
+.currency-control .select-trigger {
+  min-width: 110px;
+  padding-right: 36px;
+}
+.select-content {
+  z-index: 100;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  width: var(--radix-select-trigger-width);
+  max-width: min(
+    calc(100vw - 16px),
+    var(--radix-select-content-available-width)
+  );
+  max-height: min(320px, var(--radix-select-content-available-height));
+  overflow: hidden;
+  border: 1px solid #34435f;
+  border-radius: 9px;
+  background: #161e31;
+  color: #e1eafa;
+  box-shadow: 0 12px 30px #05091370;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.select-viewport {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  padding: 4px;
+}
+.select-option {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 35px;
+  padding: 8px 31px 8px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  user-select: none;
+  outline: none;
+  overflow-wrap: anywhere;
+}
+.select-option[data-highlighted] {
+  background: #253654;
+  color: #f0f5ff;
+}
+.select-option[data-disabled] {
+  color: #6b7d9c;
+  pointer-events: none;
+}
+.select-option-check {
+  display: inline-flex;
+  position: absolute;
+  right: 9px;
+  color: #9bbcff;
+}
+.select-scroll-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 24px;
+  color: #9bbcff;
+  background: #161e31;
+  cursor: default;
+}
 input::placeholder,
 textarea::placeholder {
   color: #7184a5;
@@ -851,7 +953,7 @@ fieldset {
   color: #b5c6e1;
 }
 .field input,
-.field select,
+.field .select-trigger,
 .field textarea {
   width: 100%;
 }
@@ -1062,7 +1164,7 @@ fieldset {
   width: 100%;
   min-height: 42px;
 }
-.management-toolbar > select {
+.management-toolbar > .select-trigger {
   font-size: 12px;
   min-width: 120px;
 }
@@ -1466,6 +1568,9 @@ fieldset {
   }
 }
 @media (max-width: 700px) {
+  .select-content {
+    font-size: 14px;
+  }
   .workspace {
     grid-template-columns: 145px minmax(0, 1fr);
   }
@@ -1521,9 +1626,9 @@ fieldset {
   .currency-control > span {
     display: none;
   }
-  .currency-control select {
+  .currency-control .select-trigger {
     font-size: 11px;
-    padding: 6px;
+    padding: 6px 36px 6px 9px;
   }
   .page-heading {
     align-items: flex-start;
@@ -1616,7 +1721,7 @@ fieldset {
     gap: 10px;
   }
   .field input,
-  .field select,
+  .field .select-trigger,
   .field textarea {
     font-size: 16px;
   }
@@ -1630,7 +1735,7 @@ fieldset {
   .search-field input {
     font-size: 16px;
   }
-  .management-toolbar > select {
+  .management-toolbar > .select-trigger {
     width: 100%;
     font-size: 14px;
   }
@@ -1780,7 +1885,7 @@ fieldset {
   .breadcrumb {
     font-size: 11px;
   }
-  .currency-control select {
+  .currency-control .select-trigger {
     font-size: 12px;
     min-height: 34px;
   }
@@ -1866,6 +1971,10 @@ fieldset {
   }
 }
 @media (pointer: coarse) {
+  .select-trigger,
+  .select-option {
+    min-height: 43px;
+  }
   .button {
     min-height: 43px;
   }

@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { ArrowLeft, CalendarCheck2, Save } from "lucide-react";
 import { api, errorMessage, json } from "./api";
 import { Banner, Button, Field } from "./components";
+import { Select } from "./Select";
 import type {
   Currency,
   Subscription,
@@ -199,16 +200,17 @@ export function SubscriptionEditor({
           <h2 className="form-section first">通用订阅信息</h2>
           <Field label="订阅类型">
             {types.length > 1 ? (
-              <select
+              <Select
                 value={draft.type}
-                onChange={(e) => field("type", e.target.value as "cloud")}
-              >
-                {types.map((type) => (
-                  <option key={type.key} value={type.key}>
-                    {type.name}
-                  </option>
-                ))}
-              </select>
+                onValueChange={(value) => field("type", value as "cloud")}
+                options={types.map((type) => ({
+                  value: type.key,
+                  label: type.name,
+                }))}
+                aria-label="订阅类型"
+                name="type"
+                disabled={busy}
+              />
             ) : (
               <span className="static-field">
                 {types[0]?.name || "云服务器"}
@@ -263,26 +265,33 @@ export function SubscriptionEditor({
             />
           </Field>
           <Field label="流量额度类型">
-            <select
+            <Select
               value={draft.trafficMode}
-              onChange={(e) =>
-                field("trafficMode", e.target.value as Draft["trafficMode"])
+              onValueChange={(value) =>
+                field("trafficMode", value as Draft["trafficMode"])
               }
-            >
-              <option value="unknown">未填写</option>
-              <option value="limited">有限额度</option>
-              <option value="unlimited">不限流量</option>
-            </select>
+              options={[
+                { value: "unknown", label: "未填写" },
+                { value: "limited", label: "有限额度" },
+                { value: "unlimited", label: "不限流量" },
+              ]}
+              aria-label="流量额度类型"
+              name="trafficMode"
+              disabled={busy}
+            />
           </Field>
           <Field label="流量单位" help="1 TB = 1000 GB">
-            <select
+            <Select
               value={draft.trafficUnit}
-              onChange={(e) => unit(e.target.value as "GB" | "TB")}
-              disabled={draft.trafficMode !== "limited"}
-            >
-              <option value="GB">GB</option>
-              <option value="TB">TB</option>
-            </select>
+              onValueChange={(value) => unit(value as "GB" | "TB")}
+              options={[
+                { value: "GB", label: "GB" },
+                { value: "TB", label: "TB" },
+              ]}
+              aria-label="流量单位"
+              name="trafficUnit"
+              disabled={busy || draft.trafficMode !== "limited"}
+            />
           </Field>
           <Field label="套餐流量总额度">
             <input
@@ -298,28 +307,27 @@ export function SubscriptionEditor({
           </Field>
           <h2 className="form-section">价格与账期</h2>
           <Field label="价格币种">
-            <select
+            <Select
               value={draft.currency}
-              onChange={(e) => field("currency", e.target.value as Currency)}
-            >
-              {currencies.map((c) => (
-                <option key={c.value} value={c.value}>
-                  {c.label}
-                </option>
-              ))}
-            </select>
+              onValueChange={(value) => field("currency", value as Currency)}
+              options={currencies}
+              aria-label="价格币种"
+              name="currency"
+              disabled={busy}
+            />
           </Field>
           <Field label="计费周期">
-            <select
+            <Select
               value={draft.billingMonths}
-              onChange={(e) => field("billingMonths", e.target.value)}
-            >
-              {[1, 3, 6, 12, 24, 36].map((months) => (
-                <option key={months} value={months}>
-                  {periodLabel(months)}付
-                </option>
-              ))}
-            </select>
+              onValueChange={(value) => field("billingMonths", value)}
+              options={[1, 3, 6, 12, 24, 36].map((months) => ({
+                value: String(months),
+                label: `${periodLabel(months)}付`,
+              }))}
+              aria-label="计费周期"
+              name="billingMonths"
+              disabled={busy}
+            />
           </Field>
           <Field label="购买价格 *">
             <input
@@ -371,16 +379,20 @@ export function SubscriptionEditor({
             />
           </Field>
           <Field label="订阅状态">
-            <select
+            <Select
               value={draft.status}
-              onChange={(e) =>
-                field("status", e.target.value as Draft["status"])
+              onValueChange={(value) =>
+                field("status", value as Draft["status"])
               }
-            >
-              <option value="active">生效中</option>
-              <option value="paused">暂停续费</option>
-              <option value="archived">已归档</option>
-            </select>
+              options={[
+                { value: "active", label: "生效中" },
+                { value: "paused", label: "暂停续费" },
+                { value: "archived", label: "已归档" },
+              ]}
+              aria-label="订阅状态"
+              name="status"
+              disabled={busy}
+            />
           </Field>
           <Field label="提前提醒天数" help="以逗号分隔，留空则关闭该订阅提醒">
             <input

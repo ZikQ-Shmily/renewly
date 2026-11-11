@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { api, errorMessage, json } from "./api";
 import { Banner, Button, DeliveryList, Field } from "./components";
+import { Select } from "./Select";
 import type {
   Delivery,
   MailSettings,
@@ -241,19 +242,20 @@ export function ReminderSettings({
               />
             </Field>
             <Field label="提醒时区">
-              <select
+              <Select
                 value={zone}
-                onChange={(e) => {
-                  setZone(e.target.value);
+                onValueChange={(value) => {
+                  setZone(value);
                   setDirty(true);
                 }}
-              >
-                {[...new Set([zone, ...zones])].map((value) => (
-                  <option key={value} value={value}>
-                    {value}
-                  </option>
-                ))}
-              </select>
+                options={[...new Set([zone, ...zones])].map((value) => ({
+                  value,
+                  label: value,
+                }))}
+                aria-label="提醒时区"
+                name="timeZone"
+                disabled={busy}
+              />
             </Field>
             {!verified && settings?.recipientEmail && (
               <Button
@@ -511,18 +513,19 @@ export function AdminMail({
           <fieldset className="form-body" disabled={loading || busy}>
             <legend className="sr-only">全站发信配置</legend>
             <Field label="发信方式">
-              <select
+              <Select
                 value={draft.transport}
-                onChange={(e) =>
-                  field(
-                    "transport",
-                    e.target.value as MailSettings["transport"],
-                  )
+                onValueChange={(value) =>
+                  field("transport", value as MailSettings["transport"])
                 }
-              >
-                <option value="smtp">SMTP / 邮箱授权码</option>
-                <option value="resend">Resend API</option>
-              </select>
+                options={[
+                  { value: "smtp", label: "SMTP / 邮箱授权码" },
+                  { value: "resend", label: "Resend API" },
+                ]}
+                aria-label="发信方式"
+                name="transport"
+                disabled={loading || busy}
+              />
             </Field>
             <div className="form-columns">
               <Field label="发件人名称 *">
