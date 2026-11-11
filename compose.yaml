@@ -19,7 +19,7 @@ services:
       ALLOW_REGISTRATION: ${ALLOW_REGISTRATION:-true}
       COOKIE_SECURE: ${COOKIE_SECURE:-true}
       TRUST_PROXY: ${TRUST_PROXY:-false}
-      REMINDER_INTERVAL_MS: ${REMINDER_INTERVAL_MS:-900000}
+      REMINDER_INTERVAL_MS: ${REMINDER_INTERVAL_MS:-60000}
     volumes:
       - renewly_data:/app/data
     read_only: true
