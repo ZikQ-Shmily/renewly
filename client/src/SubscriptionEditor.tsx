@@ -3,6 +3,7 @@ import { ArrowLeft, CalendarCheck2, Save } from "lucide-react";
 import { api, errorMessage, json } from "./api";
 import { Banner, Button, Field } from "./components";
 import { Select } from "./Select";
+import { NumberInput, parseNumberInput } from "./NumberInput";
 import type {
   Currency,
   Subscription,
@@ -29,18 +30,18 @@ interface EditorProps {
 }
 type Draft = Omit<
   SubscriptionInput,
-  | "purchasePrice"
   | "renewalPrice"
   | "billingMonths"
   | "paidAmount"
   | "trafficQuota"
+  | "bandwidthValue"
   | "reminderDays"
 > & {
-  purchasePrice: string;
   renewalPrice: string;
   billingMonths: string;
   paidAmount: string;
   trafficQuota: string;
+  bandwidthValue: string;
   reminderDays: string;
 };
 function initialDraft(
@@ -52,12 +53,15 @@ function initialDraft(
   return item
     ? {
         ...item,
-        purchasePrice: String(item.purchasePrice),
         renewalPrice: String(item.renewalPrice),
         paidAmount: String(item.paidAmount),
         billingMonths: String(item.billingMonths),
         trafficQuota:
           item.trafficQuota == null ? "" : String(item.trafficQuota),
+        bandwidthValue:
+          item.bandwidthValue == null ? "" : String(item.bandwidthValue),
+        bandwidthUnit: item.bandwidthUnit || "Mbps",
+        autoRenew: item.autoRenew || false,
         reminderDays: item.reminderDays.join(", "),
       }
     : {
@@ -66,7 +70,7 @@ function initialDraft(
         vendor: "",
         website: "",
         currency: "CNY",
-        purchasePrice: "",
+        purchasePrice: 0,
         renewalPrice: "",
         paidAmount: "",
         billingMonths: "12",
@@ -77,6 +81,9 @@ function initialDraft(
         trafficMode: "unknown",
         trafficQuota: "",
         trafficUnit: "GB",
+        bandwidthValue: "",
+        bandwidthUnit: "Mbps",
+        autoRenew: false,
         status: "active",
         notes: "",
         reminderDays: defaultDays.join(", "),
@@ -96,11 +103,15 @@ export function SubscriptionEditor({
     initialDraft(item, timeZone, defaultDays),
   );
   const [endEdited, setEndEdited] = useState(false);
+  const [differentRenewal, setDifferentRenewal] = useState(
+    item != null && item.renewalPrice !== item.paidAmount,
+  );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   useEffect(() => {
     setDraft(initialDraft(item, timeZone, defaultDays));
     setEndEdited(false);
+    setDifferentRenewal(item != null && item.renewalPrice !== item.paidAmount);
     setError("");
   }, [draftKey]);
   function field<K extends keyof Draft>(key: K, value: Draft[K]) {
@@ -123,8 +134,8 @@ export function SubscriptionEditor({
       ...previous,
       trafficUnit: value,
       trafficQuota:
-        previous.trafficQuota === ""
-          ? ""
+        !/^[0-9]+(?:[.][0-9]+)?$/.test(previous.trafficQuota.trim())
+          ? previous.trafficQuota
           : String(
               Number(
                 (
@@ -136,6 +147,11 @@ export function SubscriptionEditor({
             ),
     }));
   }
+  function toggleDifferentRenewal(checked: boolean) {
+    setDifferentRenewal(checked);
+    if (checked && !draft.renewalPrice.trim())
+      field("renewalPrice", draft.paidAmount);
+  }
   async function submit(event: FormEvent) {
     event.preventDefault();
     setError("");
@@ -146,7 +162,9 @@ export function SubscriptionEditor({
       if (!["http:", "https:"].includes(website.protocol))
         throw new Error("商家网站只支持 HTTP 或 HTTPS 地址。");
       const quota =
-        draft.trafficMode === "limited" ? Number(draft.trafficQuota) : null;
+        draft.trafficMode === "limited"
+          ? parseNumberInput(draft.trafficQuota, "套餐流量总额度")
+          : null;
       if (
         draft.trafficMode === "limited" &&
         (quota == null ||
@@ -157,13 +175,29 @@ export function SubscriptionEditor({
           ))
       )
         throw new Error("请填写有效且大于 0 的套餐流量总额度。");
+      const paidAmount = parseNumberInput(draft.paidAmount, "本期费用", {
+        max: 1_000_000_000,
+        decimalPlaces: 2,
+      });
+      const renewalPrice = differentRenewal
+        ? parseNumberInput(draft.renewalPrice, "下次续费价格", {
+            max: 1_000_000_000,
+            decimalPlaces: 2,
+          })
+        : paidAmount;
+      const bandwidthValue = draft.bandwidthValue.trim()
+        ? parseNumberInput(draft.bandwidthValue, "套餐带宽", { max: 1e9 })
+        : null;
+      if (bandwidthValue != null && bandwidthValue <= 0)
+        throw new Error("套餐带宽需要大于 0，或留空表示未填写。");
       const data: SubscriptionInput = {
         ...draft,
-        purchasePrice: Number(draft.purchasePrice),
-        renewalPrice: Number(draft.renewalPrice),
-        paidAmount: Number(draft.paidAmount),
+        purchasePrice: item?.purchasePrice ?? paidAmount,
+        renewalPrice,
+        paidAmount,
         billingMonths: Number(draft.billingMonths),
         trafficQuota: quota,
+        bandwidthValue,
         reminderDays: reminderDays(draft.reminderDays),
       };
       setBusy(true);
@@ -180,13 +214,19 @@ export function SubscriptionEditor({
       setBusy(false);
     }
   }
+  const previewPriceText = (
+    differentRenewal ? draft.renewalPrice : draft.paidAmount
+  ).trim();
+  const previewPrice = /^[0-9]+(?:[.][0-9]+)?$/.test(previewPriceText)
+    ? Number(previewPriceText)
+    : null;
   return (
     <section aria-label={item ? "编辑订阅" : "新增订阅"}>
       <div className="page-heading">
         <div>
           <span className="eyebrow gradient">SUBSCRIPTION DETAILS</span>
           <h1>{item ? "编辑订阅" : "新增订阅"}</h1>
-          <p>首购价、续费价与本期实付分别记录。</p>
+          <p>录入一次费用，安排下一次续费。</p>
         </div>
         <Button onClick={onCancel} disabled={busy}>
           <ArrowLeft size={15} />
@@ -264,6 +304,30 @@ export function SubscriptionEditor({
               maxLength={200}
             />
           </Field>
+          <Field label="套餐带宽" help="选填，填写商家标称带宽">
+            <div className="field-combo">
+              <NumberInput
+                value={draft.bandwidthValue}
+                onChange={(e) => field("bandwidthValue", e.target.value)}
+                placeholder="未填写"
+                aria-label="带宽数值"
+                maxLength={24}
+              />
+              <Select
+                value={draft.bandwidthUnit}
+                onValueChange={(value) =>
+                  field("bandwidthUnit", value as Draft["bandwidthUnit"])
+                }
+                options={[
+                  { value: "Mbps", label: "Mbps" },
+                  { value: "Gbps", label: "Gbps" },
+                ]}
+                aria-label="带宽单位"
+                name="bandwidthUnit"
+                disabled={busy}
+              />
+            </div>
+          </Field>
           <Field label="流量额度类型">
             <Select
               value={draft.trafficMode}
@@ -280,85 +344,89 @@ export function SubscriptionEditor({
               disabled={busy}
             />
           </Field>
-          <Field label="流量单位" help="1 TB = 1000 GB">
-            <Select
-              value={draft.trafficUnit}
-              onValueChange={(value) => unit(value as "GB" | "TB")}
-              options={[
-                { value: "GB", label: "GB" },
-                { value: "TB", label: "TB" },
-              ]}
-              aria-label="流量单位"
-              name="trafficUnit"
-              disabled={busy || draft.trafficMode !== "limited"}
-            />
-          </Field>
-          <Field label="套餐流量总额度">
-            <input
-              value={draft.trafficQuota}
-              onChange={(e) => field("trafficQuota", e.target.value)}
-              type="number"
-              min="0"
-              step="any"
-              required={draft.trafficMode === "limited"}
-              disabled={draft.trafficMode !== "limited"}
-              placeholder="填写商家标注额度"
-            />
+          <Field label="套餐流量总额度" help="1 TB = 1000 GB" wide>
+            <div className="field-combo">
+              <NumberInput
+                value={draft.trafficQuota}
+                onChange={(e) => field("trafficQuota", e.target.value)}
+                required={draft.trafficMode === "limited"}
+                disabled={draft.trafficMode !== "limited"}
+                placeholder="填写商家标注额度"
+                aria-label="套餐流量总额度"
+                maxLength={24}
+              />
+              <Select
+                value={draft.trafficUnit}
+                onValueChange={(value) => unit(value as "GB" | "TB")}
+                options={[
+                  { value: "GB", label: "GB" },
+                  { value: "TB", label: "TB" },
+                ]}
+                aria-label="流量单位"
+                name="trafficUnit"
+                disabled={busy || draft.trafficMode !== "limited"}
+              />
+            </div>
           </Field>
           <h2 className="form-section">价格与账期</h2>
-          <Field label="价格币种">
-            <Select
-              value={draft.currency}
-              onValueChange={(value) => field("currency", value as Currency)}
-              options={currencies}
-              aria-label="价格币种"
-              name="currency"
-              disabled={busy}
-            />
-          </Field>
-          <Field label="计费周期">
-            <Select
-              value={draft.billingMonths}
-              onValueChange={(value) => field("billingMonths", value)}
-              options={[1, 3, 6, 12, 24, 36].map((months) => ({
-                value: String(months),
-                label: `${periodLabel(months)}付`,
-              }))}
-              aria-label="计费周期"
-              name="billingMonths"
-              disabled={busy}
-            />
-          </Field>
-          <Field label="购买价格 *">
-            <input
-              value={draft.purchasePrice}
-              onChange={(e) => field("purchasePrice", e.target.value)}
-              type="number"
-              min="0"
-              step="0.01"
-              required
-            />
-          </Field>
-          <Field label="下次续费价格 *">
-            <input
-              value={draft.renewalPrice}
-              onChange={(e) => field("renewalPrice", e.target.value)}
-              type="number"
-              min="0"
-              step="0.01"
-              required
-            />
-          </Field>
-          <Field label="本期实付金额 *" help="用于计算本期剩余使用价值">
-            <input
-              value={draft.paidAmount}
-              onChange={(e) => field("paidAmount", e.target.value)}
-              type="number"
-              min="0"
-              step="0.01"
-              required
-            />
-          </Field>
+          <div className="price-fields wide">
+            <Field label="本期费用 *">
+              <NumberInput
+                value={draft.paidAmount}
+                onChange={(e) => field("paidAmount", e.target.value)}
+                decimalPlaces={2}
+                required
+                maxLength={24}
+              />
+            </Field>
+            <Field label="价格币种">
+              <Select
+                value={draft.currency}
+                onValueChange={(value) => field("currency", value as Currency)}
+                options={currencies}
+                aria-label="价格币种"
+                name="currency"
+                disabled={busy}
+              />
+            </Field>
+            <Field label="计费周期">
+              <Select
+                value={draft.billingMonths}
+                onValueChange={(value) => field("billingMonths", value)}
+                options={[1, 3, 6, 12, 24, 36].map((months) => ({
+                  value: String(months),
+                  label: `${periodLabel(months)}付`,
+                }))}
+                aria-label="计费周期"
+                name="billingMonths"
+                disabled={busy}
+              />
+            </Field>
+          </div>
+          <div className="renewal-price-toggle wide">
+            <label className="check">
+              <input
+                type="checkbox"
+                checked={differentRenewal}
+                onChange={(e) => toggleDifferentRenewal(e.target.checked)}
+              />
+              下次续费价格不同
+            </label>
+          </div>
+          {differentRenewal && (
+            <div className="renewal-price-field wide">
+              <Field label="下次续费价格 *">
+                <NumberInput
+                  value={draft.renewalPrice}
+                  onChange={(e) => field("renewalPrice", e.target.value)}
+                  decimalPlaces={2}
+                  required
+                  maxLength={24}
+                />
+              </Field>
+              <p className="muted small">适用于首购优惠、折扣或调价。</p>
+            </div>
+          )}
           <Field label="本期开始日期 *">
             <input
               value={draft.periodStart}
@@ -378,6 +446,21 @@ export function SubscriptionEditor({
               required
             />
           </Field>
+          <div className="auto-renew-setting wide">
+            <label className="switch-control">
+              <input
+                type="checkbox"
+                role="switch"
+                checked={draft.autoRenew}
+                onChange={(e) => field("autoRenew", e.target.checked)}
+              />
+              <span className="switch-track" aria-hidden="true" />
+              <span>
+                <strong>自动续费</strong>
+                <small>商家自动扣款，仍照常发送到期提醒邮件</small>
+              </span>
+            </label>
+          </div>
           <Field label="订阅状态">
             <Select
               value={draft.status}
@@ -417,8 +500,9 @@ export function SubscriptionEditor({
             </span>
             <strong className="gradient">
               {money(
-                (Number(draft.renewalPrice || 0) * 12) /
-                  Number(draft.billingMonths),
+                previewPrice == null
+                  ? null
+                  : (previewPrice * 12) / Number(draft.billingMonths),
                 draft.currency,
               )}{" "}
               / 年
@@ -474,10 +558,14 @@ export function RenewalForm({
     }
     setBusy(true);
     try {
+      const paidAmount = parseNumberInput(amount, "本次实付金额", {
+        max: 1_000_000_000,
+        decimalPlaces: 2,
+      });
       await api(
         `/subscriptions/${encodeURIComponent(subscription.id)}/renew`,
         json("POST", {
-          paidAmount: Number(amount),
+          paidAmount,
           periodStart: start,
           nextRenewal: end,
         }),
@@ -507,18 +595,18 @@ export function RenewalForm({
       {error && <Banner tone="error">{error}</Banner>}
       <Banner>
         请在商家完成付款后登记。续费会新增实付账期，保留此前的付款记录。
+        {item.autoRenew && "已开启商家自动续费的订阅，也请在确认扣款后登记。"}
       </Banner>
       <form className="panel" onSubmit={submit}>
         <fieldset className="subscription-form" disabled={busy}>
           <legend className="sr-only">本次续费</legend>
           <Field label={`本次实付金额（${item.currency}）*`}>
-            <input
+            <NumberInput
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              type="number"
-              min="0"
-              step="0.01"
+              decimalPlaces={2}
               required
+              maxLength={24}
             />
           </Field>
           <Field label="新账期开始 *">

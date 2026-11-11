@@ -1,4 +1,4 @@
-import type { Currency, Subscription } from "./types";
+import type { Currency, Subscription } from "./types.js";
 
 export const currencies: { value: Currency; label: string }[] = [
   { value: "CNY", label: "¥ 人民币" },
@@ -75,6 +75,32 @@ export function trafficLabel(
   )
     return "未填写";
   return `${subscription.trafficQuota.toLocaleString("zh-CN", { maximumFractionDigits: 3 })} ${subscription.trafficUnit}`;
+}
+export function bandwidthLabel(
+  subscription: Pick<Subscription, "bandwidthValue" | "bandwidthUnit">,
+) {
+  return subscription.bandwidthValue == null
+    ? "未填写"
+    : `${subscription.bandwidthValue.toLocaleString("zh-CN", { maximumFractionDigits: 3 })} ${subscription.bandwidthUnit}`;
+}
+
+export function termProgress(item: Subscription, timeZone: string, currentDay = today(timeZone)) {
+  const period = item.progressPeriod || item.currentPeriod || {
+    startsAt: item.periodStart,
+    endsAt: item.nextRenewal,
+  };
+  const start = Date.parse(`${period.startsAt}T00:00:00Z`);
+  const end = Date.parse(`${period.endsAt}T00:00:00Z`);
+  const current = Date.parse(`${currentDay}T00:00:00Z`);
+  if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start)
+    return { percent: 0, label: "暂无有效账期", tone: "muted" };
+  const remaining = Math.round((end - current) / 86_400_000);
+  const percent = Math.round(Math.max(0, Math.min(1, (end - current) / (end - start))) * 100);
+  return {
+    percent,
+    label: start > current ? "尚未开始" : remaining < 0 ? "已到期" : remaining === 0 ? "今天到期" : `剩余 ${remaining} 天`,
+    tone: start > current ? "normal" : remaining < 0 ? "expired" : remaining <= 7 ? "soon" : "normal",
+  };
 }
 export function timestamp(value: string | undefined, timeZone: string) {
   if (!value) return "—";

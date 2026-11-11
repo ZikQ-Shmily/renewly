@@ -102,8 +102,9 @@ export function DueBadge({
 }) {
   const urgent =
     item.status === "active" && daysUntil(item.nextRenewal, timeZone) <= 7;
+  const expired = item.status === "active" && daysUntil(item.nextRenewal, timeZone) < 0;
   return (
-    <span className={`badge ${urgent ? "warning" : "muted"}`}>
+    <span className={`badge ${expired ? "expired" : urgent ? "warning" : "muted"}`}>
       {dueLabel(item, timeZone)}
     </span>
   );

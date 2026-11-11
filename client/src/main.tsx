@@ -3,6 +3,13 @@ import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./styles.css";
 
+document.addEventListener("pointerdown", () => {
+  document.documentElement.dataset.inputMode = "pointer";
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Tab") document.documentElement.dataset.inputMode = "keyboard";
+});
+
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <App />

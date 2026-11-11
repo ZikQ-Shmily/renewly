@@ -7,6 +7,17 @@ export interface User {
   currency: Currency;
   timeZone: string;
 }
+export interface AdminUser {
+  id: string;
+  name: string;
+  email: string;
+  role: "user" | "admin";
+  status: "active" | "disabled";
+  recipientEmail: string;
+  emailVerified: boolean;
+  subscriptionCount: number;
+  createdAt: string;
+}
 export interface AuthConfig {
   registrationEnabled: boolean;
   adminConfigured: boolean;
@@ -28,6 +39,9 @@ export interface SubscriptionInput {
   trafficMode: "limited" | "unlimited" | "unknown";
   trafficQuota: number | null;
   trafficUnit: "GB" | "TB";
+  bandwidthValue: number | null;
+  bandwidthUnit: "Mbps" | "Gbps";
+  autoRenew: boolean;
   status: "active" | "paused" | "archived";
   notes: string;
   reminderDays: number[];
@@ -37,6 +51,8 @@ export interface Subscription extends SubscriptionInput {
   createdAt: string;
   updatedAt: string;
   billingAnchorDay?: number;
+  currentPeriod?: { startsAt: string; endsAt: string } | null;
+  progressPeriod?: { startsAt: string; endsAt: string } | null;
 }
 export interface SubscriptionType {
   key: string;

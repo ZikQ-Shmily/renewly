@@ -17,6 +17,7 @@ import {
   Settings2,
   SlidersHorizontal,
   Wallet,
+  Users,
 } from "lucide-react";
 import { ApiError, api, errorMessage, json } from "./api";
 import { Auth } from "./Auth";
@@ -24,6 +25,8 @@ import { Banner, Button, DueBadge, EmptyState } from "./components";
 import { SubscriptionEditor, RenewalForm } from "./SubscriptionEditor";
 import { AdminMail, ReminderSettings } from "./Settings";
 import { Select } from "./Select";
+import { UserManagement } from "./Users";
+import { SubscriptionColumns, SubscriptionSummary, TermProgress } from "./SubscriptionSummary";
 import type {
   AuthConfig,
   Currency,
@@ -39,9 +42,10 @@ import {
   money,
   periodLabel,
   trafficLabel,
+  bandwidthLabel,
 } from "./utils";
 
-type Page = "overview" | "manage" | "editor" | "renew" | "reminders" | "admin";
+type Page = "overview" | "manage" | "editor" | "renew" | "reminders" | "admin" | "users";
 const pageTitles: Record<Page, string> = {
   overview: "全部订阅",
   manage: "订阅管理",
@@ -49,10 +53,11 @@ const pageTitles: Record<Page, string> = {
   renew: "登记续费",
   reminders: "我的提醒",
   admin: "系统邮件",
+  users: "用户管理",
 };
 function hashPage(): Page {
   const value = window.location.hash.slice(1);
-  return ["overview", "manage", "reminders", "admin"].includes(value)
+  return ["overview", "manage", "reminders", "admin", "users"].includes(value)
     ? (value as Page)
     : "overview";
 }
@@ -124,7 +129,7 @@ export default function App() {
     };
   }, []);
   useEffect(() => {
-    if (user && page === "admin" && user.role !== "admin") navigate("overview");
+    if (user && ["admin", "users"].includes(page) && user.role !== "admin") navigate("overview");
   }, [user, page]);
   function navigate(next: Page) {
     setPage(next);
@@ -362,6 +367,7 @@ export default function App() {
             </button>
           )}
         </nav>
+        {user.role === "admin" && <><div className="nav-divider" /><p className="nav-caption">管理</p><nav className="nav-group admin-nav" aria-label="管理"><button className={`nav-item ${page === "users" ? "selected" : ""}`} aria-current={page === "users" ? "page" : undefined} onClick={() => navigate("users")}><Users size={17} /><span>用户管理</span></button></nav></>}
         <div className="account">
           <span className="avatar">
             {(user.name || user.email).slice(0, 2).toUpperCase()}
@@ -520,57 +526,10 @@ export default function App() {
                     }
                   />
                 ) : (
-                  <div className="asset-list">
-                    {shown.map((item) => (
-                      <div className="asset-row" key={item.id}>
-                        <div className="asset-identity">
-                          <span className="asset-icon">
-                            <Server size={17} />
-                          </span>
-                          <div>
-                            <strong>{item.name}</strong>
-                            <p>
-                              <a
-                                href={item.website}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="gradient"
-                              >
-                                {item.vendor}
-                              </a>
-                              <span> · {item.region}</span>
-                            </p>
-                            <p className="asset-model">{item.model}</p>
-                          </div>
-                        </div>
-                        <div className="asset-price">
-                          {money(item.renewalPrice, item.currency)}
-                          <small>/ {periodLabel(item.billingMonths)}</small>
-                        </div>
-                        <div className="asset-due">
-                          <time dateTime={item.nextRenewal}>
-                            {item.nextRenewal}
-                          </time>
-                          <DueBadge item={item} timeZone={user.timeZone} />
-                        </div>
-                        <div className="traffic-label">
-                          <span>套餐流量总额度</span>
-                          <strong
-                            className={
-                              item.trafficMode === "unknown"
-                                ? "muted"
-                                : "gradient"
-                            }
-                          >
-                            {trafficLabel(item)}
-                          </strong>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  <div className="subscription-list"><SubscriptionColumns />{shown.map((item) => <SubscriptionSummary key={item.id} item={item} timeZone={user.timeZone} />)}</div>
                 )}
                 <div className="panel-footer">
-                  按到期时间排列 · 仅展示自己的数据<span>原币续费价格</span>
+                  自动续费订阅仍按提醒设置发送邮件<span>原币续费价格 · 按到期时间排序</span>
                 </div>
               </div>
               <aside className="stack">
@@ -690,6 +649,7 @@ export default function App() {
               <AdminMail user={user} onChanged={loadData} />
             </div>
           )}
+          {user.role === "admin" && page === "users" && <UserManagement currentUser={user} onSelfUpdated={setUser} />}
           <footer className="app-footer">
             <span className="gradient">续记 Renewly</span>
             <span>每一笔订阅，都心中有数。</span>
@@ -790,6 +750,7 @@ function Management({
                 <div className="management-name">
                   <strong>{item.name}</strong>
                   <span>{item.vendor}</span>
+                  {item.autoRenew && <span className="auto-renew-tag">自动续费</span>}
                   <DueBadge item={item} timeZone={user.timeZone} />
                 </div>
                 <div className="management-meta">
@@ -802,8 +763,10 @@ function Management({
                   </span>
                   <span>{item.nextRenewal} 到期</span>
                   <span>流量 {trafficLabel(item)}</span>
+                  <span>带宽 {bandwidthLabel(item)}</span>
                 </div>
                 {item.notes && <p className="item-notes">{item.notes}</p>}
+                <TermProgress item={item} timeZone={user.timeZone} />
               </div>
               <div className="row-actions">
                 <Button

@@ -12,6 +12,7 @@ import {
 import { api, errorMessage, json } from "./api";
 import { Banner, Button, DeliveryList, Field } from "./components";
 import { Select } from "./Select";
+import { NumberInput, parseNumberInput } from "./NumberInput";
 import type {
   Delivery,
   MailSettings,
@@ -347,6 +348,7 @@ export function AdminMail({
 }) {
   const [settings, setSettings] = useState<MailSettings>(blankMail);
   const [draft, setDraft] = useState<MailSettings>(blankMail);
+  const [smtpPort, setSmtpPort] = useState("465");
   const [smtpPass, setSmtpPass] = useState("");
   const [apiKey, setApiKey] = useState("");
   const [testEmail, setTestEmail] = useState("");
@@ -378,6 +380,7 @@ export function AdminMail({
       const data = await api<MailSettings>("/admin/mail");
       setSettings(data);
       setDraft(data);
+      setSmtpPort(String(data.smtpPort));
       setDirty(false);
     } catch (e) {
       setError(errorMessage(e));
@@ -419,6 +422,9 @@ export function AdminMail({
     }
     setBusy(true);
     try {
+      const port = draft.transport === "smtp"
+        ? parseNumberInput(smtpPort, "SMTP 端口", { min: 1, max: 65535, integer: true })
+        : settings.smtpPort;
       const {
         smtpPassConfigured: _smtp,
         resendKeyConfigured: _api,
@@ -428,12 +434,14 @@ export function AdminMail({
         "/admin/mail",
         json("PUT", {
           ...publicFields,
+          smtpPort: port,
           ...(smtpPass ? { smtpPass } : {}),
           ...(apiKey ? { resendApiKey: apiKey } : {}),
         }),
       );
       setSettings(result);
       setDraft(result);
+      setSmtpPort(String(result.smtpPort));
       setSmtpPass("");
       setApiKey("");
       setDirty(false);
@@ -560,14 +568,10 @@ export function AdminMail({
                     />
                   </Field>
                   <Field label="端口">
-                    <input
-                      value={draft.smtpPort}
-                      onChange={(e) =>
-                        field("smtpPort", Number(e.target.value))
-                      }
-                      type="number"
-                      min="1"
-                      max="65535"
+                    <NumberInput
+                      value={smtpPort}
+                      onChange={(e) => { setSmtpPort(e.target.value); setDirty(true); }}
+                      integer
                       required
                     />
                   </Field>
