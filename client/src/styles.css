@@ -2058,11 +2058,13 @@ fieldset {
 .term-progress { display: flex; align-items: center; gap: 10px; margin: 12px 0 0 27px; color: #8b9bb8; font-size: 11px; }
 .term-progress > span:first-child { flex: none; }
 .term-track { height: 4px; background: #2b354c; border-radius: 3px; flex: 1; overflow: hidden; }
-.term-track > span { display: block; height: 100%; background: linear-gradient(90deg,#5884f2 0%,#729be3 45%,#53bab4 100%); border-radius: 3px; }
-.term-progress.warning .term-track > span { background: linear-gradient(90deg,#7b8de0 0%,#afa4c8 45%,#dfbd7b 100%); }
-.term-progress.soon .term-track > span { background: linear-gradient(90deg,#a08ad3 0%,#d59aa4 45%,#eba571 100%); }
-.term-progress.urgent .term-track > span,
-.term-progress.expired .term-track > span { background: linear-gradient(90deg,#a975c5 0%,#d8749b 45%,#f28e8e 100%); }
+.term-track > span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, #a975c5 0%, #f28e8e 18%, #dfbd7b 38%, #7b8de0 58%, #5884f2 76%, #53bab4 100%);
+  border-radius: 3px;
+}
 .term-progress.expired .term-track { background: #54303d; }
 .term-note { flex: none; min-width: 4ch; text-align: right; font-variant-numeric: tabular-nums; }
 input[type="datetime-local"] { min-width: 0; width: 100%; }

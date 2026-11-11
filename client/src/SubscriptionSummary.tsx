@@ -9,7 +9,7 @@ export function TermProgress({ item, timeZone }: { item: Subscription; timeZone:
     <div className={`term-progress ${progress.tone}`}>
       <span>账期剩余</span>
       <div className="term-track" role="progressbar" aria-label={`${item.name}账期剩余`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress.percent} aria-valuetext={`${progress.percent}% · ${progress.label}`}>
-        <span style={{ width: `${progress.percent}%` }} />
+        <span style={{ clipPath: `inset(0 ${100 - progress.percent}% 0 0 round 3px)` }} />
       </div>
       <span className="term-note">{progress.percent}%</span>
     </div>
