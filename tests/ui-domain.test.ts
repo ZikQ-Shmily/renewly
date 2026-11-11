@@ -1,8 +1,17 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { termProgress, durationLabel } from "../client/src/utils.js";
+import { termProgress, durationLabel, trafficLabel } from "../client/src/utils.js";
 import { parseNumberInput } from "../client/src/number.js";
 import type { Subscription } from "../client/src/types.js";
+
+test("traffic labels retain quota and distinguish single and bidirectional accounting", () => {
+  const quota = { trafficMode: "limited", trafficQuota: 300, trafficUnit: "GB" } as const;
+  assert.equal(trafficLabel({ ...quota, trafficDirection: "one_way" }), "300 GB · 单向");
+  assert.equal(trafficLabel({ ...quota, trafficDirection: "two_way" }), "300 GB · 双向");
+  assert.equal(trafficLabel({ ...quota, trafficDirection: "unknown" }), "300 GB");
+  assert.equal(trafficLabel({ ...quota, trafficMode: "unlimited", trafficDirection: "two_way" }), "不限流量 · 双向");
+  assert.equal(trafficLabel({ ...quota, trafficMode: "unknown", trafficDirection: "one_way" }), "单向");
+});
 
 test("progress uses the paid period covering today after early renewal", () => {
   const item = {
@@ -20,7 +29,7 @@ test("progress uses the paid period covering today after early renewal", () => {
 
 test("progress changes at the exact minute in the account time zone", () => {
   const item = { periodStart: "2026-11-11T19:30", nextRenewal: "2026-11-11T20:30" } as Subscription;
-  assert.deepEqual(termProgress(item, "Asia/Shanghai", new Date("2026-11-11T12:00:00Z")), { percent: 50, label: "剩余 30 分钟", tone: "soon" });
+  assert.deepEqual(termProgress(item, "Asia/Shanghai", new Date("2026-11-11T12:00:00Z")), { percent: 50, label: "剩余 30 分钟", tone: "urgent" });
   assert.equal(termProgress(item, "Asia/Shanghai", new Date("2026-11-11T12:30:00Z")).label, "已到期");
   assert.equal(durationLabel(90 * 60_000), "1 小时 30 分钟");
 });
@@ -31,6 +40,36 @@ test("future and invalid periods stay bounded and have clear labels", () => {
     percent: 100, label: "尚未开始", tone: "normal",
   });
   assert.equal(termProgress({ ...future, nextRenewal: "2026-12-03" }, "UTC", "2026-11-11").label, "暂无有效账期");
+  assert.equal(termProgress(future, "UTC", new Date(NaN)).tone, "muted");
+});
+
+test("progress color follows the unrounded remaining period ratio", () => {
+  const item = { periodStart: "2026-01-01", nextRenewal: "2026-04-11" } as Subscription;
+  const end = Date.parse("2026-04-11T00:00:00Z");
+  const duration = 100 * 86_400_000;
+  const cases = [
+    { ratio: 1, tone: "normal" },
+    { ratio: 0.50001, tone: "normal" },
+    { ratio: 0.5, tone: "warning" },
+    { ratio: 0.20001, tone: "warning" },
+    { ratio: 0.2, tone: "soon" },
+    { ratio: 0.10001, tone: "soon" },
+    { ratio: 0.1, tone: "urgent" },
+    { ratio: 0, tone: "expired" },
+  ];
+  for (const { ratio, tone } of cases) {
+    const progress = termProgress(item, "UTC", new Date(end - duration * ratio));
+    assert.equal(progress.tone, tone, `remaining ratio ${ratio}`);
+    assert.equal(progress.percent, Math.round(ratio * 100));
+  }
+});
+
+test("upcoming deadlines intensify progress color for short billing periods", () => {
+  const item = { periodStart: "2026-11-01", nextRenewal: "2026-11-11" } as Subscription;
+  assert.equal(termProgress(item, "UTC", "2026-11-03").tone, "normal");
+  assert.equal(termProgress(item, "UTC", "2026-11-04").tone, "soon");
+  assert.equal(termProgress(item, "UTC", "2026-11-10").tone, "urgent");
+  assert.equal(termProgress(item, "UTC", "2026-11-11").tone, "expired");
 });
 
 test("text number inputs reject missing and malformed amounts instead of saving zero", () => {

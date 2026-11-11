@@ -318,6 +318,7 @@ test("v1 migration preserves existing subscription and user data and is repeatab
     assert.equal(subscription.renewalPrice, 299);
     assert.equal(subscription.paidAmount, 199);
     assert.equal(subscription.trafficQuota, 200);
+    assert.equal(subscription.trafficDirection, "unknown");
     assert.equal(subscription.notes, "保留备注");
     assert.equal(subscription.autoRenew, false);
     assert.equal(subscription.bandwidthValue, null);
@@ -330,8 +331,61 @@ test("v1 migration preserves existing subscription and user data and is repeatab
     assert.equal(subscription.diskValue, null);
     assert.deepEqual(subscription.ipAddresses, []);
     assert.equal((db.prepare("SELECT due_date FROM reminder_deliveries").get() as any).due_date, "2027-01-01T00:00");
-    assert.deepEqual(db.prepare("SELECT version FROM schema_migrations ORDER BY version").all(), [{ version: 1 }, { version: 2 }, { version: 3 }, { version: 4 }]);
+    assert.deepEqual(db.prepare("SELECT version FROM schema_migrations ORDER BY version").all(), [{ version: 1 }, { version: 2 }, { version: 3 }, { version: 4 }, { version: 5 }]);
   } finally { db.close(); }
+});
+
+test("traffic direction persists, validates and survives edits from older clients", async () => {
+  const f = await fixture();
+  try {
+    const cookie = await f.login("admin@example.com", "test-admin-password-strong-2026");
+    const created = await f.request("/subscriptions", "POST", { ...input, trafficDirection: "one_way" }, cookie);
+    assert.equal(created.status, 201, await created.clone().text());
+    const item = (await created.json() as any).subscription;
+    assert.equal(item.trafficDirection, "one_way");
+
+    const update = (payload: object) => f.request(`/subscriptions/${item.id}`, "PUT", { ...input, ...payload }, cookie);
+    const twoWay = await update({ trafficDirection: "two_way" });
+    assert.equal(twoWay.status, 200, await twoWay.clone().text());
+    assert.equal((await twoWay.json() as any).subscription.trafficDirection, "two_way");
+    const oldClient = await update({ notes: "旧客户端只修改备注" });
+    assert.equal(oldClient.status, 200, await oldClient.clone().text());
+    assert.equal((await oldClient.json() as any).subscription.trafficDirection, "two_way");
+
+    for (const trafficDirection of [null, "inbound", "双向", 1])
+      assert.equal((await update({ trafficDirection })).status, 400);
+    const list = await f.request("/subscriptions", "GET", undefined, cookie).then(response => response.json()) as any;
+    assert.equal(list.subscriptions[0].trafficDirection, "two_way");
+    const cleared = await update({ trafficDirection: "unknown" });
+    assert.equal(cleared.status, 200);
+    assert.equal((await cleared.json() as any).subscription.trafficDirection, "unknown");
+    const defaulted = await f.request("/subscriptions", "POST", input, cookie);
+    assert.equal(defaulted.status, 201);
+    assert.equal((await defaulted.json() as any).subscription.trafficDirection, "unknown");
+  } finally { f.cleanup(); }
+});
+
+test("v5 migration marks existing traffic direction unknown and preserves v4 subscription details", async () => {
+  const f = await fixture();
+  try {
+    const cookie = await f.login("admin@example.com", "test-admin-password-strong-2026");
+    const created = await f.request("/subscriptions", "POST", {
+      ...input, cpuCores: 2, memoryValue: 4, memoryUnit: "GB", diskValue: 40, diskUnit: "GB",
+      ipAddresses: [{ type: "static", address: "203.0.113.7" }],
+    }, cookie);
+    assert.equal(created.status, 201);
+    const before = (await created.json() as any).subscription;
+    // Recreate a v4 schema so the production upgrade path is exercised directly.
+    f.runtime.db.exec("ALTER TABLE server_details DROP COLUMN traffic_direction; DELETE FROM schema_migrations WHERE version=5;");
+    migrate(f.runtime.db);
+    migrate(f.runtime.db);
+    const after = await f.request("/subscriptions", "GET", undefined, cookie).then(response => response.json()) as any;
+    assert.deepEqual(after.subscriptions[0], before);
+    const direction = f.runtime.db.prepare("SELECT traffic_direction FROM server_details WHERE subscription_id=?").get(before.id) as any;
+    assert.equal(direction.traffic_direction, "unknown");
+    assert.equal((f.runtime.db.prepare("SELECT COUNT(*) AS n FROM schema_migrations WHERE version=5").get() as any).n, 1);
+    assert.throws(() => f.runtime.db.prepare("UPDATE server_details SET traffic_direction='inbound' WHERE subscription_id=?").run(before.id));
+  } finally { f.cleanup(); }
 });
 
 test("structured server configuration and static or dynamic IPs round trip and survive older clients", async () => {
@@ -903,7 +957,7 @@ test("minute reminders wait for the matching local time and preserve midnight de
     assert.doesNotMatch(messages[1].subject, /已到续费时间/);
 
     // Recreate the old date-only database representation and its sent delivery.
-    for (const column of ["cpu_cores", "memory_value", "memory_unit", "disk_value", "disk_unit", "ip_addresses"])
+    for (const column of ["cpu_cores", "memory_value", "memory_unit", "disk_value", "disk_unit", "ip_addresses", "traffic_direction"])
       f.runtime.db.exec(`ALTER TABLE server_details DROP COLUMN ${column}`);
     f.runtime.db.exec("UPDATE subscriptions SET next_renewal=substr(next_renewal,1,10); UPDATE billing_periods SET starts_at=substr(starts_at,1,10),ends_at=substr(ends_at,1,10); UPDATE reminder_deliveries SET due_date=substr(due_date,1,10); DELETE FROM schema_migrations WHERE version>=3;");
     migrate(f.runtime.db);
