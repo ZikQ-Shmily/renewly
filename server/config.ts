@@ -54,7 +54,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   const port = Number(env.PORT || 3000);
   if (!Number.isInteger(port) || port < 1 || port > 65535)
     throw new Error("Invalid PORT.");
-  const interval = Number(env.REMINDER_INTERVAL_MS || 900_000);
+  const interval = Number(env.REMINDER_INTERVAL_MS || 60_000);
   return {
     dataDir,
     dbPath: join(dataDir, "renewly.sqlite"),
@@ -69,7 +69,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     bootstrapPassword: env.BOOTSTRAP_ADMIN_PASSWORD || "",
     reminderIntervalMs: Number.isFinite(interval)
       ? Math.max(60_000, interval)
-      : 900_000,
+      : 60_000,
     clientDir: resolve(env.CLIENT_DIR || "dist/client"),
   };
 }

@@ -33,6 +33,7 @@ import {
 import { createFx } from "./fx.js";
 import { createMail, type SendMail } from "./mail.js";
 import { createReminders } from "./reminders.js";
+import { dateTimeInstant } from "../shared/datetime.js";
 
 class ApiError extends Error {
   constructor(
@@ -317,10 +318,27 @@ export async function createApp(options: AppOptions = {}) {
     return c.json({ ok: true });
   });
   app.get("/api/v1/me", (c) => c.json({ user: publicUser(c.get("user")) }));
+  function validatePeriod(start: string, end: string, timeZone: string) {
+    let startsAt: number, endsAt: number;
+    try {
+      startsAt = dateTimeInstant(start, timeZone);
+      endsAt = dateTimeInstant(end, timeZone);
+    } catch {
+      return fail(400, "INVALID_DATE_TIME", "日期时间在当前账户时区无效，请检查日期、小时和分钟（含夏令时调整）。");
+    }
+    if (endsAt <= startsAt) fail(400, "INVALID_PERIOD", "账期截止时间需要晚于开始时间。");
+    return { startsAt, endsAt };
+  }
+  function validateStoredTimeZone(owner: string, timeZone: string) {
+    const values = db.prepare("SELECT next_renewal AS value FROM subscriptions WHERE user_id=? UNION SELECT starts_at AS value FROM billing_periods WHERE user_id=? UNION SELECT ends_at AS value FROM billing_periods WHERE user_id=?").all(owner, owner, owner) as { value: string }[];
+    try { values.forEach(({ value }) => dateTimeInstant(value, timeZone)); }
+    catch { fail(400, "INVALID_TIME_ZONE_SCHEDULE", "已有账期时间在此时区无效，请先核对夏令时切换日期的小时和分钟。"); }
+  }
   app.put("/api/v1/me/preferences", async (c) => {
     const v = z
       .object({ currency: z.enum(currencies), timeZone: timeZoneSchema })
       .parse(await c.req.json());
+    validateStoredTimeZone(userId(c), v.timeZone);
     db.prepare("UPDATE users SET currency=?,time_zone=? WHERE id=?").run(
       v.currency,
       v.timeZone,
@@ -344,6 +362,7 @@ export async function createApp(options: AppOptions = {}) {
       owner = userId(c),
       now = clock().toISOString();
     const reminderDays = v.reminderDays ?? getPrefs(owner).reminderDays;
+    validatePeriod(v.periodStart, v.nextRenewal, c.get("user").time_zone);
     db.transaction(() => {
       db.prepare(
         "INSERT INTO subscriptions(id,user_id,type_key,name,vendor,website,currency,purchase_minor,renewal_minor,billing_months,billing_anchor_day,next_renewal,status,notes,reminder_days,created_at,updated_at,auto_renew) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
@@ -359,8 +378,8 @@ export async function createApp(options: AppOptions = {}) {
         Math.round(v.renewalPrice * 100),
         v.billingMonths,
         Math.max(
-          Number(v.periodStart.slice(8)),
-          Number(v.nextRenewal.slice(8)),
+          Number(v.periodStart.slice(8, 10)),
+          Number(v.nextRenewal.slice(8, 10)),
         ),
         v.nextRenewal,
         v.status,
@@ -403,6 +422,8 @@ export async function createApp(options: AppOptions = {}) {
     const old = owned(c.req.param("id"), userId(c)),
       v = subscriptionSchema.parse(await c.req.json()),
       now = clock().toISOString();
+    const timeZone = c.get("user").time_zone;
+    const instants = validatePeriod(v.periodStart, v.nextRenewal, timeZone);
     const period = db
       .prepare(
         "SELECT * FROM billing_periods WHERE subscription_id=? AND user_id=? ORDER BY id DESC LIMIT 1",
@@ -413,7 +434,7 @@ export async function createApp(options: AppOptions = {}) {
         "SELECT MAX(ends_at) AS ends_at FROM billing_periods WHERE subscription_id=? AND user_id=? AND id!=?",
       )
       .get(old.id, userId(c), period.id) as any;
-    if (previous.ends_at && v.periodStart < previous.ends_at)
+    if (previous.ends_at && instants.startsAt < dateTimeInstant(previous.ends_at, timeZone))
       fail(
         400,
         "OVERLAPPING_PERIOD",
@@ -424,8 +445,8 @@ export async function createApp(options: AppOptions = {}) {
       v.nextRenewal !== old.next_renewal ||
       v.billingMonths !== old.billing_months
         ? Math.max(
-            Number(v.periodStart.slice(8)),
-            Number(v.nextRenewal.slice(8)),
+            Number(v.periodStart.slice(8, 10)),
+            Number(v.nextRenewal.slice(8, 10)),
           )
         : old.billing_anchor_day;
     db.transaction(() => {
@@ -502,7 +523,8 @@ export async function createApp(options: AppOptions = {}) {
           nextRenewal: dateSchema,
         })
         .parse(await c.req.json());
-    if (v.periodStart < old.next_renewal || v.nextRenewal <= v.periodStart)
+    const instants = validatePeriod(v.periodStart, v.nextRenewal, c.get("user").time_zone);
+    if (instants.startsAt < dateTimeInstant(old.next_renewal, c.get("user").time_zone))
       fail(
         400,
         "INVALID_PERIOD",
@@ -572,6 +594,7 @@ export async function createApp(options: AppOptions = {}) {
         .parse(await c.req.json()),
       old = getPrefs(userId(c)),
       changed = old.recipientEmail !== v.recipientEmail;
+    validateStoredTimeZone(userId(c), v.timeZone);
     db.transaction(() => {
       db.prepare(
         "UPDATE notification_settings SET recipient_email=?,email_verified=?,enabled=?,reminder_days=? WHERE user_id=?",

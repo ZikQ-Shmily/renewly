@@ -53,4 +53,13 @@ export function migrate(db: DB) {
     `);
     db.prepare("INSERT INTO schema_migrations VALUES(2,?)").run(new Date().toISOString());
   })();
+  if ((version.version || 0) < 3) db.transaction(() => {
+    db.exec(`
+      UPDATE subscriptions SET next_renewal=next_renewal || 'T00:00' WHERE length(next_renewal)=10;
+      UPDATE billing_periods SET starts_at=starts_at || 'T00:00' WHERE length(starts_at)=10;
+      UPDATE billing_periods SET ends_at=ends_at || 'T00:00' WHERE length(ends_at)=10;
+      UPDATE reminder_deliveries SET due_date=due_date || 'T00:00' WHERE length(due_date)=10;
+    `);
+    db.prepare("INSERT INTO schema_migrations VALUES(3,?)").run(new Date().toISOString());
+  })();
 }

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { DB } from "./db.js";
+import { normalizeDateTime, dateTimeInstant, addDateTimeMonths, localDateTime } from "../shared/datetime.js";
 export const currencies = ["CNY", "USD", "EUR", "GBP"] as const;
 export const dayMs = 86_400_000;
 export function validDate(s: string) {
@@ -9,7 +10,13 @@ export function validDate(s: string) {
     new Date(`${s}T00:00:00Z`).toISOString().slice(0, 10) === s
   );
 }
-export const dateSchema = z.string().refine(validDate, "日期格式无效");
+export const dateSchema = z.string().transform((value, context) => {
+  try { return normalizeDateTime(value); }
+  catch {
+    context.addIssue({ code: "custom", message: "日期时间格式无效，请填写到小时和分钟。" });
+    return z.NEVER;
+  }
+});
 export const daysSchema = z
   .array(z.number().int().min(0).max(365))
   .max(12)
@@ -84,15 +91,7 @@ export const subscriptionSchema = z
   });
 export type SubscriptionInput = z.infer<typeof subscriptionSchema>;
 export function localDate(now: Date, timeZone: string) {
-  const p = new Intl.DateTimeFormat("en-CA", {
-    timeZone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(now);
-  return ["year", "month", "day"]
-    .map((k) => p.find((x) => x.type === k)!.value)
-    .join("-");
+  return localDateTime(now, timeZone).slice(0, 10);
 }
 export function validTimeZone(v: string) {
   try {
@@ -109,20 +108,30 @@ export const timeZoneSchema = z
 export function addMonths(
   date: string,
   months: number,
-  anchorDay = Number(date.slice(8)),
+  anchorDay = Number(date.slice(8, 10)),
 ) {
-  const d = new Date(`${date}T00:00:00Z`),
-    n = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + months, 1));
-  const last = new Date(
-    Date.UTC(n.getUTCFullYear(), n.getUTCMonth() + 1, 0),
-  ).getUTCDate();
-  n.setUTCDate(Math.min(anchorDay, last));
-  return n.toISOString().slice(0, 10);
+  return addDateTimeMonths(date, months, anchorDay);
 }
 export function dateDiff(a: string, b: string) {
   return Math.round(
-    (Date.parse(`${a}T00:00:00Z`) - Date.parse(`${b}T00:00:00Z`)) / dayMs,
+    (Date.parse(`${a.slice(0, 10)}T00:00:00Z`) - Date.parse(`${b.slice(0, 10)}T00:00:00Z`)) / dayMs,
   );
+}
+export function shiftCalendarDays(value: string, days: number) {
+  const normalized = normalizeDateTime(value);
+  const date = new Date(`${normalized}Z`);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 16);
+}
+/** Calendar recurrences in a DST gap run at the next valid local minute. */
+export function recurringInstant(value: string, timeZone: string) {
+  const normalized = normalizeDateTime(value);
+  const localEpoch = Date.parse(`${normalized}Z`);
+  for (let minute = 0; minute <= 26 * 60; minute++) {
+    const candidate = new Date(localEpoch + minute * 60_000).toISOString().slice(0, 16);
+    try { return dateTimeInstant(candidate, timeZone); } catch { /* Try the next minute in a DST gap. */ }
+  }
+  throw new RangeError("当前时区没有有效的提醒时刻。");
 }
 export function serializeSubscription(db: DB, row: any, timeZone?: string, now = new Date()) {
   const details = db
@@ -134,11 +143,12 @@ export function serializeSubscription(db: DB, row: any, timeZone?: string, now =
     )
     .get(row.id, row.user_id) as any;
   const zone = timeZone || (db.prepare("SELECT time_zone FROM users WHERE id=?").get(row.user_id) as { time_zone: string }).time_zone;
-  const today = localDate(now, zone);
+  const instant = (value: string) => dateTimeInstant(value, zone);
+  const timestamp = now.getTime();
   const periods = db.prepare("SELECT starts_at,ends_at FROM billing_periods WHERE subscription_id=? AND user_id=? ORDER BY starts_at DESC,id DESC").all(row.id, row.user_id) as { starts_at: string; ends_at: string }[];
-  const current = periods.find(p => p.starts_at <= today && p.ends_at > today);
-  const upcoming = periods.filter(p => p.starts_at > today).at(-1);
-  const expired = periods.filter(p => p.ends_at <= today).sort((a,b) => b.ends_at.localeCompare(a.ends_at))[0];
+  const current = periods.find(p => instant(p.starts_at) <= timestamp && instant(p.ends_at) > timestamp);
+  const upcoming = periods.filter(p => instant(p.starts_at) > timestamp).at(-1);
+  const expired = periods.filter(p => instant(p.ends_at) <= timestamp).sort((a,b) => instant(b.ends_at) - instant(a.ends_at))[0];
   const serializePeriod = (p: typeof current) => p ? { startsAt: p.starts_at, endsAt: p.ends_at } : null;
   return {
     id: row.id,
@@ -194,8 +204,9 @@ export function totals(
 ) {
   const all = listSubscriptions(db, userId, timeZone, now),
     active = all.filter((s) => s.status === "active"),
-    today = localDate(now, timeZone),
+    timestamp = now.getTime(),
     missing = new Set<string>();
+  const instant = (value: string) => dateTimeInstant(value, timeZone);
   const convert = (value: number, from: string) => {
     if (from === target) return value;
     if (rates[from] && rates[target])
@@ -208,13 +219,13 @@ export function totals(
     upcomingTotal = 0;
   for (const s of active) {
     annualTotal += convert((s.renewalPrice * 12) / s.billingMonths, s.currency);
-    if (s.nextRenewal >= today) {
+    if (instant(s.nextRenewal) >= timestamp) {
       for (let i = 0; i < 36; i++) {
         const due =
           i === 0
             ? s.nextRenewal
             : addMonths(s.nextRenewal, i * s.billingMonths, s.billingAnchorDay);
-        if (dateDiff(due, today) > 30) break;
+        if (recurringInstant(due, timeZone) - timestamp > 30 * dayMs) break;
         upcomingTotal += convert(s.renewalPrice, s.currency);
       }
     }
@@ -229,15 +240,15 @@ export function totals(
       0,
       Math.min(
         1,
-        dateDiff(p.ends_at, today) / dateDiff(p.ends_at, p.starts_at),
+        (instant(p.ends_at) - timestamp) / (instant(p.ends_at) - instant(p.starts_at)),
       ),
     );
     remainingValue += convert((p.paid_minor / 100) * fraction, p.currency);
   }
   const nextDue = active.filter(
     (s) =>
-      dateDiff(s.nextRenewal, today) >= 0 &&
-      dateDiff(s.nextRenewal, today) <= 30,
+      instant(s.nextRenewal) >= timestamp &&
+      instant(s.nextRenewal) - timestamp <= 30 * dayMs,
   );
   const round = (v: number) => Math.round((v + Number.EPSILON) * 100) / 100;
   return {

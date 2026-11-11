@@ -3,7 +3,8 @@ import type { DB } from "./db.js";
 import type { MailService } from "./mail.js";
 import { htmlEscape } from "./mail.js";
 import type { Config } from "./config.js";
-import { localDate, dateDiff } from "./domain.js";
+import { localDate, dateDiff, recurringInstant, shiftCalendarDays } from "./domain.js";
+import { formatDateTime } from "../shared/datetime.js";
 
 export function createReminders(db: DB, mail: MailService, config: Config) {
   let running = false;
@@ -50,14 +51,17 @@ export function createReminders(db: DB, mail: MailService, config: Config) {
         .all() as any[];
 
       for (const subscription of subscriptions) {
-        const days = dateDiff(
-          subscription.next_renewal,
-          localDate(now, subscription.time_zone),
-        );
-        if (
-          !(JSON.parse(subscription.reminder_days) as number[]).includes(days)
-        )
-          continue;
+        try {
+          if (now.getTime() >= recurringInstant(shiftCalendarDays(subscription.next_renewal, 1), subscription.time_zone)) continue;
+        } catch { continue; }
+        for (const days of JSON.parse(subscription.reminder_days) as number[]) {
+        const scheduled = shiftCalendarDays(subscription.next_renewal, -days);
+        let opens: number, closes: number;
+        try {
+          opens = recurringInstant(scheduled, subscription.time_zone);
+          closes = recurringInstant(shiftCalendarDays(scheduled, 1), subscription.time_zone);
+        } catch { continue; }
+        if (now.getTime() < opens || now.getTime() >= closes) continue;
         db.prepare(
           `
           INSERT OR IGNORE INTO reminder_deliveries(
@@ -74,6 +78,7 @@ export function createReminders(db: DB, mail: MailService, config: Config) {
           timestamp,
           timestamp,
         );
+        }
       }
 
       // Retry queued deliveries independently of today's reminder-rule match.
@@ -110,11 +115,16 @@ export function createReminders(db: DB, mail: MailService, config: Config) {
           )
         )
           continue;
+        let scheduled: number, expires: number;
+        try {
+          scheduled = recurringInstant(shiftCalendarDays(delivery.due_date, -delivery.days_before), delivery.time_zone);
+          expires = recurringInstant(shiftCalendarDays(delivery.due_date, delivery.days_before === 0 ? 1 : 0), delivery.time_zone);
+        } catch { continue; }
+        if (now.getTime() < scheduled || now.getTime() >= expires) continue;
         const days = dateDiff(
           delivery.due_date,
           localDate(now, delivery.time_zone),
         );
-        if (days < 0) continue;
 
         const claim = db
           .prepare(
@@ -126,7 +136,8 @@ export function createReminders(db: DB, mail: MailService, config: Config) {
           .run(timestamp, delivery.id, delivery.attempts);
         if (!claim.changes) continue;
 
-        const when = days === 0 ? "今天到期" : `${days}天后到期`;
+        const dueInstant = recurringInstant(delivery.due_date, delivery.time_zone);
+        const when = now.getTime() >= dueInstant ? "已到续费时间" : days <= 0 ? "今天到期" : `${days}天后到期`;
         const price = new Intl.NumberFormat("zh-CN", {
           style: "currency",
           currency: delivery.currency,
@@ -134,14 +145,15 @@ export function createReminders(db: DB, mail: MailService, config: Config) {
         const instruction = delivery.auto_renew
           ? "此订阅已标记商家自动续费，请检查余额并确认商家扣款成功，再在续记登记。"
           : "请前往商家完成续费，并在续记登记。";
-        const text = `${delivery.name} ${when}。\n商家：${delivery.vendor}\n续费日期：${delivery.due_date}\n续费价格：${price}\n${instruction}\n${config.appUrl}`;
+        const dueTime = `${formatDateTime(delivery.due_date)}（${delivery.time_zone}）`;
+        const text = `${delivery.name} ${when}。\n商家：${delivery.vendor}\n续费时间：${dueTime}\n续费价格：${price}\n${instruction}\n${config.appUrl}`;
 
         try {
           await mail.send({
             to: delivery.recipient_email,
             subject: `续记 · ${delivery.name} ${when}`,
             text,
-            html: `<h2>${htmlEscape(delivery.name)} ${when}</h2><p>商家：${htmlEscape(delivery.vendor)}</p><p>续费日期：${delivery.due_date}</p><p>续费价格：${htmlEscape(price)}</p><p>${htmlEscape(instruction)}</p><a href="${htmlEscape(config.appUrl)}">打开续记</a>`,
+            html: `<h2>${htmlEscape(delivery.name)} ${when}</h2><p>商家：${htmlEscape(delivery.vendor)}</p><p>续费时间：${htmlEscape(dueTime)}</p><p>续费价格：${htmlEscape(price)}</p><p>${htmlEscape(instruction)}</p><a href="${htmlEscape(config.appUrl)}">打开续记</a>`,
             idempotencyKey: `renewly-${delivery.id}`,
           });
           db.prepare(
