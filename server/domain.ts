@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isIP } from "node:net";
 import type { DB } from "./db.js";
 import { normalizeDateTime, dateTimeInstant, addDateTimeMonths, localDateTime } from "../shared/datetime.js";
 export const currencies = ["CNY", "USD", "EUR", "GBP"] as const;
@@ -30,6 +31,14 @@ const money = z
     (v) => Math.abs(v * 100 - Math.round(v * 100)) < 0.00001,
     "价格最多保留两位小数",
   );
+const serverNumber = z.number().finite().positive().max(1e9).nullable();
+const ipAddressSchema = z.object({
+  type: z.enum(["static", "dynamic"]),
+  address: z.string().trim().max(128),
+}).refine(
+  value => (value.type === "dynamic" && value.address === "") || isIP(value.address) !== 0,
+  { message: "请填写有效的 IPv4 或 IPv6 地址。", path: ["address"] },
+);
 export const subscriptionSchema = z
   .object({
     type: z.literal("cloud"),
@@ -58,6 +67,12 @@ export const subscriptionSchema = z
     nextRenewal: dateSchema,
     region: z.string().trim().max(100).default(""),
     model: z.string().trim().max(200).default(""),
+    cpuCores: serverNumber.default(null),
+    memoryValue: serverNumber.default(null),
+    memoryUnit: z.enum(["MB", "GB"]).default("GB"),
+    diskValue: serverNumber.default(null),
+    diskUnit: z.enum(["GB", "TB"]).default("GB"),
+    ipAddresses: z.array(ipAddressSchema).max(20, "每台服务器最多记录 20 个 IP 地址。").default([]),
     trafficMode: z.enum(["limited", "unlimited", "unknown"]).default("unknown"),
     trafficQuota: z.number().finite().positive().nullable().optional(),
     trafficUnit: z.enum(["GB", "TB"]).default("GB"),
@@ -133,6 +148,16 @@ export function recurringInstant(value: string, timeZone: string) {
   }
   throw new RangeError("当前时区没有有效的提醒时刻。");
 }
+export function serverConfiguration(details: any) {
+  return {
+    cpuCores: details?.cpu_cores ?? null,
+    memoryValue: details?.memory_value ?? null,
+    memoryUnit: details?.memory_unit || "GB",
+    diskValue: details?.disk_value ?? null,
+    diskUnit: details?.disk_unit || "GB",
+    ipAddresses: JSON.parse(details?.ip_addresses || "[]") as { type: "static" | "dynamic"; address: string }[],
+  };
+}
 export function serializeSubscription(db: DB, row: any, timeZone?: string, now = new Date()) {
   const details = db
     .prepare("SELECT * FROM server_details WHERE subscription_id=?")
@@ -168,6 +193,7 @@ export function serializeSubscription(db: DB, row: any, timeZone?: string, now =
     progressPeriod: serializePeriod(current || upcoming || expired),
     region: details?.region || "",
     model: details?.model || "",
+    ...serverConfiguration(details),
     trafficMode: details?.traffic_mode || "unknown",
     trafficQuota:
       details?.traffic_quota_bytes == null
@@ -201,8 +227,9 @@ export function totals(
   target: string,
   rates: Record<string, number>,
   now = new Date(),
+  typeKey?: string,
 ) {
-  const all = listSubscriptions(db, userId, timeZone, now),
+  const all = listSubscriptions(db, userId, timeZone, now).filter(subscription => !typeKey || subscription.type === typeKey),
     active = all.filter((s) => s.status === "active"),
     timestamp = now.getTime(),
     missing = new Set<string>();
@@ -230,11 +257,9 @@ export function totals(
       }
     }
   }
-  const periods = db
-    .prepare(
-      "SELECT p.* FROM billing_periods p JOIN subscriptions s ON s.id=p.subscription_id WHERE p.user_id=? AND s.status!='archived'",
-    )
-    .all(userId) as any[];
+  const periods = db.prepare(
+    "SELECT p.* FROM billing_periods p JOIN subscriptions s ON s.id=p.subscription_id WHERE p.user_id=? AND s.user_id=? AND s.status!='archived'" + (typeKey ? " AND s.type_key=?" : ""),
+  ).all(...(typeKey ? [userId, userId, typeKey] : [userId, userId])) as any[];
   for (const p of periods) {
     const fraction = Math.max(
       0,

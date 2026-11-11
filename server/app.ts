@@ -25,6 +25,7 @@ import {
   dateSchema,
   daysSchema,
   listSubscriptions,
+  serverConfiguration,
   serializeSubscription,
   subscriptionSchema,
   timeZoneSchema,
@@ -389,7 +390,7 @@ export async function createApp(options: AppOptions = {}) {
         now,
         Number(v.autoRenew),
       );
-      db.prepare("INSERT INTO server_details(subscription_id,region,model,traffic_mode,traffic_quota_bytes,traffic_unit,bandwidth_value,bandwidth_unit) VALUES(?,?,?,?,?,?,?,?)").run(
+      db.prepare("INSERT INTO server_details(subscription_id,region,model,traffic_mode,traffic_quota_bytes,traffic_unit,bandwidth_value,bandwidth_unit,cpu_cores,memory_value,memory_unit,disk_value,disk_unit,ip_addresses) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)").run(
         id,
         v.region,
         v.model,
@@ -400,6 +401,12 @@ export async function createApp(options: AppOptions = {}) {
         v.trafficUnit,
         v.bandwidthValue,
         v.bandwidthUnit,
+        v.cpuCores,
+        v.memoryValue,
+        v.memoryUnit,
+        v.diskValue,
+        v.diskUnit,
+        JSON.stringify(v.ipAddresses),
       );
       db.prepare(
         "INSERT INTO billing_periods(subscription_id,user_id,starts_at,ends_at,paid_minor,currency,created_at) VALUES(?,?,?,?,?,?,?)",
@@ -419,9 +426,12 @@ export async function createApp(options: AppOptions = {}) {
     );
   });
   app.put("/api/v1/subscriptions/:id", async (c) => {
-    const old = owned(c.req.param("id"), userId(c)),
-      v = subscriptionSchema.parse(await c.req.json()),
-      now = clock().toISOString();
+    const old = owned(c.req.param("id"), userId(c));
+    const details = db.prepare("SELECT * FROM server_details WHERE subscription_id=?").get(old.id);
+    const payload = z.object({}).catchall(z.unknown()).parse(await c.req.json());
+    // Older clients omit the structured configuration and IP fields.
+    const v = subscriptionSchema.parse({ ...serverConfiguration(details), ...payload });
+    const now = clock().toISOString();
     const timeZone = c.get("user").time_zone;
     const instants = validatePeriod(v.periodStart, v.nextRenewal, timeZone);
     const period = db
@@ -471,7 +481,7 @@ export async function createApp(options: AppOptions = {}) {
         userId(c),
       );
       db.prepare(
-        "UPDATE server_details SET region=?,model=?,traffic_mode=?,traffic_quota_bytes=?,traffic_unit=?,bandwidth_value=?,bandwidth_unit=? WHERE subscription_id=?",
+        "UPDATE server_details SET region=?,model=?,traffic_mode=?,traffic_quota_bytes=?,traffic_unit=?,bandwidth_value=?,bandwidth_unit=?,cpu_cores=?,memory_value=?,memory_unit=?,disk_value=?,disk_unit=?,ip_addresses=? WHERE subscription_id=?",
       ).run(
         v.region,
         v.model,
@@ -482,6 +492,12 @@ export async function createApp(options: AppOptions = {}) {
         v.trafficUnit,
         v.bandwidthValue,
         v.bandwidthUnit,
+        v.cpuCores,
+        v.memoryValue,
+        v.memoryUnit,
+        v.diskValue,
+        v.diskUnit,
+        JSON.stringify(v.ipAddresses),
         old.id,
       );
       db.prepare(
@@ -559,6 +575,7 @@ export async function createApp(options: AppOptions = {}) {
   });
   app.get("/api/v1/exchange-rates", async (c) => c.json(await fx.get()));
   app.get("/api/v1/dashboard", async (c) => {
+    const typeKey = z.enum(["cloud"]).optional().parse(c.req.query("type"));
     const target = z
         .enum(currencies)
         .parse(c.req.query("currency") || c.get("user").currency),
@@ -571,6 +588,7 @@ export async function createApp(options: AppOptions = {}) {
         target,
         rates.rates,
         clock(),
+        typeKey,
       ),
       rates: {
         date: rates.date,

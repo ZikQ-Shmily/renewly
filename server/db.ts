@@ -62,4 +62,15 @@ export function migrate(db: DB) {
     `);
     db.prepare("INSERT INTO schema_migrations VALUES(3,?)").run(new Date().toISOString());
   })();
+  if ((version.version || 0) < 4) db.transaction(() => {
+    db.exec(`
+      ALTER TABLE server_details ADD COLUMN cpu_cores REAL CHECK(cpu_cores > 0);
+      ALTER TABLE server_details ADD COLUMN memory_value REAL CHECK(memory_value > 0);
+      ALTER TABLE server_details ADD COLUMN memory_unit TEXT NOT NULL DEFAULT 'GB' CHECK(memory_unit IN ('MB','GB'));
+      ALTER TABLE server_details ADD COLUMN disk_value REAL CHECK(disk_value > 0);
+      ALTER TABLE server_details ADD COLUMN disk_unit TEXT NOT NULL DEFAULT 'GB' CHECK(disk_unit IN ('GB','TB'));
+      ALTER TABLE server_details ADD COLUMN ip_addresses TEXT NOT NULL DEFAULT '[]';
+    `);
+    db.prepare("INSERT INTO schema_migrations VALUES(4,?)").run(new Date().toISOString());
+  })();
 }
