@@ -2042,7 +2042,7 @@ fieldset {
 .term-track { height: 4px; background: #2b354c; border-radius: 3px; flex: 1; overflow: hidden; }
 .term-track > span { display: block; height: 100%; background: linear-gradient(100deg,#5889f0,#9d97df); border-radius: 3px; }
 .term-progress.soon .term-track > span { background: #cf9c6f; }
-.term-note { flex: none; min-width: 101px; text-align: right; font-variant-numeric: tabular-nums; }
+.term-note { flex: none; min-width: 4ch; text-align: right; font-variant-numeric: tabular-nums; }
 input[type="datetime-local"] { min-width: 0; width: 100%; }
 .term-progress.soon .term-note { color: #edb68c; }
 .term-progress.expired .term-note { color: #f19a9e; }
@@ -2080,7 +2080,6 @@ html[data-input-mode="keyboard"] .switch-control input:focus + .switch-track { o
   .subscription-price { order: 5; text-align: right; }
   .mobile-cell-label { display: inline; color: var(--muted); }
   .term-progress { margin-left: 0; gap: 7px; }
-  .term-note { min-width: 90px; }
 }
 @media (max-width: 700px) {
   .price-fields { grid-template-columns: 1fr 1fr; }
