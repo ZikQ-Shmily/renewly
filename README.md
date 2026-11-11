@@ -69,7 +69,7 @@ npm run build
 
 ## 云服务器部署
 
-1. 在仓库的 **Actions → CI & Container** 查看成功构建，复制摘要中的固定镜像引用。
+1. 在仓库的 **Actions → CI & Container** 确认默认分支构建成功，使用 `ghcr.io/zikq-shmily/renewly:latest`。
 2. 在装有 Docker Engine 和 Compose v2 的云服务器上，准备 `compose.yaml`、`.env` 与 `deploy/`。
 3. 配置真实的 `APP_URL`、应用密钥、管理员账号和 `RENEWLY_IMAGE`，运行 `docker compose up -d --wait`。
 4. 配置 HTTPS 反向代理，再由管理员登录配置邮件服务。
@@ -84,7 +84,7 @@ v3 数据库结构会在应用启动时自动增量迁移，保留已有用户�
 
 推送到 `main`、推送 `v*` 标签或手动运行工作流，将执行类型检查、测试与构建。全部通过后，GitHub Actions 构建并推送 GHCR 镜像。Pull request 只运行检查，不发布镜像。
 
-生产部署使用镜像摘要 `@sha256:…` 或完整提交标签 `:sha-<40 位提交号>`，便于追溯版本。另有手动 **Deploy server (manual)** 工作流，需先配置 `production` 环境、部署 Secrets 和服务器文件；默认不会自动连接未配置的服务器。
+默认分支构建成功后会更新 `latest` 标签。服务器可通过 `bash deploy/update.sh ghcr.io/zikq-shmily/renewly:latest` 拉取并切换到最新镜像，也支持使用摘要 `@sha256:…` 或完整提交标签 `:sha-<40 位提交号>` 指定版本。另有手动 **Deploy server (manual)** 工作流，需先配置 `production` 环境、部署 Secrets 和服务器文件。
 
 ## 数据与邮件
 
