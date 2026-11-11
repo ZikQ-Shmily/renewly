@@ -13,13 +13,13 @@ cp .env.example .env
 chmod 600 .env
 ```
 
-在仓库 Actions 的 **CI & Container** 中选择成功运行，工作流摘要会给出类似下面的镜像摘要；将其写入 `.env` 的 `RENEWLY_IMAGE`：
+在仓库 Actions 的 **CI & Container** 中确认默认分支构建成功，在 `.env` 中使用 `latest` 标签：
 
 ```dotenv
-RENEWLY_IMAGE=ghcr.io/zikq-shmily/renewly@sha256:这里替换为实际64位摘要
+RENEWLY_IMAGE=ghcr.io/zikq-shmily/renewly:latest
 ```
 
-摘要来自实际构建结果，示例不能直接运行。也可使用对应提交的完整 `sha-<40位提交号>` 标签。
+默认分支每次构建成功都会更新 `latest`。也可使用工作流摘要中的 `@sha256:…` 或对应提交的完整 `sha-<40位提交号>` 标签指定版本。
 
 ## 2. 配置与首次启动
 
@@ -40,7 +40,7 @@ docker run --rm node:24-bookworm-slim node -e "process.stdout.write(require('nod
 | `ALLOW_REGISTRATION` | 是否允许普通用户注册，默认 `true` |
 | `COOKIE_SECURE` | 生产 HTTPS 使用 `true` |
 | `TRUST_PROXY` | 默认 `false`，在单个可信反向代理入口且应用端口仅限本机访问时设置为 `true` |
-| `RENEWLY_IMAGE` | 成功构建的固定镜像版本或摘要 |
+| `RENEWLY_IMAGE` | `latest` 标签、完整提交标签或镜像摘要 |
 | `RENEWLY_DATA_VOLUME` | 默认 `renewly-data`，更新时保持相同名称 |
 
 Compose 默认只将应用端口绑定至 `127.0.0.1:3000`，适合本机 Nginx 或其他反向代理。数据库目录在容器内为 `/app/data`，由命名数据卷持久化。应用以非 root 用户运行；数据库与备份目录均位于可写数据卷，容器其他文件系统为只读。
@@ -74,24 +74,24 @@ curl --fail http://127.0.0.1:3000/api/health
 
 ## 4. 更新应用
 
-先将服务器上的部署文件更新至目标代码版本，保留自己的 `.env` 与数据卷。取得已通过检查的新镜像摘要后执行：
+先将服务器上的部署文件更新至目标代码版本，保留自己的 `.env` 与数据卷。默认分支的新镜像构建成功后执行：
 
 ```bash
 cd /opt/renewly
-bash deploy/update.sh ghcr.io/zikq-shmily/renewly@sha256:实际镜像摘要
+bash deploy/update.sh ghcr.io/zikq-shmily/renewly:latest
 ```
 
 更新脚本会：
 
-1. 拉取固定镜像，并检查持久化数据库是否存在。
+1. 保存当前容器的实际镜像 ID，拉取指定镜像，并检查持久化数据库是否存在。
 2. 若已有数据库，通过 CLI 生成在线备份。
 3. 停止旧应用，执行新版本数据库迁移。
 4. 启动新应用并等待健康检查。
-5. 成功后保存当前镜像引用；健康检查失败时尝试启动上一应用镜像。
+5. 成功后保存当前镜像引用；健康检查失败时使用更新前保存的镜像 ID 启动上一应用镜像。
 
 脚本不会自动还原数据库。迁移失败时会停止部署并保留备份；涉及不兼容表结构的版本，应按该版本迁移说明选择恢复方式。镜像回退不能替代数据库恢复。
 
-`.deploy-state/previous-image` 记录上一次镜像引用。若发现 `.deploy-lock`，先确认没有更新任务运行；确定为中断残留后再清理该空目录。
+`.deploy-state/previous-image` 记录上一次容器的本机镜像 ID，便于在 `latest` 标签更新后定位原版本。若发现 `.deploy-lock`，先确认没有更新任务运行；确定为中断残留后再清理该空目录。
 
 ## 5. 数据库备份与恢复
 
@@ -123,7 +123,7 @@ docker compose cp app:/app/data/backups/manual.sqlite ./backups/manual.sqlite
 
 可选 Environment variable：`DEPLOY_PATH`，默认 `/opt/renewly`。目录仅允许字母、数字、下划线、点、短横线与斜线。服务器应已准备 `.env`、Compose、更新脚本和镜像读取权限。
 
-选择成功构建的镜像摘要或完整提交标签，手动运行工作流并按环境规则审批。工作流仅使用严格主机密钥检查连接该服务器，不使用自动接受未知主机密钥。
+填写 `ghcr.io/zikq-shmily/renewly:latest`、成功构建的镜像摘要或完整提交标签，手动运行工作流并按环境规则审批。工作流使用严格主机密钥检查连接该服务器。
 
 ## 官方参考
 
