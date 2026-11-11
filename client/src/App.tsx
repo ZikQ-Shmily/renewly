@@ -1,12 +1,8 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   AlarmClock,
-  ArrowRight,
-  ArrowUpRight,
   Bell,
-  CalendarClock,
   Cloud,
-  Hourglass,
   Layers,
   LoaderCircle,
   LogOut,
@@ -15,8 +11,6 @@ import {
   Search,
   Server,
   Settings2,
-  SlidersHorizontal,
-  Wallet,
   Users,
 } from "lucide-react";
 import { ApiError, api, errorMessage, json } from "./api";
@@ -26,7 +20,8 @@ import { SubscriptionEditor, RenewalForm } from "./SubscriptionEditor";
 import { AdminMail, ReminderSettings } from "./Settings";
 import { Select } from "./Select";
 import { UserManagement } from "./Users";
-import { SubscriptionColumns, SubscriptionSummary, TermProgress } from "./SubscriptionSummary";
+import { TermProgress } from "./SubscriptionSummary";
+import { DashboardMetrics, RatesFooter } from "./DashboardMetrics";
 import type {
   AuthConfig,
   Currency,
@@ -44,23 +39,28 @@ import {
   trafficLabel,
   bandwidthLabel,
   formatDateTime,
+  configurationLabel,
 } from "./utils";
 
 type Page = "overview" | "manage" | "editor" | "renew" | "reminders" | "admin" | "users";
 const pageTitles: Record<Page, string> = {
   overview: "全部订阅",
-  manage: "订阅管理",
+  manage: "云服务器",
   editor: "订阅信息",
   renew: "登记续费",
   reminders: "我的提醒",
   admin: "系统邮件",
   users: "用户管理",
 };
-function hashPage(): Page {
+function hashRoute(): { page: Page; category: string } {
   const value = window.location.hash.slice(1);
-  return ["overview", "manage", "reminders", "admin", "users"].includes(value)
-    ? (value as Page)
-    : "overview";
+  const category = /^category\/([a-z][a-z0-9_-]*)$/.exec(value)?.[1];
+  if (category) return { page: "manage", category };
+  if (value === "manage") return { page: "manage", category: "cloud" };
+  return {
+    page: ["overview", "reminders", "admin", "users"].includes(value) ? value as Page : "overview",
+    category: "cloud",
+  };
 }
 
 export default function App() {
@@ -68,9 +68,11 @@ export default function App() {
   const [authConfig, setAuthConfig] = useState<AuthConfig | null>(null);
   const [booting, setBooting] = useState(true);
   const [bootError, setBootError] = useState("");
-  const [page, setPage] = useState<Page>(hashPage);
-  const [category, setCategory] = useState("all");
+  const [page, setPage] = useState<Page>(() => hashRoute().page);
+  const [category, setCategory] = useState(() => hashRoute().category);
   const [dashboard, setDashboard] = useState<Dashboard | null>(null);
+  const [categoryDashboard, setCategoryDashboard] = useState<Dashboard | null>(null);
+  const [loadedCategory, setLoadedCategory] = useState("");
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [types, setTypes] = useState<SubscriptionType[]>([]);
   const [notifications, setNotifications] =
@@ -86,6 +88,7 @@ export default function App() {
   function clearData() {
     requestVersion.current++;
     setDashboard(null);
+    setCategoryDashboard(null);
     setSubscriptions([]);
     setTypes([]);
     setNotifications(null);
@@ -96,6 +99,7 @@ export default function App() {
     requestVersion.current++;
     setUser(null);
     setDashboard(null);
+    setCategoryDashboard(null);
     setSubscriptions([]);
     setNotifications(null);
     setTypes([]);
@@ -122,7 +126,11 @@ export default function App() {
     void initialize();
     const expired = () => signOutLocally();
     window.addEventListener("renewly:unauthorized", expired);
-    const navigate = () => setPage(hashPage());
+    const navigate = () => {
+      const route = hashRoute();
+      setPage(route.page);
+      setCategory(route.category);
+    };
     window.addEventListener("hashchange", navigate);
     return () => {
       window.removeEventListener("renewly:unauthorized", expired);
@@ -132,7 +140,11 @@ export default function App() {
   useEffect(() => {
     if (user && ["admin", "users"].includes(page) && user.role !== "admin") navigate("overview");
   }, [user, page]);
-  function navigate(next: Page) {
+  function navigate(next: Page, nextCategory = category) {
+    if (nextCategory !== category) {
+      setCategoryDashboard(null);
+      setCategory(nextCategory);
+    }
     setPage(next);
     setError("");
     setNotice("");
@@ -140,7 +152,7 @@ export default function App() {
       window.history.replaceState(
         null,
         "",
-        `${window.location.pathname}${window.location.search}#${next}`,
+        `${window.location.pathname}${window.location.search}#${next === "manage" ? `category/${nextCategory}` : next}`,
       );
   }
   const loadData = useCallback(async () => {
@@ -157,7 +169,12 @@ export default function App() {
           api<NotificationSettings>("/me/notification-settings"),
         ],
       );
+      const scoped = categoryData.types.some((type) => type.key === category)
+        ? await api<Dashboard>(`/dashboard?currency=${user.currency}&type=${encodeURIComponent(category)}`)
+        : null;
       if (version !== requestVersion.current) return;
+      setCategoryDashboard(scoped);
+      setLoadedCategory(category);
       setDashboard(summary);
       setSubscriptions(list.subscriptions);
       setTypes(categoryData.types);
@@ -180,7 +197,7 @@ export default function App() {
     } finally {
       if (version === requestVersion.current) setLoading(false);
     }
-  }, [user?.id, user?.currency, user?.timeZone]);
+  }, [user?.id, user?.currency, user?.timeZone, category]);
   useEffect(() => {
     if (user) void loadData();
   }, [loadData]);
@@ -194,7 +211,7 @@ export default function App() {
   function signedIn(next: User) {
     clearData();
     setUser(next);
-    setCategory("all");
+    setCategory("cloud");
     navigate("overview");
   }
   async function logout() {
@@ -215,6 +232,7 @@ export default function App() {
         json("PUT", { currency, timeZone: user.timeZone }),
       );
       setDashboard(null);
+    setCategoryDashboard(null);
       setUser(result.user);
     } catch (e) {
       setError(errorMessage(e));
@@ -225,7 +243,7 @@ export default function App() {
   function edit(item: Subscription | null) {
     setEditorItem(item);
     setDraftKey((n) => n + 1);
-    navigate("editor");
+    navigate("editor", item?.type || category);
   }
   async function saved(message: string) {
     navigate("manage");
@@ -241,17 +259,6 @@ export default function App() {
     else void loadData();
   }
   const nonArchived = subscriptions.filter((s) => s.status !== "archived");
-  const shown = useMemo(
-    () =>
-      (dashboard?.subscriptions || subscriptions)
-        .filter(
-          (s) =>
-            s.status !== "archived" &&
-            (category === "all" || s.type === category),
-        )
-        .sort((a, b) => a.nextRenewal.localeCompare(b.nextRenewal)),
-    [dashboard, subscriptions, category],
-  );
   if (booting)
     return (
       <main className="boot">
@@ -272,37 +279,20 @@ export default function App() {
         onRetry={() => void initialize()}
       />
     );
-  const breadcrumb =
-    page === "overview"
-      ? category === "all"
-        ? "全部订阅"
-        : types.find((t) => t.key === category)?.name || "订阅总览"
-      : pageTitles[page];
-  const upcoming = (dashboard?.nextDue || [])
-    .filter(
-      (s) =>
-        s.status === "active" && daysUntil(s.nextRenewal, user.timeZone) >= 0,
-    )
-    .slice(0, 5);
-  const overdue = nonArchived.filter(
-    (s) => s.status === "active" && daysUntil(s.nextRenewal, user.timeZone) < 0,
-  ).length;
-  const mailState = !notifications?.enabled
-    ? "已关闭"
-    : !notifications?.recipientEmail
-      ? "待设置邮箱"
-      : !notifications.emailVerified
-        ? "待验证"
-        : !notifications.mailAvailable
-          ? "待管理员配置"
-          : "已开启";
+  const categoryName = types.find((type) => type.key === category)?.name || "云服务器";
+  const breadcrumb = ["manage", "editor", "renew"].includes(page)
+    ? page === "manage" ? categoryName : `${categoryName} / ${pageTitles[page]}`
+    : pageTitles[page];
+  const upcoming = (dashboard?.nextDue || []).filter(
+    (item) => item.status === "active" && daysUntil(item.nextRenewal, user.timeZone) >= 0,
+  );
   return (
     <div className="workspace">
       <aside className="sidebar">
         <button
           className="brand-button"
           onClick={() => {
-            setCategory("all");
+            setCategory("cloud");
             navigate("overview");
           }}
           aria-label="续记总览"
@@ -313,12 +303,12 @@ export default function App() {
         <p className="nav-caption">订阅分类</p>
         <nav className="nav-group" aria-label="订阅分类">
           <button
-            className={`nav-item ${page === "overview" && category === "all" ? "selected" : ""}`}
+            className={`nav-item ${page === "overview" ? "selected" : ""}`}
             aria-current={
-              page === "overview" && category === "all" ? "page" : undefined
+              page === "overview" ? "page" : undefined
             }
             onClick={() => {
-              setCategory("all");
+              setCategory("cloud");
               navigate("overview");
             }}
           >
@@ -329,15 +319,14 @@ export default function App() {
           {types.map((type) => (
             <button
               key={type.key}
-              className={`nav-item ${page === "overview" && category === type.key ? "selected" : ""}`}
+              className={`nav-item ${["manage", "editor", "renew"].includes(page) && category === type.key ? "selected" : ""}`}
               aria-current={
-                page === "overview" && category === type.key
+                ["manage", "editor", "renew"].includes(page) && category === type.key
                   ? "page"
                   : undefined
               }
               onClick={() => {
-                setCategory(type.key);
-                navigate("overview");
+                navigate("manage", type.key);
               }}
             >
               <Server size={17} />
@@ -351,13 +340,6 @@ export default function App() {
         <div className="nav-divider" />
         <p className="nav-caption">工作区</p>
         <nav className="nav-group utility-nav" aria-label="工作区">
-          <button
-            className={`nav-item ${["manage", "editor", "renew"].includes(page) ? "selected" : ""}`}
-            onClick={() => navigate("manage")}
-          >
-            <SlidersHorizontal size={17} />
-            <span>订阅管理</span>
-          </button>
           <button
             className={`nav-item ${page === "reminders" ? "selected" : ""}`}
             onClick={() => navigate("reminders")}
@@ -443,167 +425,45 @@ export default function App() {
           <div hidden={page !== "overview"}>
             <div className="page-heading">
               <div>
-                <span className="eyebrow gradient">SUBSCRIPTION WORKSPACE</span>
-                <h1>{category === "all" ? "订阅总览" : `${breadcrumb}订阅`}</h1>
-                <p>把订阅的账单、到期与预算，放在一起掌握。</p>
+                <span className="eyebrow gradient">SUBSCRIPTION OVERVIEW</span>
+                <h1>全部订阅</h1>
+                <p>所有订阅的支出与续费安排。</p>
               </div>
               <Button variant="ghost" onClick={loadData} busy={loading}>
-                <RefreshCw size={15} />
-                刷新
+                <RefreshCw size={15} />刷新
               </Button>
             </div>
-            <div className="metrics">
-              <div className="panel metric">
-                <div className="metric-label">
-                  年预计支出
-                  <Wallet size={17} />
-                </div>
-                <strong className="metric-value gradient">
-                  {money(dashboard?.annualTotal, user.currency)}
-                </strong>
-                <p>按续费价年化 · {dashboard?.activeCount ?? "—"} 项有效订阅</p>
+            <DashboardMetrics dashboard={dashboard} currency={user.currency} scope="全部订阅类别" />
+            <section className="panel upcoming-panel" aria-label="接下来要续费">
+              <div className="panel-heading">
+                <h2><AlarmClock size={16} />接下来要续费</h2>
+                <span className="small muted">未来 30 天</span>
               </div>
-              <div className="panel metric">
-                <div className="metric-label">
-                  剩余使用价值
-                  <Hourglass size={17} />
-                </div>
-                <strong className="metric-value gradient">
-                  {money(dashboard?.remainingValue, user.currency)}
-                </strong>
-                <p>已付账期按时间估算</p>
-              </div>
-              <div className="panel metric">
-                <div className="metric-label">
-                  30 天待续费
-                  <CalendarClock size={17} />
-                </div>
-                <strong className="metric-value gradient">
-                  {money(dashboard?.upcomingTotal, user.currency)}
-                </strong>
-                <p>{dashboard?.dueCount ?? "—"} 项即将续费 · 提前安排预算</p>
-              </div>
-            </div>
-            {dashboard?.totalsPartial && (
-              <Banner>
-                部分币种汇率暂不可用（
-                {dashboard.unconvertedCurrencies.join("、")}
-                ），汇总仅包含可换算的金额。
-              </Banner>
-            )}
-            {overdue > 0 && (
-              <Banner
-                tone="error"
-                action={
-                  <Button variant="ghost" onClick={() => navigate("manage")}>
-                    前往管理
-                  </Button>
-                }
-              >
-                有 {overdue} 项订阅已过期，请核对续费或归档。
-              </Banner>
-            )}
-            <div className="overview-grid">
-              <div className="panel">
-                <div className="panel-heading">
-                  <h2>
-                    订阅清单<small>{shown.length} 项</small>
-                  </h2>
-                  <button
-                    className="text-button gradient"
-                    onClick={() => navigate("manage")}
-                  >
-                    管理订阅
-                    <ArrowUpRight size={14} />
-                  </button>
-                </div>
-                {loading && !dashboard ? (
-                  <div className="panel-loading">
-                    <LoaderCircle className="spin" size={17} />
-                    正在加载订阅…
+              {loading && !dashboard ? <div className="panel-loading"><LoaderCircle className="spin" size={17} />正在加载…</div> : upcoming.length ? (
+                upcoming.map((item) => (
+                  <div className="upcoming-row" key={item.id}>
+                    <time dateTime={item.nextRenewal} aria-label={`${formatDateTime(item.nextRenewal)} ${user.timeZone}`}>
+                      <strong>{formatDateTime(item.nextRenewal).slice(0, 10)}</strong>
+                      <span>{formatDateTime(item.nextRenewal).slice(11)}</span>
+                    </time>
+                    <div className="upcoming-name">
+                      <button className="text-button" onClick={() => edit(item)}>{item.name}</button>
+                      <small>{types.find((type) => type.key === item.type)?.name || item.type} · {item.vendor}</small>
+                    </div>
+                    <div className="upcoming-price">{money(item.renewalPrice, item.currency)}<small>/ {periodLabel(item.billingMonths)}</small></div>
+                    <DueBadge item={item} timeZone={user.timeZone} />
                   </div>
-                ) : !shown.length ? (
-                  <EmptyState
-                    title="还没有订阅"
-                    detail="先记录一项订阅，开始掌握续费时间与预算。"
-                    action={
-                      <Button onClick={() => navigate("manage")}>
-                        <Plus size={15} />
-                        去管理订阅
-                      </Button>
-                    }
-                  />
-                ) : (
-                  <div className="subscription-list"><SubscriptionColumns />{shown.map((item) => <SubscriptionSummary key={item.id} item={item} timeZone={user.timeZone} />)}</div>
-                )}
-                <div className="panel-footer">
-                  自动续费订阅仍按提醒设置发送邮件<span>原币续费价格 · 按到期时间排序</span>
-                </div>
-              </div>
-              <aside className="stack">
-                <div className="panel timeline">
-                  <h2>
-                    <AlarmClock size={16} />
-                    接下来要续费
-                  </h2>
-                  {upcoming.length ? (
-                    upcoming.map((item) => (
-                      <div className="timeline-item" key={item.id}>
-                        <div className="date-chip">
-                          <span>{Number(item.nextRenewal.slice(5, 7))} 月</span>
-                          {item.nextRenewal.slice(8, 10)}
-                        </div>
-                        <div>
-                          <strong>{item.name}</strong>
-                          <p>
-                            {money(item.renewalPrice, item.currency)} /{" "}
-                            {periodLabel(item.billingMonths)} · {formatDateTime(item.nextRenewal).slice(11)}
-                          </p>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="quiet-empty">未来 30 天暂无待续费项目</p>
-                  )}
-                </div>
-                <div className="panel reminder-status">
-                  <h2>提醒状态</h2>
-                  <div>
-                    <span>站内提醒</span>
-                    <span className="badge">已开启</span>
-                  </div>
-                  <div>
-                    <span>邮件提醒</span>
-                    <span
-                      className={`badge ${mailState === "已开启" ? "" : "muted"}`}
-                    >
-                      {mailState}
-                    </span>
-                  </div>
-                  <button
-                    className="text-button gradient"
-                    onClick={() => navigate("reminders")}
-                  >
-                    设置收件邮箱
-                    <ArrowRight size={13} />
-                  </button>
-                </div>
-              </aside>
-            </div>
-            <div className="rates-footer">
-              <span>
-                {dashboard?.rates.date
-                  ? `汇率日期 ${dashboard.rates.date} · Frankfurter 参考汇率`
-                  : "汇率暂不可用 · 原币记录仍可查看"}
-                {dashboard?.rates.stale ? " · 沿用缓存" : ""}
-              </span>
-              <span>剩余使用价值为时间摊销估算</span>
-            </div>
+                ))
+              ) : <p className="quiet-empty">未来 30 天暂无待续费项目</p>}
+            </section>
+            <RatesFooter dashboard={dashboard} />
           </div>
           <div hidden={page !== "manage"}>
             <Management
-              subscriptions={subscriptions}
+              subscriptions={subscriptions.filter((item) => item.type === category)}
               user={user}
+              title={categoryName}
+              dashboard={loadedCategory === category ? categoryDashboard : null}
               onAdd={() => edit(null)}
               onEdit={edit}
               onRenew={(item) => {
@@ -672,6 +532,8 @@ export default function App() {
 function Management({
   subscriptions,
   user,
+  title,
+  dashboard,
   onAdd,
   onEdit,
   onRenew,
@@ -679,6 +541,8 @@ function Management({
 }: {
   subscriptions: Subscription[];
   user: User;
+  title: string;
+  dashboard: Dashboard | null;
   onAdd: () => void;
   onEdit: (item: Subscription) => void;
   onRenew: (item: Subscription) => void;
@@ -697,7 +561,7 @@ function Management({
         item.status === status,
     )
     .filter((item) =>
-      `${item.name} ${item.vendor} ${item.region} ${item.model}`
+      `${item.name} ${item.vendor} ${item.region} ${configurationLabel(item)} ${(item.ipAddresses || []).map((ip) => ip.address).join(" ")}`
         .toLowerCase()
         .includes(query.trim().toLowerCase()),
     )
@@ -718,15 +582,16 @@ function Management({
     <section>
       <div className="page-heading">
         <div>
-          <span className="eyebrow gradient">MANAGE SUBSCRIPTIONS</span>
-          <h1>订阅管理</h1>
-          <p>记录配置与价格，安排每一次续费。</p>
+          <span className="eyebrow gradient">CLOUD SERVERS</span>
+          <h1>{title}<small className="category-count">{subscriptions.filter((item) => item.status !== "archived").length} 台</small></h1>
+          <p>记录配置、IP 与价格，安排每一次续费。</p>
         </div>
         <Button variant="primary" onClick={onAdd}>
           <Plus size={16} />
-          新增订阅
+          新增服务器
         </Button>
       </div>
+      <DashboardMetrics dashboard={dashboard} currency={user.currency} scope={`仅${title}`} />
       {error && <Banner tone="error">{error}</Banner>}
       <div className="management-toolbar">
         <label className="search-field">
@@ -734,8 +599,8 @@ function Management({
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="搜索名称、商家或地区"
-            aria-label="搜索订阅"
+            placeholder="搜索名称、商家、地区或 IP"
+            aria-label="搜索服务器"
           />
         </label>
         <Select
@@ -764,7 +629,7 @@ function Management({
                 </div>
                 <div className="management-meta">
                   <span>{item.region}</span>
-                  <span>{item.model}</span>
+                  <span>{configurationLabel(item)}</span>
                   <span>购买 {money(item.purchasePrice, item.currency)}</span>
                   <span>
                     续费 {money(item.renewalPrice, item.currency)} /{" "}
@@ -774,6 +639,11 @@ function Management({
                   <span>流量 {trafficLabel(item)}</span>
                   <span>带宽 {bandwidthLabel(item)}</span>
                 </div>
+                {item.model && (item.cpuCores != null || item.memoryValue != null || item.diskValue != null) &&
+                  <p className="item-notes">原配置：{item.model}</p>}
+                {!!item.ipAddresses?.length && <div className="server-ip-list">{item.ipAddresses.map((ip, index) => (
+                  <span className="server-ip" key={index}><span>{ip.type === "dynamic" ? "动态 IP" : "静态 IP"}</span><code>{ip.address || "当前地址未填写"}</code></span>
+                ))}</div>}
                 {item.notes && <p className="item-notes">{item.notes}</p>}
                 <TermProgress item={item} timeZone={user.timeZone} />
               </div>
@@ -837,13 +707,14 @@ function Management({
               query || status !== "current" ? undefined : (
                 <Button onClick={onAdd} variant="primary">
                   <Plus size={15} />
-                  新增订阅
+                  新增服务器
                 </Button>
               )
             }
           />
         )}
       </div>
+      <RatesFooter dashboard={dashboard} />
       <p className="management-note">
         “登记续费”用于记录已完成的付款；归档保留历史，可随时恢复。
       </p>

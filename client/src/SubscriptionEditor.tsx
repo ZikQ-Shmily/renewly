@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { ArrowLeft, CalendarCheck2, Save } from "lucide-react";
+import { ArrowLeft, CalendarCheck2, Plus, Save, X } from "lucide-react";
 import { api, errorMessage, json } from "./api";
 import { Banner, Button, Field } from "./components";
 import { Select } from "./Select";
@@ -10,6 +10,7 @@ import type {
   Subscription,
   SubscriptionInput,
   SubscriptionType,
+  ServerIpAddress,
 } from "./types";
 import {
   addMonths,
@@ -36,6 +37,12 @@ type Draft = Omit<
   | "paidAmount"
   | "trafficQuota"
   | "bandwidthValue"
+  | "cpuCores"
+  | "memoryValue"
+  | "memoryUnit"
+  | "diskValue"
+  | "diskUnit"
+  | "ipAddresses"
   | "reminderDays"
 > & {
   renewalPrice: string;
@@ -43,6 +50,12 @@ type Draft = Omit<
   paidAmount: string;
   trafficQuota: string;
   bandwidthValue: string;
+  cpuCores: string;
+  memoryValue: string;
+  memoryUnit: "MB" | "GB";
+  diskValue: string;
+  diskUnit: "GB" | "TB";
+  ipAddresses: ServerIpAddress[];
   reminderDays: string;
 };
 function initialDraft(
@@ -64,6 +77,12 @@ function initialDraft(
         bandwidthValue:
           item.bandwidthValue == null ? "" : String(item.bandwidthValue),
         bandwidthUnit: item.bandwidthUnit || "Mbps",
+        cpuCores: item.cpuCores == null ? "" : String(item.cpuCores),
+        memoryValue: item.memoryValue == null ? "" : String(item.memoryValue),
+        memoryUnit: item.memoryUnit || "GB",
+        diskValue: item.diskValue == null ? "" : String(item.diskValue),
+        diskUnit: item.diskUnit || "GB",
+        ipAddresses: item.ipAddresses?.map((address) => ({ ...address })) || [],
         autoRenew: item.autoRenew || false,
         reminderDays: item.reminderDays.join(", "),
       }
@@ -81,6 +100,12 @@ function initialDraft(
         nextRenewal: addMonths(start, 12),
         region: "",
         model: "",
+        cpuCores: "",
+        memoryValue: "",
+        memoryUnit: "GB",
+        diskValue: "",
+        diskUnit: "GB",
+        ipAddresses: [],
         trafficMode: "unknown",
         trafficQuota: "",
         trafficUnit: "GB",
@@ -155,6 +180,14 @@ export function SubscriptionEditor({
     if (checked && !draft.renewalPrice.trim())
       field("renewalPrice", draft.paidAmount);
   }
+  function ipAddress(index: number, value: Partial<ServerIpAddress>) {
+    setDraft((previous) => ({
+      ...previous,
+      ipAddresses: previous.ipAddresses.map((address, entryIndex) =>
+        entryIndex === index ? { ...address, ...value } : address,
+      ),
+    }));
+  }
   async function submit(event: FormEvent) {
     event.preventDefault();
     setError("");
@@ -198,6 +231,18 @@ export function SubscriptionEditor({
         : null;
       if (bandwidthValue != null && bandwidthValue <= 0)
         throw new Error("套餐带宽需要大于 0，或留空表示未填写。");
+      const configurationNumber = (value: string, label: string) => {
+        if (!value.trim()) return null;
+        const number = parseNumberInput(value, label, { max: 1e9 });
+        if (number <= 0) throw new Error(`${label}需要大于 0，或留空表示未填写。`);
+        return number;
+      };
+      const ipAddresses = draft.ipAddresses.map((address) => ({
+        ...address,
+        address: address.address.trim(),
+      }));
+      if (ipAddresses.some((address) => address.type === "static" && !address.address))
+        throw new Error("请填写静态 IP 地址，或移除空白条目。");
       const data: SubscriptionInput = {
         ...draft,
         periodStart,
@@ -208,6 +253,10 @@ export function SubscriptionEditor({
         billingMonths: Number(draft.billingMonths),
         trafficQuota: quota,
         bandwidthValue,
+        cpuCores: configurationNumber(draft.cpuCores, "CPU 核数"),
+        memoryValue: configurationNumber(draft.memoryValue, "内存"),
+        diskValue: configurationNumber(draft.diskValue, "磁盘"),
+        ipAddresses,
         reminderDays: reminderDays(draft.reminderDays),
       };
       setBusy(true);
@@ -231,16 +280,16 @@ export function SubscriptionEditor({
     ? Number(previewPriceText)
     : null;
   return (
-    <section aria-label={item ? "编辑订阅" : "新增订阅"}>
+    <section aria-label={item ? "编辑云服务器" : "新增云服务器"}>
       <div className="page-heading">
         <div>
-          <span className="eyebrow gradient">SUBSCRIPTION DETAILS</span>
-          <h1>{item ? "编辑订阅" : "新增订阅"}</h1>
+          <span className="eyebrow gradient">SERVER DETAILS</span>
+          <h1>{item ? "编辑云服务器" : "新增云服务器"}</h1>
           <p>录入一次费用，安排下一次续费。</p>
         </div>
         <Button onClick={onCancel} disabled={busy}>
           <ArrowLeft size={15} />
-          返回列表
+          返回云服务器
         </Button>
       </div>
       {error && <Banner tone="error">{error}</Banner>}
@@ -305,15 +354,67 @@ export function SubscriptionEditor({
               maxLength={100}
             />
           </Field>
-          <Field label="型号 / 配置 *">
-            <input
-              value={draft.model}
-              onChange={(e) => field("model", e.target.value)}
-              placeholder="例如：2 核 / 2 GB / 40 GB"
-              required
-              maxLength={200}
-            />
-          </Field>
+          <div className="cloud-config-grid wide">
+            <Field label="CPU">
+              <div className="cloud-unit-input">
+                <NumberInput
+                  value={draft.cpuCores}
+                  onChange={(e) => field("cpuCores", e.target.value)}
+                  placeholder="未填写"
+                  aria-label="CPU 核数"
+                  maxLength={24}
+                />
+                <span className="cloud-unit-label">核</span>
+              </div>
+            </Field>
+            <Field label="内存">
+              <div className="field-combo">
+                <NumberInput
+                  value={draft.memoryValue}
+                  onChange={(e) => field("memoryValue", e.target.value)}
+                  placeholder="未填写"
+                  aria-label="内存数值"
+                  maxLength={24}
+                />
+                <Select
+                  value={draft.memoryUnit}
+                  onValueChange={(value) => field("memoryUnit", value as Draft["memoryUnit"])}
+                  options={[{ value: "GB", label: "GB" }, { value: "MB", label: "MB" }]}
+                  aria-label="内存单位"
+                  name="memoryUnit"
+                  disabled={busy}
+                />
+              </div>
+            </Field>
+            <Field label="磁盘">
+              <div className="field-combo">
+                <NumberInput
+                  value={draft.diskValue}
+                  onChange={(e) => field("diskValue", e.target.value)}
+                  placeholder="未填写"
+                  aria-label="磁盘数值"
+                  maxLength={24}
+                />
+                <Select
+                  value={draft.diskUnit}
+                  onValueChange={(value) => field("diskUnit", value as Draft["diskUnit"])}
+                  options={[{ value: "GB", label: "GB" }, { value: "TB", label: "TB" }]}
+                  aria-label="磁盘单位"
+                  name="diskUnit"
+                  disabled={busy}
+                />
+              </div>
+            </Field>
+          </div>
+          {draft.model && (
+            <Field label="原配置（兼容记录）" wide>
+              <input
+                value={draft.model}
+                onChange={(e) => field("model", e.target.value)}
+                maxLength={200}
+              />
+            </Field>
+          )}
           <Field label="套餐带宽" help="选填，填写商家标称带宽">
             <div className="field-combo">
               <NumberInput
@@ -378,6 +479,59 @@ export function SubscriptionEditor({
               />
             </div>
           </Field>
+          <div className="cloud-ip-heading wide">
+            <h2>IP 地址</h2>
+            <Button
+              type="button"
+              variant="ghost"
+              disabled={busy || draft.ipAddresses.length >= 20}
+              onClick={() => field("ipAddresses", [...draft.ipAddresses, { type: "static", address: "" }])}
+            >
+              <Plus size={14} />
+              添加 IP
+            </Button>
+          </div>
+          <div className="cloud-ip-list wide">
+            {draft.ipAddresses.map((address, index) => (
+              <div className="cloud-ip-row" key={index}>
+                <Field label="地址类型">
+                  <Select
+                    value={address.type}
+                    onValueChange={(value) => ipAddress(index, { type: value as ServerIpAddress["type"] })}
+                    options={[{ value: "static", label: "静态 IP" }, { value: "dynamic", label: "动态 IP" }]}
+                    aria-label={`第 ${index + 1} 个 IP 地址类型`}
+                    name={`ipType-${index}`}
+                    disabled={busy}
+                  />
+                </Field>
+                <Field label={address.type === "dynamic" ? "当前 IP（选填）" : "IP 地址"}>
+                  <input
+                    value={address.address}
+                    onChange={(e) => ipAddress(index, { address: e.target.value })}
+                    aria-label={`第 ${index + 1} 个 IP 地址`}
+                    placeholder="IPv4 或 IPv6"
+                    maxLength={45}
+                    required={address.type === "static"}
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
+                  />
+                </Field>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="cloud-ip-remove"
+                  aria-label={`移除第 ${index + 1} 个 IP`}
+                  onClick={() => field("ipAddresses", draft.ipAddresses.filter((_, entryIndex) => entryIndex !== index))}
+                >
+                  <X size={15} />
+                </Button>
+              </div>
+            ))}
+            <p className="muted small cloud-ip-help">
+              {draft.ipAddresses.length ? "支持 IPv4 和 IPv6，动态 IP 可手动更新当前地址。" : "可添加静态或动态 IP，支持 IPv4 和 IPv6。"}
+            </p>
+          </div>
           <h2 className="form-section">价格与账期</h2>
           <div className="price-fields wide">
             <Field label="本期费用 *">
@@ -470,10 +624,7 @@ export function SubscriptionEditor({
                 onChange={(e) => field("autoRenew", e.target.checked)}
               />
               <span className="switch-track" aria-hidden="true" />
-              <span>
-                <strong>自动续费</strong>
-                <small>商家自动扣款，仍照常发送到期提醒邮件</small>
-              </span>
+              <span>自动续费</span>
             </label>
           </div>
           <Field label="订阅状态">

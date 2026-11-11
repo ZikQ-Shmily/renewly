@@ -71,6 +71,15 @@ export function bandwidthLabel(
     : `${subscription.bandwidthValue.toLocaleString("zh-CN", { maximumFractionDigits: 3 })} ${subscription.bandwidthUnit}`;
 }
 
+export function configurationLabel(item: Subscription) {
+  const parts = [
+    item.cpuCores != null ? `${item.cpuCores} 核` : "",
+    item.memoryValue != null ? `${item.memoryValue} ${item.memoryUnit || "GB"} 内存` : "",
+    item.diskValue != null ? `${item.diskValue} ${item.diskUnit || "GB"} 磁盘` : "",
+  ].filter(Boolean);
+  return parts.length ? parts.join(" / ") : item.model || "未填写配置";
+}
+
 export function termProgress(item: Subscription, timeZone: string, currentTime?: string | Date) {
   const period = item.progressPeriod || item.currentPeriod || {
     startsAt: item.periodStart,

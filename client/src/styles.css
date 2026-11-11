@@ -2093,3 +2093,52 @@ html[data-input-mode="keyboard"] .switch-control input:focus + .switch-track { o
   .subscription-identity > svg { display: none; }
   .switch-control { min-height: 44px; }
 }
+
+/* Category pages share the management actions and keep scoped totals visible. */
+.category-count { margin-left: 12px; color: var(--muted); font-size: 13px; font-weight: 400; letter-spacing: 0; }
+.upcoming-panel .panel-heading h2 { display: flex; align-items: center; gap: 9px; }
+.upcoming-row { display: grid; grid-template-columns: 110px minmax(0,1fr) 110px 155px; align-items: center; gap: 20px; padding: 19px 22px; border-top: 1px solid var(--line); }
+.upcoming-row:first-of-type { border-top: 0; }
+.upcoming-row time { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-variant-numeric: tabular-nums; }
+.upcoming-row time strong { font-weight: 500; }
+.upcoming-row time span, .upcoming-name small, .upcoming-price small { color: var(--muted); font-size: 11px; }
+.upcoming-name { min-width: 0; }
+.upcoming-name .text-button { text-align: left; overflow-wrap: anywhere; }
+.upcoming-name small { display: block; margin-top: 5px; }
+.upcoming-price { text-align: right; font-variant-numeric: tabular-nums; font-size: 13px; }
+.upcoming-price small { display: block; margin-top: 4px; }
+.upcoming-row > .badge { background: transparent; text-align: right; padding: 0; white-space: normal; }
+.server-ip-list { display: flex; gap: 8px 15px; flex-wrap: wrap; margin-top: 12px; }
+.server-ip { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 7px; min-width: 0; font-size: 11px; }
+.server-ip > span { background: #24334a; color: #b4c8ef; padding: 2px 6px; border-radius: 4px; }
+.server-ip code { color: #cbd8ef; overflow-wrap: anywhere; font-size: 12px; }
+.cloud-config-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 18px; }
+.cloud-config-grid .field-combo { grid-template-columns: minmax(0,1fr) 78px; }
+.cloud-unit-input { display: flex; position: relative; align-items: center; }
+.cloud-unit-input input { padding-right: 44px; }
+.cloud-unit-label { position: absolute; right: 15px; color: var(--muted); font-size: 12px; pointer-events: none; }
+.cloud-ip-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.cloud-ip-heading h2 { margin: 0; }
+.cloud-ip-list { display: grid; gap: 15px; }
+.cloud-ip-row { display: grid; grid-template-columns: 150px minmax(0,1fr) auto; gap: 13px; align-items: end; }
+.cloud-ip-remove { margin-bottom: 1px; }
+.cloud-ip-help { color: var(--muted); font-size: 11px; }
+@media (max-width: 1050px) {
+  .upcoming-row { grid-template-columns: 100px minmax(0,1fr) 95px; gap: 12px; }
+  .upcoming-row > .badge { grid-column: 2 / 4; text-align: left; }
+}
+@media (max-width: 700px) {
+  .cloud-config-grid { grid-template-columns: 1fr; }
+  .cloud-ip-row { grid-template-columns: 115px minmax(0,1fr); gap: 10px; }
+  .cloud-ip-remove { grid-column: 2; justify-self: end; }
+  .upcoming-row { padding: 16px; grid-template-columns: 90px minmax(0,1fr) 80px; gap: 10px; }
+  .management-row > div:first-child { min-width: 0; }
+}
+@media (max-width: 440px) {
+  .upcoming-row { grid-template-columns: 90px minmax(0,1fr); }
+  .upcoming-price { grid-column: 2; text-align: left; }
+  .upcoming-price small { display: inline; margin-left: 5px; }
+  .upcoming-row > .badge { grid-column: 2; }
+  .cloud-ip-row { grid-template-columns: minmax(0,1fr); }
+  .cloud-ip-remove { grid-column: 1; }
+}

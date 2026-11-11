@@ -22,6 +22,10 @@ export interface AuthConfig {
   registrationEnabled: boolean;
   adminConfigured: boolean;
 }
+export interface ServerIpAddress {
+  type: "static" | "dynamic";
+  address: string;
+}
 export interface SubscriptionInput {
   type: "cloud";
   name: string;
@@ -36,6 +40,12 @@ export interface SubscriptionInput {
   paidAmount: number;
   region: string;
   model: string;
+  cpuCores?: number | null;
+  memoryValue?: number | null;
+  memoryUnit?: "MB" | "GB";
+  diskValue?: number | null;
+  diskUnit?: "GB" | "TB";
+  ipAddresses?: ServerIpAddress[];
   trafficMode: "limited" | "unlimited" | "unknown";
   trafficQuota: number | null;
   trafficUnit: "GB" | "TB";
