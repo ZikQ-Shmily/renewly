@@ -390,7 +390,7 @@ export async function createApp(options: AppOptions = {}) {
         now,
         Number(v.autoRenew),
       );
-      db.prepare("INSERT INTO server_details(subscription_id,region,model,traffic_mode,traffic_quota_bytes,traffic_unit,bandwidth_value,bandwidth_unit,cpu_cores,memory_value,memory_unit,disk_value,disk_unit,ip_addresses) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)").run(
+      db.prepare("INSERT INTO server_details(subscription_id,region,model,traffic_mode,traffic_quota_bytes,traffic_unit,bandwidth_value,bandwidth_unit,cpu_cores,memory_value,memory_unit,disk_value,disk_unit,ip_addresses,traffic_direction) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)").run(
         id,
         v.region,
         v.model,
@@ -407,6 +407,7 @@ export async function createApp(options: AppOptions = {}) {
         v.diskValue,
         v.diskUnit,
         JSON.stringify(v.ipAddresses),
+        v.trafficDirection,
       );
       db.prepare(
         "INSERT INTO billing_periods(subscription_id,user_id,starts_at,ends_at,paid_minor,currency,created_at) VALUES(?,?,?,?,?,?,?)",
@@ -429,7 +430,7 @@ export async function createApp(options: AppOptions = {}) {
     const old = owned(c.req.param("id"), userId(c));
     const details = db.prepare("SELECT * FROM server_details WHERE subscription_id=?").get(old.id);
     const payload = z.object({}).catchall(z.unknown()).parse(await c.req.json());
-    // Older clients omit the structured configuration and IP fields.
+    // Preserve stored detail fields omitted by older clients.
     const v = subscriptionSchema.parse({ ...serverConfiguration(details), ...payload });
     const now = clock().toISOString();
     const timeZone = c.get("user").time_zone;
@@ -481,7 +482,7 @@ export async function createApp(options: AppOptions = {}) {
         userId(c),
       );
       db.prepare(
-        "UPDATE server_details SET region=?,model=?,traffic_mode=?,traffic_quota_bytes=?,traffic_unit=?,bandwidth_value=?,bandwidth_unit=?,cpu_cores=?,memory_value=?,memory_unit=?,disk_value=?,disk_unit=?,ip_addresses=? WHERE subscription_id=?",
+        "UPDATE server_details SET region=?,model=?,traffic_mode=?,traffic_quota_bytes=?,traffic_unit=?,bandwidth_value=?,bandwidth_unit=?,cpu_cores=?,memory_value=?,memory_unit=?,disk_value=?,disk_unit=?,ip_addresses=?,traffic_direction=? WHERE subscription_id=?",
       ).run(
         v.region,
         v.model,
@@ -498,6 +499,7 @@ export async function createApp(options: AppOptions = {}) {
         v.diskValue,
         v.diskUnit,
         JSON.stringify(v.ipAddresses),
+        v.trafficDirection,
         old.id,
       );
       db.prepare(

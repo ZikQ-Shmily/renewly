@@ -73,4 +73,8 @@ export function migrate(db: DB) {
     `);
     db.prepare("INSERT INTO schema_migrations VALUES(4,?)").run(new Date().toISOString());
   })();
+  if ((version.version || 0) < 5) db.transaction(() => {
+    db.exec("ALTER TABLE server_details ADD COLUMN traffic_direction TEXT NOT NULL DEFAULT 'unknown' CHECK(traffic_direction IN ('one_way','two_way','unknown'))");
+    db.prepare("INSERT INTO schema_migrations VALUES(5,?)").run(new Date().toISOString());
+  })();
 }

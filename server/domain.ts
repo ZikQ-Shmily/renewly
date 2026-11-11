@@ -76,6 +76,7 @@ export const subscriptionSchema = z
     trafficMode: z.enum(["limited", "unlimited", "unknown"]).default("unknown"),
     trafficQuota: z.number().finite().positive().nullable().optional(),
     trafficUnit: z.enum(["GB", "TB"]).default("GB"),
+    trafficDirection: z.enum(["one_way", "two_way", "unknown"]).default("unknown"),
     bandwidthValue: z.number().finite().positive().max(1e9).nullable().default(null),
     bandwidthUnit: z.enum(["Mbps", "Gbps"]).default("Mbps"),
     autoRenew: z.boolean().default(false),
@@ -156,6 +157,7 @@ export function serverConfiguration(details: any) {
     diskValue: details?.disk_value ?? null,
     diskUnit: details?.disk_unit || "GB",
     ipAddresses: JSON.parse(details?.ip_addresses || "[]") as { type: "static" | "dynamic"; address: string }[],
+    trafficDirection: details?.traffic_direction || "unknown",
   };
 }
 export function serializeSubscription(db: DB, row: any, timeZone?: string, now = new Date()) {
