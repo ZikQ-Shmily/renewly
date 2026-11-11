@@ -59,13 +59,13 @@ const input = {
   notes: "",
   reminderDays: [7, 3, 1],
 };
-async function fixture(sendMail?: SendMail) {
+async function fixture(sendMail?: SendMail, now: () => Date = () => testNow) {
   const dir = mkdtempSync(join(tmpdir(), "renewly-backend-"));
   const runtime = await createApp({
     config: config(dir),
     fetcher: fxFetch,
     sendMail,
-    now: () => testNow,
+    now,
   });
   const request = async (
     path: string,
@@ -241,7 +241,7 @@ test("renewal retains paid value and calendar anchors; archived budget excluded"
     const before = (await f
       .request("/dashboard", "GET", undefined, cookie)
       .then((r) => r.json())) as any;
-    assert.equal(before.remainingValue, 3);
+    assert.equal(before.remainingValue, 2.17);
     assert.equal(before.annualTotal, 120);
     assert.equal(before.upcomingTotal, 10);
     const renewed = await f.request(
@@ -254,11 +254,11 @@ test("renewal retains paid value and calendar anchors; archived budget excluded"
     const after = (await f
       .request("/dashboard", "GET", undefined, cookie)
       .then((r) => r.json())) as any;
-    assert.equal(after.remainingValue, 13);
+    assert.equal(after.remainingValue, 12.17);
     assert.equal(after.upcomingTotal, 0);
-    assert.deepEqual(after.subscriptions[0].currentPeriod, { startsAt: "2026-10-14", endsAt: "2026-11-14" });
+    assert.deepEqual(after.subscriptions[0].currentPeriod, { startsAt: "2026-10-14T00:00", endsAt: "2026-11-14T00:00" });
     assert.deepEqual(after.subscriptions[0].progressPeriod, after.subscriptions[0].currentPeriod);
-    assert.equal(after.subscriptions[0].periodStart, "2026-11-14");
+    assert.equal(after.subscriptions[0].periodStart, "2026-11-14T00:00");
     assert.equal(
       (
         f.runtime.db
@@ -278,8 +278,8 @@ test("renewal retains paid value and calendar anchors; archived budget excluded"
       .then((r) => r.json())) as any;
     assert.equal(archived.annualTotal, 0);
     assert.equal(archived.activeCount, 0);
-    assert.equal(addMonths("2027-01-31", 1, 31), "2027-02-28");
-    assert.equal(addMonths("2027-02-28", 1, 31), "2027-03-31");
+    assert.equal(addMonths("2027-01-31", 1, 31), "2027-02-28T00:00");
+    assert.equal(addMonths("2027-02-28", 1, 31), "2027-03-31T00:00");
     assert.equal(
       subscriptionSchema.safeParse({ ...input, periodStart: "2026-02-30" })
         .success,
@@ -304,6 +304,8 @@ test("v1 migration preserves existing subscription and user data and is repeatab
       INSERT INTO server_details VALUES('s','香港','2C2G','limited',200000000000,'GB');
       CREATE TABLE billing_periods(id INTEGER PRIMARY KEY AUTOINCREMENT,subscription_id TEXT,user_id TEXT,starts_at TEXT,ends_at TEXT,paid_minor INTEGER,currency TEXT,created_at TEXT);
       INSERT INTO billing_periods(subscription_id,user_id,starts_at,ends_at,paid_minor,currency,created_at) VALUES('s','u','2026-01-01','2027-01-01',19900,'CNY','2026-01-01');
+      CREATE TABLE reminder_deliveries(id TEXT PRIMARY KEY,due_date TEXT);
+      INSERT INTO reminder_deliveries VALUES('old-reminder','2027-01-01');
     `);
     migrate(db);
     migrate(db);
@@ -320,7 +322,10 @@ test("v1 migration preserves existing subscription and user data and is repeatab
     assert.equal(subscription.autoRenew, false);
     assert.equal(subscription.bandwidthValue, null);
     assert.equal(subscription.bandwidthUnit, "Mbps");
-    assert.deepEqual(db.prepare("SELECT version FROM schema_migrations ORDER BY version").all(), [{ version: 1 }, { version: 2 }]);
+    assert.equal(subscription.nextRenewal, "2027-01-01T00:00");
+    assert.equal(subscription.periodStart, "2026-01-01T00:00");
+    assert.equal((db.prepare("SELECT due_date FROM reminder_deliveries").get() as any).due_date, "2027-01-01T00:00");
+    assert.deepEqual(db.prepare("SELECT version FROM schema_migrations ORDER BY version").all(), [{ version: 1 }, { version: 2 }, { version: 3 }]);
   } finally { db.close(); }
 });
 
@@ -334,7 +339,7 @@ test("server bandwidth and auto renewal persist without automatically extending 
     assert.equal(subscription.bandwidthValue, 1.25);
     assert.equal(subscription.bandwidthUnit, "Gbps");
     assert.equal(subscription.autoRenew, true);
-    assert.equal(subscription.nextRenewal, input.nextRenewal);
+    assert.equal(subscription.nextRenewal, input.nextRenewal + "T00:00");
     assert.equal((f.runtime.db.prepare("SELECT COUNT(*) AS n FROM billing_periods").get() as any).n, 1);
     const updated = await f.request(`/subscriptions/${subscription.id}`, "PUT", { ...input, bandwidthValue: 100, bandwidthUnit: "Mbps", autoRenew: false }, cookie);
     assert.equal(updated.status, 200, await updated.clone().text());
@@ -349,11 +354,11 @@ test("server bandwidth and auto renewal persist without automatically extending 
     const future = await f.request("/subscriptions", "POST", { ...input, periodStart: "2026-12-01", nextRenewal: "2027-01-01" }, cookie);
     const futureItem = (await future.json() as any).subscription;
     assert.equal(futureItem.currentPeriod, null);
-    assert.deepEqual(futureItem.progressPeriod, { startsAt: "2026-12-01", endsAt: "2027-01-01" });
+    assert.deepEqual(futureItem.progressPeriod, { startsAt: "2026-12-01T00:00", endsAt: "2027-01-01T00:00" });
     const expired = await f.request("/subscriptions", "POST", { ...input, periodStart: "2026-09-01", nextRenewal: "2026-10-01" }, cookie);
     const expiredItem = (await expired.json() as any).subscription;
     assert.equal(expiredItem.currentPeriod, null);
-    assert.deepEqual(expiredItem.progressPeriod, { startsAt: "2026-09-01", endsAt: "2026-10-01" });
+    assert.deepEqual(expiredItem.progressPeriod, { startsAt: "2026-09-01T00:00", endsAt: "2026-10-01T00:00" });
   } finally { f.cleanup(); }
 });
 
@@ -479,8 +484,8 @@ test("concurrent renewal requests append exactly one paid billing period", async
     const dashboard = (await f
       .request("/dashboard", "GET", undefined, cookie)
       .then((response) => response.json())) as any;
-    assert.equal(dashboard.remainingValue, 13);
-    assert.equal(dashboard.subscriptions[0].nextRenewal, "2026-12-14");
+    assert.equal(dashboard.remainingValue, 12.17);
+    assert.equal(dashboard.subscriptions[0].nextRenewal, "2026-12-14T00:00");
   } finally {
     f.cleanup();
   }
@@ -740,5 +745,81 @@ test("in-flight login rechecks account status and password before creating a ses
     assert.equal(changedResponse.status, 401);
     assert.equal(changedResponse.headers.get("set-cookie"), null);
     assert.equal(sessionCount(), 0);
+  } finally { f.cleanup(); }
+});
+
+test("minute billing boundaries persist, calculate paid value, and reject nonexistent account times", async () => {
+  let now = new Date("2026-11-11T12:00:00Z");
+  const f = await fixture(undefined, () => now);
+  try {
+    const cookie = await f.login("admin@example.com", "test-admin-password-strong-2026");
+    const response = await f.request("/subscriptions", "POST", { ...input, periodStart: "2026-11-11T19:30", nextRenewal: "2026-11-11T20:30", paidAmount: 100, billingMonths: 1 }, cookie);
+    assert.equal(response.status, 201, await response.clone().text());
+    const item = (await response.json() as any).subscription;
+    assert.equal(item.nextRenewal, "2026-11-11T20:30");
+    assert.equal(item.currentPeriod.endsAt, "2026-11-11T20:30");
+    const summary = () => f.request("/dashboard", "GET", undefined, cookie).then(r => r.json()) as Promise<any>;
+    assert.equal((await summary()).remainingValue, 50);
+    now = new Date("2026-11-11T12:29:00Z");
+    assert.equal((await summary()).remainingValue, 1.67);
+    now = new Date("2026-11-11T12:31:00Z");
+    assert.equal((await summary()).remainingValue, 0);
+    assert.equal((await summary()).dueCount, 0);
+    const renewal = await f.request(`/subscriptions/${item.id}/renew`, "POST", { paidAmount: 100, periodStart: item.nextRenewal, nextRenewal: addMonths(item.nextRenewal, 1) }, cookie);
+    assert.equal(renewal.status, 200, await renewal.clone().text());
+    assert.equal((await renewal.json() as any).subscription.nextRenewal, "2026-12-11T20:30");
+    for (const nextRenewal of ["2026-11-11T19:29", "2026-11-11T24:00", "2026-02-30T12:00"])
+      assert.equal((await f.request("/subscriptions", "POST", { ...input, periodStart: "2026-11-11T19:30", nextRenewal }, cookie)).status, 400);
+    assert.equal((await f.request("/me/preferences", "PUT", { currency: "CNY", timeZone: "America/New_York" }, cookie)).status, 200);
+    assert.equal((await f.request("/subscriptions", "POST", { ...input, periodStart: "2026-03-08T02:30", nextRenewal: "2026-04-08T02:30" }, cookie)).status, 400);
+  } finally { f.cleanup(); }
+});
+
+test("minute reminders wait for the matching local time and preserve midnight delivery dedupe during v3 migration", async () => {
+  const messages: Parameters<SendMail>[0][] = [];
+  const f = await fixture(async message => { messages.push(message); });
+  try {
+    const cookie = await f.login("admin@example.com", "test-admin-password-strong-2026");
+    const mail = await f.request("/admin/mail", "PUT", { enabled: true, transport: "resend", senderName: "续记", senderEmail: "sender@example.com", resendApiKey: "example-key-minute-reminders" }, cookie);
+    assert.equal(mail.status, 200);
+    f.runtime.db.prepare("UPDATE notification_settings SET recipient_email='reminder@example.com',email_verified=1").run();
+    const created = await f.request("/subscriptions", "POST", { ...input, periodStart: "2026-10-14T18:35", nextRenewal: "2026-11-14T18:35", reminderDays: [3], autoRenew: true }, cookie);
+    assert.equal(created.status, 201);
+    assert.deepEqual(await f.runtime.runReminders(new Date("2026-11-11T10:34:59Z")), { sent: 0, failed: 0 });
+    assert.deepEqual(await f.runtime.runReminders(new Date("2026-11-11T10:35:00Z")), { sent: 1, failed: 0 });
+    assert.deepEqual(await f.runtime.runReminders(new Date("2026-11-11T10:36:00Z")), { sent: 0, failed: 0 });
+    assert.match(messages[0].text, /2026-11-14 18:35（Asia\/Shanghai）/);
+    assert.match(messages[0].text, /商家自动续费/);
+    const sameDay = await f.request("/subscriptions", "POST", { ...input, periodStart: "2026-10-14T18:35", nextRenewal: "2026-11-14T18:35", reminderDays: [1] }, cookie);
+    assert.equal(sameDay.status, 201);
+    assert.deepEqual(await f.runtime.runReminders(new Date("2026-11-14T00:00:00Z")), { sent: 1, failed: 0 });
+    assert.match(messages[1].subject, /今天到期/);
+    assert.doesNotMatch(messages[1].subject, /已到续费时间/);
+
+    // Recreate the old date-only database representation and its sent delivery.
+    f.runtime.db.exec("UPDATE subscriptions SET next_renewal=substr(next_renewal,1,10); UPDATE billing_periods SET starts_at=substr(starts_at,1,10),ends_at=substr(ends_at,1,10); UPDATE reminder_deliveries SET due_date=substr(due_date,1,10); DELETE FROM schema_migrations WHERE version=3;");
+    migrate(f.runtime.db);
+    migrate(f.runtime.db);
+    assert.equal((f.runtime.db.prepare("SELECT due_date FROM reminder_deliveries WHERE kind='reminder'").get() as any).due_date, "2026-11-14T00:00");
+    assert.deepEqual(await f.runtime.runReminders(new Date("2026-11-11T10:37:00Z")), { sent: 0, failed: 0 });
+    assert.equal(messages.length, 2);
+    assert.equal((f.runtime.db.prepare("SELECT COUNT(*) n FROM reminder_deliveries WHERE kind='reminder'").get() as any).n, 2);
+  } finally { f.cleanup(); }
+});
+
+test("a skipped historical local day does not interrupt other reminder deliveries", async () => {
+  const messages: Parameters<SendMail>[0][] = [];
+  const f = await fixture(async message => { messages.push(message); });
+  try {
+    const cookie = await f.login("admin@example.com", "test-admin-password-strong-2026");
+    await f.request("/me/preferences", "PUT", { currency: "CNY", timeZone: "Pacific/Apia" }, cookie);
+    await f.request("/admin/mail", "PUT", { enabled: true, transport: "resend", senderName: "续记", senderEmail: "sender@example.com", resendApiKey: "example-key-historical-day" }, cookie);
+    f.runtime.db.prepare("UPDATE notification_settings SET recipient_email='reminder@example.com',email_verified=1").run();
+    const historical = await f.request("/subscriptions", "POST", { ...input, name: "历史订阅", periodStart: "2011-11-30T12:00", nextRenewal: "2011-12-31T12:00", reminderDays: [1] }, cookie);
+    assert.equal(historical.status, 201);
+    const current = await f.request("/subscriptions", "POST", { ...input, name: "正常订阅", reminderDays: [2] }, cookie);
+    assert.equal(current.status, 201);
+    assert.deepEqual(await f.runtime.runReminders(testNow), { sent: 1, failed: 0 });
+    assert.match(messages[0].subject, /正常订阅/);
   } finally { f.cleanup(); }
 });

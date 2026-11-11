@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { termProgress } from "../client/src/utils.js";
+import { termProgress, durationLabel } from "../client/src/utils.js";
 import { parseNumberInput } from "../client/src/number.js";
 import type { Subscription } from "../client/src/types.js";
 
@@ -12,10 +12,17 @@ test("progress uses the paid period covering today after early renewal", () => {
   assert.deepEqual(termProgress(item, "Asia/Shanghai", "2026-11-11"), {
     percent: 73, label: "剩余 22 天", tone: "normal",
   });
-  assert.equal(termProgress(item, "Asia/Shanghai", "2026-12-03").label, "今天到期");
+  assert.equal(termProgress(item, "Asia/Shanghai", "2026-12-03").label, "已到期");
   assert.deepEqual(termProgress(item, "Asia/Shanghai", "2026-12-04"), {
     percent: 0, label: "已到期", tone: "expired",
   });
+});
+
+test("progress changes at the exact minute in the account time zone", () => {
+  const item = { periodStart: "2026-11-11T19:30", nextRenewal: "2026-11-11T20:30" } as Subscription;
+  assert.deepEqual(termProgress(item, "Asia/Shanghai", new Date("2026-11-11T12:00:00Z")), { percent: 50, label: "剩余 30 分钟", tone: "soon" });
+  assert.equal(termProgress(item, "Asia/Shanghai", new Date("2026-11-11T12:30:00Z")).label, "已到期");
+  assert.equal(durationLabel(90 * 60_000), "1 小时 30 分钟");
 });
 
 test("future and invalid periods stay bounded and have clear labels", () => {
