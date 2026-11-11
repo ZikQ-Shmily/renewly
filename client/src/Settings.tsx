@@ -242,7 +242,7 @@ export function ReminderSettings({
                 maxLength={100}
               />
             </Field>
-            <Field label="提醒时区">
+            <Field label="账户时区" help="订阅时间、倒计时和邮件提醒均按此时区计算。修改时区会改变已有时间对应的实际时刻。">
               <Select
                 value={zone}
                 onValueChange={(value) => {
@@ -289,7 +289,7 @@ export function ReminderSettings({
             <div className="mail-sheet">
               <span className="eyebrow gradient">RENEWLY NOTIFICATION</span>
               <h3>订阅即将到期</h3>
-              <p>邮件会包含订阅名称、商家、到期日期与原币续费价格。</p>
+              <p>邮件会包含订阅名称、商家、到期时间（含时区）与原币续费价格。</p>
               <div className="mail-sign">提前安排续费，让服务持续在线。</div>
             </div>
             <p className="muted small">

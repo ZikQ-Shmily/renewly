@@ -1,4 +1,6 @@
 import type { Currency, Subscription } from "./types.js";
+import { addDateTimeMonths, dateTimeInstant, dateTimeRemaining, formatDateTime, localDateTime } from "../../shared/datetime.js";
+export { formatDateTime };
 
 export const currencies: { value: Currency; label: string }[] = [
   { value: "CNY", label: "¥ 人民币" },
@@ -25,42 +27,27 @@ export const periodLabel = (months: number) =>
   ({ 1: "月", 3: "季", 6: "半年", 12: "年", 24: "两年", 36: "三年" })[months] ||
   `${months} 个月`;
 export function today(timeZone = "Asia/Shanghai") {
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(new Date());
-  const part = (type: string) =>
-    parts.find((p) => p.type === type)?.value || "";
-  return `${part("year")}-${part("month")}-${part("day")}`;
+  return localDateTime(new Date(), timeZone).slice(0, 10);
 }
 export function addMonths(date: string, months: number, anchor?: number) {
-  const [year, month, day] = date.split("-").map(Number);
-  if (!year || !month || !day) return "";
-  const next = new Date(Date.UTC(year, month - 1 + months, 1));
-  const last = new Date(
-    Date.UTC(next.getUTCFullYear(), next.getUTCMonth() + 1, 0),
-  ).getUTCDate();
-  next.setUTCDate(Math.min(anchor || day, last));
-  return next.toISOString().slice(0, 10);
+  try { return addDateTimeMonths(date, months, anchor); } catch { return ""; }
 }
 export function daysUntil(date: string, timeZone: string) {
-  return Math.round(
-    (Date.parse(`${date}T00:00:00Z`) -
-      Date.parse(`${today(timeZone)}T00:00:00Z`)) /
-      86_400_000,
-  );
+  try { return dateTimeRemaining(date, timeZone) / 86_400_000; } catch { return NaN; }
+}
+export function durationLabel(milliseconds: number) {
+  const total = Math.ceil(Math.abs(milliseconds) / 60_000);
+  if (!total) return "不足 1 分钟";
+  const days = Math.floor(total / 1440), hours = Math.floor(total % 1440 / 60), minutes = total % 60;
+  return [days ? `${days} 天` : "", hours ? `${hours} 小时` : "", !days && minutes ? `${minutes} 分钟` : ""].filter(Boolean).join(" ");
 }
 export function dueLabel(subscription: Subscription, timeZone: string) {
   if (subscription.status === "archived") return "已归档";
   if (subscription.status === "paused") return "已暂停";
-  const days = daysUntil(subscription.nextRenewal, timeZone);
-  return days < 0
-    ? `已过期 ${Math.abs(days)} 天`
-    : days === 0
-      ? "今天到期"
-      : `${days} 天后`;
+  try {
+    const remaining = dateTimeRemaining(subscription.nextRenewal, timeZone);
+    return remaining <= 0 ? `已过期 ${durationLabel(remaining)}` : `剩余 ${durationLabel(remaining)}`;
+  } catch { return "时间无效"; }
 }
 export function trafficLabel(
   subscription: Pick<
@@ -84,22 +71,25 @@ export function bandwidthLabel(
     : `${subscription.bandwidthValue.toLocaleString("zh-CN", { maximumFractionDigits: 3 })} ${subscription.bandwidthUnit}`;
 }
 
-export function termProgress(item: Subscription, timeZone: string, currentDay = today(timeZone)) {
+export function termProgress(item: Subscription, timeZone: string, currentTime?: string | Date) {
   const period = item.progressPeriod || item.currentPeriod || {
     startsAt: item.periodStart,
     endsAt: item.nextRenewal,
   };
-  const start = Date.parse(`${period.startsAt}T00:00:00Z`);
-  const end = Date.parse(`${period.endsAt}T00:00:00Z`);
-  const current = Date.parse(`${currentDay}T00:00:00Z`);
+  let start: number, end: number, current: number;
+  try {
+    start = dateTimeInstant(period.startsAt, timeZone);
+    end = dateTimeInstant(period.endsAt, timeZone);
+    current = currentTime instanceof Date ? currentTime.getTime() : currentTime ? dateTimeInstant(currentTime, timeZone) : Date.now();
+  } catch { return { percent: 0, label: "暂无有效账期", tone: "muted" }; }
   if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start)
     return { percent: 0, label: "暂无有效账期", tone: "muted" };
-  const remaining = Math.round((end - current) / 86_400_000);
+  const remaining = end - current;
   const percent = Math.round(Math.max(0, Math.min(1, (end - current) / (end - start))) * 100);
   return {
     percent,
-    label: start > current ? "尚未开始" : remaining < 0 ? "已到期" : remaining === 0 ? "今天到期" : `剩余 ${remaining} 天`,
-    tone: start > current ? "normal" : remaining < 0 ? "expired" : remaining <= 7 ? "soon" : "normal",
+    label: start > current ? "尚未开始" : remaining <= 0 ? "已到期" : `剩余 ${durationLabel(remaining)}`,
+    tone: start > current ? "normal" : remaining <= 0 ? "expired" : remaining <= 7 * 86_400_000 ? "soon" : "normal",
   };
 }
 export function timestamp(value: string | undefined, timeZone: string) {

@@ -1,7 +1,7 @@
 import { Server } from "lucide-react";
 import { DueBadge } from "./components";
 import type { Subscription } from "./types";
-import { bandwidthLabel, money, periodLabel, termProgress, trafficLabel } from "./utils";
+import { bandwidthLabel, formatDateTime, money, periodLabel, termProgress, trafficLabel } from "./utils";
 
 export function TermProgress({ item, timeZone }: { item: Subscription; timeZone: string }) {
   const progress = termProgress(item, timeZone);
@@ -29,7 +29,7 @@ export function SubscriptionSummary({ item, timeZone }: { item: Subscription; ti
         <span className={`subscription-bandwidth ${item.bandwidthValue == null ? "muted" : ""}`}><span className="mobile-cell-label">带宽 </span>{bandwidthLabel(item)}</span>
         <span className="subscription-traffic"><span className="mobile-cell-label">流量 </span>{trafficLabel(item)}</span>
         <span className="subscription-price">{money(item.renewalPrice, item.currency)}<small>/ {periodLabel(item.billingMonths)}</small></span>
-        <div className="subscription-due"><time dateTime={item.nextRenewal}>{item.nextRenewal}</time><DueBadge item={item} timeZone={timeZone} /></div>
+        <div className="subscription-due"><time dateTime={item.nextRenewal} aria-label={`${formatDateTime(item.nextRenewal)} ${timeZone}`}><span>{formatDateTime(item.nextRenewal).slice(0, 10)}</span><small>{formatDateTime(item.nextRenewal).slice(11)}</small></time><DueBadge item={item} timeZone={timeZone} /></div>
       </div>
       <TermProgress item={item} timeZone={timeZone} />
     </article>

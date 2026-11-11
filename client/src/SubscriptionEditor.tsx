@@ -4,6 +4,7 @@ import { api, errorMessage, json } from "./api";
 import { Banner, Button, Field } from "./components";
 import { Select } from "./Select";
 import { NumberInput, parseNumberInput } from "./NumberInput";
+import { dateTimeInstant, normalizeDateTime } from "../../shared/datetime.js";
 import type {
   Currency,
   Subscription,
@@ -49,10 +50,12 @@ function initialDraft(
   timeZone: string,
   defaultDays: number[],
 ): Draft {
-  const start = today(timeZone);
+  const start = `${today(timeZone)}T00:00`;
   return item
     ? {
         ...item,
+        periodStart: normalizeDateTime(item.periodStart),
+        nextRenewal: normalizeDateTime(item.nextRenewal),
         renewalPrice: String(item.renewalPrice),
         paidAmount: String(item.paidAmount),
         billingMonths: String(item.billingMonths),
@@ -156,8 +159,13 @@ export function SubscriptionEditor({
     event.preventDefault();
     setError("");
     try {
-      if (draft.nextRenewal <= draft.periodStart)
-        throw new Error("续费日期需要晚于本期开始日期。");
+      const periodStart = normalizeDateTime(draft.periodStart);
+      const nextRenewal = normalizeDateTime(draft.nextRenewal);
+      if (
+        dateTimeInstant(nextRenewal, timeZone) <=
+        dateTimeInstant(periodStart, timeZone)
+      )
+        throw new Error("续费时间需要晚于本期开始时间。");
       const website = new URL(draft.website);
       if (!["http:", "https:"].includes(website.protocol))
         throw new Error("商家网站只支持 HTTP 或 HTTPS 地址。");
@@ -192,6 +200,8 @@ export function SubscriptionEditor({
         throw new Error("套餐带宽需要大于 0，或留空表示未填写。");
       const data: SubscriptionInput = {
         ...draft,
+        periodStart,
+        nextRenewal,
         purchasePrice: item?.purchasePrice ?? paidAmount,
         renewalPrice,
         paidAmount,
@@ -427,25 +437,30 @@ export function SubscriptionEditor({
               <p className="muted small">适用于首购优惠、折扣或调价。</p>
             </div>
           )}
-          <Field label="本期开始日期 *">
+          <Field label="本期开始时间 *">
             <input
               value={draft.periodStart}
               onChange={(e) => field("periodStart", e.target.value)}
-              type="date"
+              type="datetime-local"
+              step={60}
               required
             />
           </Field>
-          <Field label="本期截止 / 下次续费日期 *">
+          <Field label="本期截止 / 下次续费时间 *">
             <input
               value={draft.nextRenewal}
               onChange={(e) => {
                 setEndEdited(true);
                 field("nextRenewal", e.target.value);
               }}
-              type="date"
+              type="datetime-local"
+              step={60}
               required
             />
           </Field>
+          <p className="muted small wide">
+            按账户时区 {timeZone} 填写，未指定时间默认为 00:00。
+          </p>
           <div className="auto-renew-setting wide">
             <label className="switch-control">
               <input
@@ -523,10 +538,12 @@ export function SubscriptionEditor({
 
 export function RenewalForm({
   item,
+  timeZone,
   onSaved,
   onCancel,
 }: {
   item: Subscription | null;
+  timeZone: string;
   onSaved: () => Promise<void>;
   onCancel: () => void;
 }) {
@@ -539,9 +556,10 @@ export function RenewalForm({
   useEffect(() => {
     if (item) {
       setAmount(String(item.renewalPrice));
-      setStart(item.nextRenewal);
+      const nextRenewal = normalizeDateTime(item.nextRenewal);
+      setStart(nextRenewal);
       setEnd(
-        addMonths(item.nextRenewal, item.billingMonths, item.billingAnchorDay),
+        addMonths(nextRenewal, item.billingMonths, item.billingAnchorDay),
       );
       setEndEdited(false);
       setError("");
@@ -552,22 +570,26 @@ export function RenewalForm({
   async function submit(event: FormEvent) {
     event.preventDefault();
     setError("");
-    if (start < subscription.nextRenewal || end <= start) {
-      setError("新账期开始不能早于现有截止日期，且截止日期应晚于开始日期。");
-      return;
-    }
-    setBusy(true);
     try {
+      const periodStart = normalizeDateTime(start);
+      const nextRenewal = normalizeDateTime(end);
+      const startInstant = dateTimeInstant(periodStart, timeZone);
+      if (
+        startInstant < dateTimeInstant(subscription.nextRenewal, timeZone) ||
+        dateTimeInstant(nextRenewal, timeZone) <= startInstant
+      )
+        throw new Error("新账期开始不能早于现有截止时间，且截止时间应晚于开始时间。");
       const paidAmount = parseNumberInput(amount, "本次实付金额", {
         max: 1_000_000_000,
         decimalPlaces: 2,
       });
+      setBusy(true);
       await api(
         `/subscriptions/${encodeURIComponent(subscription.id)}/renew`,
         json("POST", {
           paidAmount,
-          periodStart: start,
-          nextRenewal: end,
+          periodStart,
+          nextRenewal,
         }),
       );
       await onSaved();
@@ -623,22 +645,27 @@ export function RenewalForm({
                     ),
                   );
               }}
-              type="date"
-              min={item.nextRenewal}
+              type="datetime-local"
+              step={60}
+              min={normalizeDateTime(item.nextRenewal)}
               required
             />
           </Field>
-          <Field label="下次续费日期 *">
+          <Field label="下次续费时间 *">
             <input
               value={end}
               onChange={(e) => {
                 setEndEdited(true);
                 setEnd(e.target.value);
               }}
-              type="date"
+              type="datetime-local"
+              step={60}
               required
             />
           </Field>
+          <p className="muted small wide">
+            按账户时区 {timeZone} 填写，未指定时间默认为 00:00。
+          </p>
         </fieldset>
         <div className="form-footer">
           <span className="muted small">

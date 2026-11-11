@@ -43,6 +43,7 @@ import {
   periodLabel,
   trafficLabel,
   bandwidthLabel,
+  formatDateTime,
 } from "./utils";
 
 type Page = "overview" | "manage" | "editor" | "renew" | "reminders" | "admin" | "users";
@@ -182,6 +183,13 @@ export default function App() {
   }, [user?.id, user?.currency, user?.timeZone]);
   useEffect(() => {
     if (user) void loadData();
+  }, [loadData]);
+  useEffect(() => {
+    if (!user) return;
+    const refresh = () => { if (document.visibilityState === "visible") void loadData(); };
+    const timer = window.setInterval(refresh, 60_000);
+    document.addEventListener("visibilitychange", refresh);
+    return () => { window.clearInterval(timer); document.removeEventListener("visibilitychange", refresh); };
   }, [loadData]);
   function signedIn(next: User) {
     clearData();
@@ -543,13 +551,13 @@ export default function App() {
                       <div className="timeline-item" key={item.id}>
                         <div className="date-chip">
                           <span>{Number(item.nextRenewal.slice(5, 7))} 月</span>
-                          {item.nextRenewal.slice(8)}
+                          {item.nextRenewal.slice(8, 10)}
                         </div>
                         <div>
                           <strong>{item.name}</strong>
                           <p>
                             {money(item.renewalPrice, item.currency)} /{" "}
-                            {periodLabel(item.billingMonths)}
+                            {periodLabel(item.billingMonths)} · {formatDateTime(item.nextRenewal).slice(11)}
                           </p>
                         </div>
                       </div>
@@ -626,6 +634,7 @@ export default function App() {
           <div hidden={page !== "renew"}>
             <RenewalForm
               item={renewalItem}
+              timeZone={user.timeZone}
               onSaved={async () => {
                 setRenewalItem(null);
                 await saved("续费已登记，账期已更新。");
@@ -761,7 +770,7 @@ function Management({
                     续费 {money(item.renewalPrice, item.currency)} /{" "}
                     {periodLabel(item.billingMonths)}
                   </span>
-                  <span>{item.nextRenewal} 到期</span>
+                  <span>{formatDateTime(item.nextRenewal)} 到期</span>
                   <span>流量 {trafficLabel(item)}</span>
                   <span>带宽 {bandwidthLabel(item)}</span>
                 </div>

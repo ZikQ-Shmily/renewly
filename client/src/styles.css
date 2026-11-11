@@ -2030,6 +2030,9 @@ fieldset {
 .subscription-price { white-space: nowrap; font-size: 12px; }
 .subscription-price small { margin-left: 4px; color: var(--muted); font-size: 11px; }
 .subscription-due { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; font-size: 11px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.subscription-due time { display: flex; align-items: center; justify-content: flex-end; gap: 6px; flex-wrap: wrap; }
+.subscription-due time small { color: #9cafd0; font-size: 11px; }
+.subscription-due .badge { max-width: 100%; text-align: right; white-space: normal; }
 .subscription-due .badge { padding: 1px 0; background: transparent; font-size: 11px; }
 .badge.expired { color: #f19a9e; background: #402a35; }
 .subscription-due .badge.expired { background: transparent; }
@@ -2040,6 +2043,7 @@ fieldset {
 .term-track > span { display: block; height: 100%; background: linear-gradient(100deg,#5889f0,#9d97df); border-radius: 3px; }
 .term-progress.soon .term-track > span { background: #cf9c6f; }
 .term-note { flex: none; min-width: 101px; text-align: right; font-variant-numeric: tabular-nums; }
+input[type="datetime-local"] { min-width: 0; width: 100%; }
 .term-progress.soon .term-note { color: #edb68c; }
 .term-progress.expired .term-note { color: #f19a9e; }
 .management-row .term-progress { margin-left: 0; }
