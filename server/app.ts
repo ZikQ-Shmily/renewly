@@ -73,6 +73,11 @@ const mailSchema = z.object({
   smtpPass: z.string().max(4096).optional(),
   resendApiKey: z.string().max(4096).optional(),
 });
+const userUpdateSchema = z.object({
+  name: z.string().trim().min(1).max(60).optional(),
+  role: z.enum(["user", "admin"]).optional(),
+  status: z.enum(["active", "disabled"]).optional(),
+}).strict().refine(value => Object.keys(value).length > 0, "请填写需要更新的信息。");
 const cookieName = "renewly_session";
 export interface AppOptions {
   config?: Config;
@@ -290,8 +295,13 @@ export async function createApp(options: AppOptions = {}) {
       v.password,
       user?.password_hash || dummyHash,
     );
-    if (!user || !okay) fail(401, "INVALID_CREDENTIALS", "邮箱或密码不正确。");
-    return attachSession(c, user);
+    // Password derivation is asynchronous: account access may change meanwhile.
+    const current = user
+      ? db.prepare("SELECT * FROM users WHERE id=?").get(user.id) as any
+      : null;
+    if (!current || !okay || current.status !== "active" || current.password_hash !== user.password_hash)
+      fail(401, "INVALID_CREDENTIALS", "邮箱或密码不正确，或账号已停用。");
+    return attachSession(c, current);
   });
   app.post("/api/v1/auth/logout", (c) => {
     const token = getCookie(c, cookieName);
@@ -326,7 +336,7 @@ export async function createApp(options: AppOptions = {}) {
     c.json({ types: [{ key: "cloud", name: "云服务器", icon: "server" }] }),
   );
   app.get("/api/v1/subscriptions", (c) =>
-    c.json({ subscriptions: listSubscriptions(db, userId(c)) }),
+    c.json({ subscriptions: listSubscriptions(db, userId(c), c.get("user").time_zone, clock()) }),
   );
   app.post("/api/v1/subscriptions", async (c) => {
     const v = subscriptionSchema.parse(await c.req.json()),
@@ -336,7 +346,7 @@ export async function createApp(options: AppOptions = {}) {
     const reminderDays = v.reminderDays ?? getPrefs(owner).reminderDays;
     db.transaction(() => {
       db.prepare(
-        "INSERT INTO subscriptions(id,user_id,type_key,name,vendor,website,currency,purchase_minor,renewal_minor,billing_months,billing_anchor_day,next_renewal,status,notes,reminder_days,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+        "INSERT INTO subscriptions(id,user_id,type_key,name,vendor,website,currency,purchase_minor,renewal_minor,billing_months,billing_anchor_day,next_renewal,status,notes,reminder_days,created_at,updated_at,auto_renew) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
       ).run(
         id,
         owner,
@@ -358,8 +368,9 @@ export async function createApp(options: AppOptions = {}) {
         JSON.stringify(reminderDays),
         now,
         now,
+        Number(v.autoRenew),
       );
-      db.prepare("INSERT INTO server_details VALUES(?,?,?,?,?,?)").run(
+      db.prepare("INSERT INTO server_details(subscription_id,region,model,traffic_mode,traffic_quota_bytes,traffic_unit,bandwidth_value,bandwidth_unit) VALUES(?,?,?,?,?,?,?,?)").run(
         id,
         v.region,
         v.model,
@@ -368,6 +379,8 @@ export async function createApp(options: AppOptions = {}) {
           ? Math.round(v.trafficQuota! * (v.trafficUnit === "TB" ? 1e12 : 1e9))
           : null,
         v.trafficUnit,
+        v.bandwidthValue,
+        v.bandwidthUnit,
       );
       db.prepare(
         "INSERT INTO billing_periods(subscription_id,user_id,starts_at,ends_at,paid_minor,currency,created_at) VALUES(?,?,?,?,?,?,?)",
@@ -382,7 +395,7 @@ export async function createApp(options: AppOptions = {}) {
       );
     })();
     return c.json(
-      { subscription: serializeSubscription(db, owned(id, owner)) },
+      { subscription: serializeSubscription(db, owned(id, owner), c.get("user").time_zone, clock()) },
       201,
     );
   });
@@ -417,7 +430,7 @@ export async function createApp(options: AppOptions = {}) {
         : old.billing_anchor_day;
     db.transaction(() => {
       db.prepare(
-        "UPDATE subscriptions SET name=?,vendor=?,website=?,currency=?,purchase_minor=?,renewal_minor=?,billing_months=?,billing_anchor_day=?,next_renewal=?,status=?,notes=?,reminder_days=?,updated_at=? WHERE id=? AND user_id=?",
+        "UPDATE subscriptions SET name=?,vendor=?,website=?,currency=?,purchase_minor=?,renewal_minor=?,billing_months=?,billing_anchor_day=?,next_renewal=?,status=?,notes=?,reminder_days=?,updated_at=?,auto_renew=? WHERE id=? AND user_id=?",
       ).run(
         v.name,
         v.vendor,
@@ -432,11 +445,12 @@ export async function createApp(options: AppOptions = {}) {
         v.notes,
         JSON.stringify(v.reminderDays ?? JSON.parse(old.reminder_days)),
         now,
+        Number(v.autoRenew),
         old.id,
         userId(c),
       );
       db.prepare(
-        "UPDATE server_details SET region=?,model=?,traffic_mode=?,traffic_quota_bytes=?,traffic_unit=? WHERE subscription_id=?",
+        "UPDATE server_details SET region=?,model=?,traffic_mode=?,traffic_quota_bytes=?,traffic_unit=?,bandwidth_value=?,bandwidth_unit=? WHERE subscription_id=?",
       ).run(
         v.region,
         v.model,
@@ -445,6 +459,8 @@ export async function createApp(options: AppOptions = {}) {
           ? Math.round(v.trafficQuota! * (v.trafficUnit === "TB" ? 1e12 : 1e9))
           : null,
         v.trafficUnit,
+        v.bandwidthValue,
+        v.bandwidthUnit,
         old.id,
       );
       db.prepare(
@@ -459,7 +475,7 @@ export async function createApp(options: AppOptions = {}) {
       );
     })();
     return c.json({
-      subscription: serializeSubscription(db, owned(old.id, userId(c))),
+      subscription: serializeSubscription(db, owned(old.id, userId(c)), c.get("user").time_zone, clock()),
     });
   });
   app.delete("/api/v1/subscriptions/:id", (c) => {
@@ -516,7 +532,7 @@ export async function createApp(options: AppOptions = {}) {
       ).run(v.nextRenewal, now, old.id, userId(c));
     })();
     return c.json({
-      subscription: serializeSubscription(db, owned(old.id, userId(c))),
+      subscription: serializeSubscription(db, owned(old.id, userId(c)), c.get("user").time_zone, clock()),
     });
   });
   app.get("/api/v1/exchange-rates", async (c) => c.json(await fx.get()));
@@ -650,6 +666,57 @@ export async function createApp(options: AppOptions = {}) {
   app.get("/api/v1/me/reminder-log", (c) =>
     c.json({ deliveries: logs(userId(c)) }),
   );
+  const managedUsersQuery = `
+    SELECT u.id,u.name,u.email,u.role,u.status,u.created_at,
+      n.recipient_email,n.email_verified,
+      (SELECT COUNT(*) FROM subscriptions s WHERE s.user_id=u.id AND s.status!='archived') AS subscription_count
+    FROM users u LEFT JOIN notification_settings n ON n.user_id=u.id
+  `;
+  const managedUser = (row: any) => ({
+    id: row.id,
+    name: row.name,
+    email: row.email,
+    role: row.role,
+    status: row.status,
+    recipientEmail: row.recipient_email || "",
+    emailVerified: !!row.email_verified,
+    subscriptionCount: row.subscription_count,
+    createdAt: row.created_at,
+  });
+  app.get("/api/v1/admin/users", (c) => {
+    admin(c);
+    const rows = db.prepare(`${managedUsersQuery} ORDER BY u.created_at,u.email`).all();
+    return c.json({ users: rows.map(managedUser) });
+  });
+  app.patch("/api/v1/admin/users/:id", async (c) => {
+    admin(c);
+    const changes = userUpdateSchema.parse(await c.req.json());
+    const targetId = c.req.param("id");
+    db.transaction(() => {
+      // Recheck authorization after parsing the asynchronous request body.
+      const actor = db.prepare("SELECT role,status FROM users WHERE id=?").get(userId(c)) as any;
+      if (actor?.role !== "admin" || actor.status !== "active")
+        fail(403, "FORBIDDEN", "此功能仅供管理员使用。");
+      const old = db.prepare("SELECT id,name,role,status FROM users WHERE id=?").get(targetId) as any;
+      if (!old) fail(404, "USER_NOT_FOUND", "用户不存在。");
+      const next = { ...old, ...changes };
+      if (targetId === userId(c) && (next.role !== "admin" || next.status !== "active"))
+        fail(409, "CURRENT_ADMIN_PROTECTED", "不能降权或停用当前登录管理员。");
+      if (old.role === "admin" && old.status === "active" && (next.role !== "admin" || next.status !== "active")) {
+        const count = db.prepare("SELECT COUNT(*) AS n FROM users WHERE role='admin' AND status='active'").get() as { n: number };
+        if (count.n <= 1) fail(409, "LAST_ADMIN_PROTECTED", "请保留至少一位正常的管理员。");
+      }
+      db.prepare("UPDATE users SET name=?,role=?,status=? WHERE id=?").run(next.name, next.role, next.status, targetId);
+      if (next.status === "disabled" || next.role !== old.role)
+        db.prepare("DELETE FROM sessions WHERE user_id=?").run(targetId);
+      if (next.status === "disabled")
+        db.prepare("DELETE FROM email_verifications WHERE user_id=?").run(targetId);
+      db.prepare("INSERT INTO audit_logs(actor_id,action,created_at) VALUES(?,?,?)").run(
+        userId(c), JSON.stringify({ action: "user.updated", targetId, changes }), clock().toISOString(),
+      );
+    })();
+    return c.json({ user: managedUser(db.prepare(`${managedUsersQuery} WHERE u.id=?`).get(targetId)) });
+  });
   app.get("/api/v1/admin/mail", (c) => {
     admin(c);
     return c.json(mail.settings());

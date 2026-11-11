@@ -108,7 +108,7 @@ export function sessionUser(db: DB, token: string | undefined) {
   return (
     (db
       .prepare(
-        "SELECT u.* FROM users u JOIN sessions s ON u.id=s.user_id WHERE s.token_hash=? AND s.expires_at>?",
+        "SELECT u.* FROM users u JOIN sessions s ON u.id=s.user_id WHERE s.token_hash=? AND s.expires_at>? AND u.status='active'",
       )
       .get(tokenHash(token), new Date().toISOString()) as any) || null
   );

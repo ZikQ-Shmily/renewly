@@ -54,6 +54,9 @@ export const subscriptionSchema = z
     trafficMode: z.enum(["limited", "unlimited", "unknown"]).default("unknown"),
     trafficQuota: z.number().finite().positive().nullable().optional(),
     trafficUnit: z.enum(["GB", "TB"]).default("GB"),
+    bandwidthValue: z.number().finite().positive().max(1e9).nullable().default(null),
+    bandwidthUnit: z.enum(["Mbps", "Gbps"]).default("Mbps"),
+    autoRenew: z.boolean().default(false),
     status: z.enum(["active", "paused", "archived"]).default("active"),
     notes: z.string().max(4000).default(""),
     reminderDays: daysSchema.optional(),
@@ -121,7 +124,7 @@ export function dateDiff(a: string, b: string) {
     (Date.parse(`${a}T00:00:00Z`) - Date.parse(`${b}T00:00:00Z`)) / dayMs,
   );
 }
-export function serializeSubscription(db: DB, row: any) {
+export function serializeSubscription(db: DB, row: any, timeZone?: string, now = new Date()) {
   const details = db
     .prepare("SELECT * FROM server_details WHERE subscription_id=?")
     .get(row.id) as any;
@@ -130,6 +133,13 @@ export function serializeSubscription(db: DB, row: any) {
       "SELECT * FROM billing_periods WHERE subscription_id=? AND user_id=? ORDER BY id DESC LIMIT 1",
     )
     .get(row.id, row.user_id) as any;
+  const zone = timeZone || (db.prepare("SELECT time_zone FROM users WHERE id=?").get(row.user_id) as { time_zone: string }).time_zone;
+  const today = localDate(now, zone);
+  const periods = db.prepare("SELECT starts_at,ends_at FROM billing_periods WHERE subscription_id=? AND user_id=? ORDER BY starts_at DESC,id DESC").all(row.id, row.user_id) as { starts_at: string; ends_at: string }[];
+  const current = periods.find(p => p.starts_at <= today && p.ends_at > today);
+  const upcoming = periods.filter(p => p.starts_at > today).at(-1);
+  const expired = periods.filter(p => p.ends_at <= today).sort((a,b) => b.ends_at.localeCompare(a.ends_at))[0];
+  const serializePeriod = (p: typeof current) => p ? { startsAt: p.starts_at, endsAt: p.ends_at } : null;
   return {
     id: row.id,
     type: row.type_key,
@@ -144,6 +154,8 @@ export function serializeSubscription(db: DB, row: any) {
     periodStart: period.starts_at,
     nextRenewal: row.next_renewal,
     paidAmount: period.paid_minor / 100,
+    currentPeriod: serializePeriod(current),
+    progressPeriod: serializePeriod(current || upcoming || expired),
     region: details?.region || "",
     model: details?.model || "",
     trafficMode: details?.traffic_mode || "unknown",
@@ -153,6 +165,9 @@ export function serializeSubscription(db: DB, row: any) {
         : details.traffic_quota_bytes /
           (details.traffic_unit === "TB" ? 1e12 : 1e9),
     trafficUnit: details?.traffic_unit || "GB",
+    bandwidthValue: details?.bandwidth_value ?? null,
+    bandwidthUnit: details?.bandwidth_unit || "Mbps",
+    autoRenew: !!row.auto_renew,
     status: row.status,
     notes: row.notes,
     reminderDays: JSON.parse(row.reminder_days),
@@ -160,14 +175,14 @@ export function serializeSubscription(db: DB, row: any) {
     updatedAt: row.updated_at,
   };
 }
-export function listSubscriptions(db: DB, userId: string) {
+export function listSubscriptions(db: DB, userId: string, timeZone?: string, now = new Date()) {
   return (
     db
       .prepare(
         "SELECT * FROM subscriptions WHERE user_id=? ORDER BY next_renewal,name",
       )
       .all(userId) as any[]
-  ).map((r) => serializeSubscription(db, r));
+  ).map((r) => serializeSubscription(db, r, timeZone, now));
 }
 export function totals(
   db: DB,
@@ -177,7 +192,7 @@ export function totals(
   rates: Record<string, number>,
   now = new Date(),
 ) {
-  const all = listSubscriptions(db, userId),
+  const all = listSubscriptions(db, userId, timeZone, now),
     active = all.filter((s) => s.status === "active"),
     today = localDate(now, timeZone),
     missing = new Set<string>();

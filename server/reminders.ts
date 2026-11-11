@@ -44,7 +44,7 @@ export function createReminders(db: DB, mail: MailService, config: Config) {
         SELECT s.*,u.time_zone FROM subscriptions s
         JOIN users u ON u.id=s.user_id
         JOIN notification_settings n ON n.user_id=u.id
-        WHERE s.status='active' AND n.enabled=1 AND n.email_verified=1 AND n.recipient_email!=''
+        WHERE s.status='active' AND u.status='active' AND n.enabled=1 AND n.email_verified=1 AND n.recipient_email!=''
       `,
         )
         .all() as any[];
@@ -92,13 +92,13 @@ export function createReminders(db: DB, mail: MailService, config: Config) {
         const delivery = db
           .prepare(
             `
-          SELECT d.*,s.name,s.vendor,s.currency,s.renewal_minor,s.reminder_days,
+          SELECT d.*,s.name,s.vendor,s.currency,s.renewal_minor,s.reminder_days,s.auto_renew,
             u.time_zone,n.recipient_email
           FROM reminder_deliveries d
           JOIN subscriptions s ON s.id=d.subscription_id AND s.user_id=d.user_id
           JOIN users u ON u.id=d.user_id
           JOIN notification_settings n ON n.user_id=u.id
-          WHERE d.id=? AND d.due_date=s.next_renewal AND s.status='active'
+          WHERE d.id=? AND d.due_date=s.next_renewal AND s.status='active' AND u.status='active'
             AND n.enabled=1 AND n.email_verified=1 AND n.recipient_email!=''
         `,
           )
@@ -131,14 +131,17 @@ export function createReminders(db: DB, mail: MailService, config: Config) {
           style: "currency",
           currency: delivery.currency,
         }).format(delivery.renewal_minor / 100);
-        const text = `${delivery.name} ${when}。\n商家：${delivery.vendor}\n续费日期：${delivery.due_date}\n续费价格：${price}\n请前往商家完成续费，并在续记登记。\n${config.appUrl}`;
+        const instruction = delivery.auto_renew
+          ? "此订阅已标记商家自动续费，请检查余额并确认商家扣款成功，再在续记登记。"
+          : "请前往商家完成续费，并在续记登记。";
+        const text = `${delivery.name} ${when}。\n商家：${delivery.vendor}\n续费日期：${delivery.due_date}\n续费价格：${price}\n${instruction}\n${config.appUrl}`;
 
         try {
           await mail.send({
             to: delivery.recipient_email,
             subject: `续记 · ${delivery.name} ${when}`,
             text,
-            html: `<h2>${htmlEscape(delivery.name)} ${when}</h2><p>商家：${htmlEscape(delivery.vendor)}</p><p>续费日期：${delivery.due_date}</p><p>续费价格：${htmlEscape(price)}</p><p>请前往商家完成续费，并在续记登记。</p><a href="${htmlEscape(config.appUrl)}">打开续记</a>`,
+            html: `<h2>${htmlEscape(delivery.name)} ${when}</h2><p>商家：${htmlEscape(delivery.vendor)}</p><p>续费日期：${delivery.due_date}</p><p>续费价格：${htmlEscape(price)}</p><p>${htmlEscape(instruction)}</p><a href="${htmlEscape(config.appUrl)}">打开续记</a>`,
             idempotencyKey: `renewly-${delivery.id}`,
           });
           db.prepare(

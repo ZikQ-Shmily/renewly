@@ -19,8 +19,7 @@ export function migrate(db: DB) {
   const version = db
     .prepare("SELECT MAX(version) AS version FROM schema_migrations")
     .get() as { version: number | null };
-  if ((version.version || 0) >= 1) return;
-  db.transaction(() => {
+  if ((version.version || 0) < 1) db.transaction(() => {
     db.exec(`
       CREATE TABLE users(id TEXT PRIMARY KEY,email TEXT NOT NULL UNIQUE COLLATE NOCASE,name TEXT NOT NULL,password_hash TEXT NOT NULL,role TEXT NOT NULL CHECK(role IN ('user','admin')),currency TEXT NOT NULL DEFAULT 'CNY',time_zone TEXT NOT NULL DEFAULT 'Asia/Shanghai',created_at TEXT NOT NULL);
       CREATE TABLE sessions(token_hash TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,expires_at TEXT NOT NULL);
@@ -44,5 +43,14 @@ export function migrate(db: DB) {
     db.prepare("INSERT INTO schema_migrations VALUES(1,?)").run(
       new Date().toISOString(),
     );
+  })();
+  if ((version.version || 0) < 2) db.transaction(() => {
+    db.exec(`
+      ALTER TABLE users ADD COLUMN status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active','disabled'));
+      ALTER TABLE subscriptions ADD COLUMN auto_renew INTEGER NOT NULL DEFAULT 0 CHECK(auto_renew IN (0,1));
+      ALTER TABLE server_details ADD COLUMN bandwidth_value REAL CHECK(bandwidth_value > 0);
+      ALTER TABLE server_details ADD COLUMN bandwidth_unit TEXT NOT NULL DEFAULT 'Mbps' CHECK(bandwidth_unit IN ('Mbps','Gbps'));
+    `);
+    db.prepare("INSERT INTO schema_migrations VALUES(2,?)").run(new Date().toISOString());
   })();
 }
