@@ -801,6 +801,10 @@ export async function createApp(options: AppOptions = {}) {
   if (existsSync(join(config.clientDir, "index.html"))) {
     app.use("/assets/*", serveStatic({ root: config.clientDir }));
     app.use("/favicon.svg", serveStatic({ root: config.clientDir }));
+    app.use("/theme-init.js", async (c, next) => {
+      c.header("Cache-Control", "no-cache");
+      await next();
+    }, serveStatic({ root: config.clientDir }));
     app.get("*", (c) => {
       c.header("Cache-Control", "no-cache");
       return c.html(readFileSync(join(config.clientDir, "index.html"), "utf8"));
