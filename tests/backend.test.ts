@@ -336,7 +336,7 @@ test("v1 migration preserves existing subscription and user data and is repeatab
     assert.equal(subscription.diskValue, null);
     assert.deepEqual(subscription.ipAddresses, []);
     assert.equal((db.prepare("SELECT due_date FROM reminder_deliveries").get() as any).due_date, "2027-01-01T00:00");
-    assert.deepEqual(db.prepare("SELECT version FROM schema_migrations ORDER BY version").all(), [{ version: 1 }, { version: 2 }, { version: 3 }, { version: 4 }, { version: 5 }, { version: 6 }, { version: 7 }]);
+    assert.deepEqual(db.prepare("SELECT version FROM schema_migrations ORDER BY version").all(), [{ version: 1 }, { version: 2 }, { version: 3 }, { version: 4 }, { version: 5 }, { version: 6 }, { version: 7 }, { version: 8 }]);
   } finally { db.close(); }
 });
 
@@ -662,6 +662,118 @@ test("App subscriptions round trip, stay owner scoped, renew and aggregate separ
   } finally { f.cleanup(); }
 });
 
+test("App purchase channels create, edit and round trip with in-app purchases while rejecting unknown values", async () => {
+  const f = await fixture();
+  try {
+    const { cookie } = await f.seedAccount("app-channels@example.com");
+    const appInput = { ...input, type: "app", name: "应用内购测试", appPlan: "Premium", appChannel: "应用内购", appAccount: "个人账户", appIcon: "spotify" };
+    const created = await f.request("/subscriptions", "POST", appInput, cookie);
+    assert.equal(created.status, 201, await created.clone().text());
+    const item = (await created.json() as any).subscription;
+    assert.equal(item.appChannel, "应用内购");
+    assert.equal((f.runtime.db.prepare("SELECT purchase_channel FROM app_details WHERE subscription_id=?").get(item.id) as any).purchase_channel, "应用内购");
+
+    for (const appChannel of ["官网", "App Store", "Google Play", "其他"]) {
+      const originalChannel = await f.request("/subscriptions", "POST", { ...appInput, appChannel }, cookie);
+      assert.equal(originalChannel.status, 201, await originalChannel.clone().text());
+      assert.equal((await originalChannel.json() as any).subscription.appChannel, appChannel);
+      const edited = await f.request(`/subscriptions/${item.id}`, "PUT", { ...appInput, appChannel }, cookie);
+      assert.equal(edited.status, 200, await edited.clone().text());
+      assert.equal((await edited.json() as any).subscription.appChannel, appChannel);
+    }
+    const edited = await f.request(`/subscriptions/${item.id}`, "PUT", { ...appInput, appPlan: "Premium 年付" }, cookie);
+    assert.equal(edited.status, 200, await edited.clone().text());
+    assert.equal((await edited.json() as any).subscription.appChannel, "应用内购");
+
+    for (const appChannel of ["未知渠道", "In-App Purchase", "应用内购买", "", null, 1]) {
+      assert.equal((await f.request("/subscriptions", "POST", { ...appInput, appChannel }, cookie)).status, 400);
+      assert.equal((await f.request(`/subscriptions/${item.id}`, "PUT", { ...appInput, appChannel }, cookie)).status, 400);
+    }
+    const list = await f.request("/subscriptions", "GET", undefined, cookie).then(response => response.json()) as any;
+    const saved = list.subscriptions.find((subscription: any) => subscription.id === item.id);
+    assert.equal(list.subscriptions.length, 5);
+    assert.equal(saved.appChannel, "应用内购");
+    assert.equal(saved.appPlan, "Premium 年付");
+    assert.equal(saved.appAccount, "个人账户");
+    assert.equal(saved.appIcon, "spotify");
+  } finally { f.cleanup(); }
+});
+
+test("v8 migration preserves populated v7 Apps and related data, rolls back failures and is repeatable", async () => {
+  const f = await fixture();
+  try {
+    const { cookie, user } = await f.seedAccount("v8-app-owner@example.com");
+    const png = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
+    const appIds: string[] = [];
+    for (const [index, appChannel] of ["官网", "App Store", "Google Play", "其他"].entries()) {
+      const created = await f.request("/subscriptions", "POST", {
+        ...input, type: "app", name: `迁移应用 ${index}`, currency: "JPY", appChannel,
+        appPlan: `保留套餐 ${index}`, appAccount: `saved-account-${index}@example.com`,
+        appIcon: index === 0 ? png : "notion", autoRenew: true, notes: `保留备注 ${index}`,
+      }, cookie);
+      assert.equal(created.status, 201, await created.clone().text());
+      appIds.push((await created.json() as any).subscription.id);
+    }
+    const cloud = await f.request("/subscriptions", "POST", { ...input, currency: "USD", ipAddresses: [{ type: "static", address: "203.0.113.18" }] }, cookie);
+    assert.equal(cloud.status, 201, await cloud.clone().text());
+    const db = f.runtime.db;
+    db.prepare("UPDATE users SET currency='GBP' WHERE id=?").run(user.id);
+    db.exec("UPDATE mail_settings SET enabled=1,transport='resend',sender_email='migration@example.com',secrets_cipher='preserved-encrypted-secret'");
+    // Recreate the deployed v7 constraint with real App rows before exercising the upgrade.
+    db.transaction(() => {
+      db.exec(`
+        CREATE TABLE app_details_v7(
+          subscription_id TEXT PRIMARY KEY REFERENCES subscriptions(id) ON DELETE CASCADE,
+          plan TEXT NOT NULL DEFAULT '',
+          purchase_channel TEXT NOT NULL DEFAULT '官网' CHECK(purchase_channel IN ('官网','App Store','Google Play','其他')),
+          account TEXT NOT NULL DEFAULT '',
+          icon TEXT NOT NULL DEFAULT 'auto'
+        );
+        INSERT INTO app_details_v7 SELECT * FROM app_details;
+        DROP TABLE app_details;
+        ALTER TABLE app_details_v7 RENAME TO app_details;
+        DELETE FROM schema_migrations WHERE version>=8;
+      `);
+    })();
+    assert.throws(() => db.prepare("UPDATE app_details SET purchase_channel='应用内购' WHERE subscription_id=?").run(appIds[0]), /CHECK constraint failed/);
+    const tables = ["users", "sessions", "notification_settings", "subscriptions", "server_details", "app_details", "billing_periods", "mail_settings"];
+    const snapshot = () => Object.fromEntries(tables.map(table => [table, db.prepare(`SELECT * FROM ${table} ORDER BY rowid`).all()]));
+    const before = snapshot();
+    const oldSchema = db.prepare("SELECT sql FROM sqlite_master WHERE name='app_details'").get();
+    const foreignKeys = db.prepare("PRAGMA foreign_key_list(app_details)").all();
+    const oldMigrations = db.prepare("SELECT * FROM schema_migrations ORDER BY version").all();
+    db.exec("CREATE TRIGGER fail_v8_migration BEFORE INSERT ON schema_migrations WHEN NEW.version=8 BEGIN SELECT RAISE(ABORT,'simulated v8 marker failure'); END");
+    assert.throws(() => migrate(db), /simulated v8 marker failure/);
+    assert.deepEqual(snapshot(), before);
+    assert.deepEqual(db.prepare("SELECT sql FROM sqlite_master WHERE name='app_details'").get(), oldSchema);
+    assert.equal(db.prepare("SELECT name FROM sqlite_master WHERE name='app_details_v8'").get(), undefined);
+    assert.deepEqual(db.prepare("SELECT * FROM schema_migrations ORDER BY version").all(), oldMigrations);
+    db.exec("DROP TRIGGER fail_v8_migration");
+
+    migrate(db);
+    migrate(db);
+    assert.deepEqual(snapshot(), before);
+    assert.deepEqual(db.prepare("SELECT * FROM schema_migrations WHERE version<8 ORDER BY version").all(), oldMigrations);
+    assert.equal((db.prepare("SELECT MAX(version) version FROM schema_migrations").get() as any).version, 8);
+    assert.equal((db.prepare("SELECT COUNT(*) n FROM schema_migrations WHERE version=8").get() as any).n, 1);
+    assert.deepEqual(db.prepare("PRAGMA foreign_key_list(app_details)").all(), foreignKeys);
+    assert.deepEqual(db.prepare("PRAGMA foreign_key_check").all(), []);
+    assert.equal((db.prepare("PRAGMA quick_check").get() as any).quick_check, "ok");
+    db.prepare("UPDATE app_details SET purchase_channel='应用内购' WHERE subscription_id=?").run(appIds[0]);
+    const listed = await f.request("/subscriptions", "GET", undefined, cookie).then(response => response.json()) as any;
+    const migrated = listed.subscriptions.find((subscription: any) => subscription.id === appIds[0]);
+    assert.equal(migrated.appChannel, "应用内购");
+    assert.equal(migrated.appPlan, "保留套餐 0");
+    assert.equal(migrated.appAccount, "saved-account-0@example.com");
+    assert.equal(migrated.appIcon, png);
+    assert.throws(() => db.prepare("UPDATE app_details SET purchase_channel='未知渠道' WHERE subscription_id=?").run(appIds[0]), /CHECK constraint failed/);
+    assert.throws(() => db.prepare("INSERT INTO app_details(subscription_id) VALUES('missing-subscription')").run(), /FOREIGN KEY constraint failed/);
+    db.prepare("DELETE FROM subscriptions WHERE id=?").run(appIds[0]);
+    assert.equal(db.prepare("SELECT * FROM app_details WHERE subscription_id=?").get(appIds[0]), undefined);
+    assert.deepEqual(db.prepare("PRAGMA foreign_key_check").all(), []);
+  } finally { f.cleanup(); }
+});
+
 test("v7 upgrade preserves foreign-currency cloud records, paid history and mail while pinning summaries to CNY", async () => {
   const f = await fixture();
   try {
@@ -672,7 +784,7 @@ test("v7 upgrade preserves foreign-currency cloud records, paid history and mail
     const periods = f.runtime.db.prepare("SELECT * FROM billing_periods").all();
     const mail = f.runtime.db.prepare("SELECT * FROM mail_settings").all();
     f.runtime.db.prepare("UPDATE users SET currency='GBP' WHERE id=?").run(user.id);
-    f.runtime.db.exec("DROP TABLE app_details; DELETE FROM schema_migrations WHERE version=7;");
+    f.runtime.db.exec("DROP TABLE app_details; DELETE FROM schema_migrations WHERE version>=7;");
     migrate(f.runtime.db); migrate(f.runtime.db);
     assert.equal((f.runtime.db.prepare("SELECT currency FROM users WHERE id=?").get(user.id) as any).currency, "CNY");
     assert.deepEqual((await f.request("/subscriptions", "GET", undefined, cookie).then(r => r.json()) as any).subscriptions[0], before);
