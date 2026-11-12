@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { appIconInitial, appIconPresets, matchedAppIcon, appFaviconUrl, isUploadedAppIcon, resolveAppIcon } from "../client/src/app-icons.js";
+import { appIconInitial, appIconPresets, merchantIconPresets, matchedAppIcon, appFaviconUrl, isUploadedAppIcon, resolveAppIcon } from "../client/src/app-icons.js";
 
 test("merchant initials preserve complete Unicode graphemes and use a cloud for empty names", () => {
   assert.equal(appIconInitial("腾讯云"), "腾");
@@ -62,4 +62,34 @@ test("manual generic icons suppress merchant requests and selected presets overr
   assert.equal(automatic.src, "https://billing.example.com/favicon.ico");
   assert.equal(automatic.preset, undefined);
   assert.equal(resolveAppIcon("Example", "https://example.com", "data:image/jpeg;base64,AA==").src, "data:image/jpeg;base64,AA==");
+});
+
+test("bundled merchant logos match the catalog names, aliases and verified websites", () => {
+  for (const preset of merchantIconPresets) {
+    assert.equal(matchedAppIcon(preset.label, "")?.key, preset.key, preset.label);
+    assert.ok(preset.image, preset.key);
+    for (const src of new Set([preset.image!.light, preset.image!.dark])) {
+      assert.match(src, /^\/app-icons\/merchants\/[a-z0-9-]+\.webp$/);
+      const data = readFileSync(new URL(`../client/public${src}`, import.meta.url));
+      assert.equal(data.subarray(0, 4).toString(), "RIFF", src);
+      assert.equal(data.subarray(8, 12).toString(), "WEBP", src);
+      assert.ok(data.length > 20 && data.length < 65_536, src);
+    }
+  }
+  for (const [name, website, key] of [
+    ["干杯Cloud", "", "merchant-usvps24"],
+    ["干杯 Cloud", "", "merchant-usvps24"],
+    ["Zgo", "", "merchant-zgovps"],
+    ["大妈", "", "merchant-dmit"],
+    ["搬瓦工", "", "merchant-bandwagon"],
+    ["未填名称", "https://www.dmit.io/clientarea.php", "merchant-dmit"],
+    ["我的服务器", "https://console.po0.io/login", "merchant-po0"],
+    ["自定义名称", "https://www.bytevirt.com/clientarea.php", "merchant-bytevirt"],
+  ]) assert.equal(matchedAppIcon(name, website)?.key, key);
+  for (const [name, website] of [["DMITnot", ""], ["account", ""], ["CC plan", ""], ["Unknown", "https://dmit.io.evil.example"], ["Unknown", "https://evil-po0.io"]])
+    assert.equal(matchedAppIcon(name, website), undefined);
+  const manual = resolveAppIcon("Notion", "https://notion.so", "merchant-dmit");
+  assert.equal(manual.preset?.key, "merchant-dmit");
+  assert.equal(manual.src, null);
+  assert.equal(resolveAppIcon("DMIT", "https://dmit.io", "generic").preset, undefined);
 });
