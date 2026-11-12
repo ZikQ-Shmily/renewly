@@ -1,0 +1,1589 @@
+[
+  {
+    "key": "merchant-gomami",
+    "label": "GoMami（狗妈）",
+    "aliases": [
+      "GoMami",
+      "狗妈",
+      "gomami"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/gomami-light-a3ba8c11.webp",
+    "dark": "/app-icons/merchants/gomami-light-a3ba8c11.webp"
+  },
+  {
+    "key": "merchant-bandwagon",
+    "label": "Bandwagon（搬瓦工）",
+    "aliases": [
+      "Bandwagon",
+      "搬瓦工",
+      "BandwagonHost",
+      "bandwagon"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/bandwagon-light-4dfa8ecd.webp",
+    "dark": "/app-icons/merchants/bandwagon-light-4dfa8ecd.webp"
+  },
+  {
+    "key": "merchant-dmit",
+    "label": "DMIT（大妈）",
+    "aliases": [
+      "DMIT",
+      "大妈",
+      "dmit"
+    ],
+    "domains": [
+      "dmit.io"
+    ],
+    "light": "/app-icons/merchants/dmit-light-aec933bf.webp",
+    "dark": "/app-icons/merchants/dmit-light-aec933bf.webp"
+  },
+  {
+    "key": "merchant-zgovps",
+    "label": "ZgoCloud",
+    "aliases": [
+      "ZgoCloud",
+      "Zgo",
+      "zgovps"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/zgovps-light-be91a9ea.webp",
+    "dark": "/app-icons/merchants/zgovps-light-be91a9ea.webp"
+  },
+  {
+    "key": "merchant-bytevirt",
+    "label": "ByteVirt",
+    "aliases": [
+      "ByteVirt",
+      "bytevirt"
+    ],
+    "domains": [
+      "bytevirt.com",
+      "bytevirt.net"
+    ],
+    "light": "/app-icons/merchants/bytevirt-light-4ea811df.webp",
+    "dark": "/app-icons/merchants/bytevirt-light-4ea811df.webp"
+  },
+  {
+    "key": "merchant-evoxt",
+    "label": "Evoxt（益沃斯）",
+    "aliases": [
+      "Evoxt",
+      "益沃斯",
+      "evoxt"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/evoxt-light-37e16a22.webp",
+    "dark": "/app-icons/merchants/evoxt-light-37e16a22.webp"
+  },
+  {
+    "key": "merchant-lisahost",
+    "label": "Lisahost（丽萨主机）",
+    "aliases": [
+      "Lisahost",
+      "丽萨主机",
+      "lisahost"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/lisahost-light-87d0ca47.webp",
+    "dark": "/app-icons/merchants/lisahost-light-87d0ca47.webp"
+  },
+  {
+    "key": "merchant-wepc",
+    "label": "WePC（车库云）",
+    "aliases": [
+      "WePC",
+      "车库云",
+      "wepc"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/wepc-light-72d36a56.webp",
+    "dark": "/app-icons/merchants/wepc-light-72d36a56.webp"
+  },
+  {
+    "key": "merchant-yunyoo",
+    "label": "云悠（YUNYOO）",
+    "aliases": [
+      "云悠",
+      "YUNYOO",
+      "yunyoo"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/yunyoo-light-46849781.webp",
+    "dark": "/app-icons/merchants/yunyoo-light-46849781.webp"
+  },
+  {
+    "key": "merchant-666clouds",
+    "label": "六六云",
+    "aliases": [
+      "六六云",
+      "666clouds"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/666clouds-light-1a0fa564.webp",
+    "dark": "/app-icons/merchants/666clouds-light-1a0fa564.webp"
+  },
+  {
+    "key": "merchant-qqg",
+    "label": "QQG",
+    "aliases": [
+      "QQG",
+      "qqg"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/qqg-light-ce6c496c.webp",
+    "dark": "/app-icons/merchants/qqg-light-ce6c496c.webp"
+  },
+  {
+    "key": "merchant-usvps24",
+    "label": "干杯 Cloud",
+    "aliases": [
+      "干杯 Cloud",
+      "干杯Cloud",
+      "干杯云",
+      "USVPS24",
+      "usvps24"
+    ],
+    "domains": [
+      "usvps24.com"
+    ],
+    "light": "/app-icons/merchants/usvps24-light-a34447c7.webp",
+    "dark": "/app-icons/merchants/usvps24-light-a34447c7.webp"
+  },
+  {
+    "key": "merchant-zorocloud",
+    "label": "ZoroCloud（索隆云）",
+    "aliases": [
+      "ZoroCloud",
+      "索隆云",
+      "zorocloud"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/zorocloud-light-ad32511d.webp",
+    "dark": "/app-icons/merchants/zorocloud-light-ad32511d.webp"
+  },
+  {
+    "key": "merchant-yin-net",
+    "label": "蔭雲（YINNET）",
+    "aliases": [
+      "蔭雲",
+      "YINNET",
+      "荫云",
+      "yin-net"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/yin-net-light-8e57b174.webp",
+    "dark": "/app-icons/merchants/yin-net-light-8e57b174.webp"
+  },
+  {
+    "key": "merchant-rfchost",
+    "label": "RFCHost（花卷）",
+    "aliases": [
+      "RFCHost",
+      "花卷",
+      "rfchost"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/rfchost-light-86492b29.webp",
+    "dark": "/app-icons/merchants/rfchost-light-86492b29.webp"
+  },
+  {
+    "key": "merchant-sadidc",
+    "label": "伤心的云（Sad Cloud）",
+    "aliases": [
+      "伤心的云",
+      "Sad Cloud",
+      "sadidc"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/sadidc-light-31056f5c.webp",
+    "dark": "/app-icons/merchants/sadidc-light-31056f5c.webp"
+  },
+  {
+    "key": "merchant-novixlink",
+    "label": "NovixLink 诺联主机",
+    "aliases": [
+      "NovixLink 诺联主机",
+      "novixlink"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/novixlink-light-9f6fe331.webp",
+    "dark": "/app-icons/merchants/novixlink-light-9f6fe331.webp"
+  },
+  {
+    "key": "merchant-akile",
+    "label": "AkileCloud（AK）",
+    "aliases": [
+      "AkileCloud",
+      "AK",
+      "akile"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/akile-light-32d941b4.webp",
+    "dark": "/app-icons/merchants/akile-light-32d941b4.webp"
+  },
+  {
+    "key": "merchant-racknerd",
+    "label": "RackNerd（RN）",
+    "aliases": [
+      "RackNerd",
+      "RN",
+      "racknerd"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/racknerd-light-a129314e.webp",
+    "dark": "/app-icons/merchants/racknerd-light-a129314e.webp"
+  },
+  {
+    "key": "merchant-dotdotnetworks",
+    "label": "Dotdot Networks",
+    "aliases": [
+      "Dotdot Networks",
+      "dotdotnetworks"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/dotdotnetworks-light-2aef6c88.webp",
+    "dark": "/app-icons/merchants/dotdotnetworks-light-2aef6c88.webp"
+  },
+  {
+    "key": "merchant-sixtynet",
+    "label": "SixtyNet",
+    "aliases": [
+      "SixtyNet",
+      "sixtynet"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/sixtynet-light-985cac34.webp",
+    "dark": "/app-icons/merchants/sixtynet-light-985cac34.webp"
+  },
+  {
+    "key": "merchant-isif",
+    "label": "ISIF Cloud",
+    "aliases": [
+      "ISIF Cloud",
+      "isif"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/isif-light-5776aae0.webp",
+    "dark": "/app-icons/merchants/isif-dark-d6d883eb.webp"
+  },
+  {
+    "key": "merchant-rcvps",
+    "label": "热陈互联IDC RCCloud",
+    "aliases": [
+      "热陈互联IDC RCCloud",
+      "rcvps",
+      "热陈互联",
+      "RCCloud"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/rcvps-light-93c6aa39.webp",
+    "dark": "/app-icons/merchants/rcvps-light-93c6aa39.webp"
+  },
+  {
+    "key": "merchant-akkocloud",
+    "label": "AkkoCloud",
+    "aliases": [
+      "AkkoCloud",
+      "akkocloud"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/akkocloud-light-9817d9e5.webp",
+    "dark": "/app-icons/merchants/akkocloud-light-9817d9e5.webp"
+  },
+  {
+    "key": "merchant-greencloudvps",
+    "label": "GreenCloud（绿云）",
+    "aliases": [
+      "GreenCloud",
+      "绿云",
+      "greencloudvps"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/greencloudvps-light-43849089.webp",
+    "dark": "/app-icons/merchants/greencloudvps-light-43849089.webp"
+  },
+  {
+    "key": "merchant-saltyfish",
+    "label": "SaltyFish（咸鱼）",
+    "aliases": [
+      "SaltyFish",
+      "咸鱼",
+      "saltyfish"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/saltyfish-light-f159d77a.webp",
+    "dark": "/app-icons/merchants/saltyfish-light-f159d77a.webp"
+  },
+  {
+    "key": "merchant-skylineconnect",
+    "label": "Skyline Connect",
+    "aliases": [
+      "Skyline Connect",
+      "skylineconnect"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/skylineconnect-light-79f51a4d.webp",
+    "dark": "/app-icons/merchants/skylineconnect-light-79f51a4d.webp"
+  },
+  {
+    "key": "merchant-joysol",
+    "label": "JoySolData 悦阳数据",
+    "aliases": [
+      "JoySolData 悦阳数据",
+      "joysol",
+      "JoySolData",
+      "悦阳数据"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/joysol-light-ab10f31e.webp",
+    "dark": "/app-icons/merchants/joysol-light-ab10f31e.webp"
+  },
+  {
+    "key": "merchant-aaitr",
+    "label": "AaITR",
+    "aliases": [
+      "AaITR",
+      "aaitr"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/aaitr-light-3aa383e8.webp",
+    "dark": "/app-icons/merchants/aaitr-light-3aa383e8.webp"
+  },
+  {
+    "key": "merchant-v-ps",
+    "label": "V.PS（小秘书）",
+    "aliases": [
+      "V.PS",
+      "小秘书",
+      "v-ps"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/v-ps-light-6ab6b3b2.webp",
+    "dark": "/app-icons/merchants/v-ps-dark-c4c0b39e.webp"
+  },
+  {
+    "key": "merchant-vmiss",
+    "label": "VMISS",
+    "aliases": [
+      "VMISS",
+      "vmiss"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/vmiss-light-7d2d99f3.webp",
+    "dark": "/app-icons/merchants/vmiss-light-7d2d99f3.webp"
+  },
+  {
+    "key": "merchant-bagevm",
+    "label": "BageVM",
+    "aliases": [
+      "BageVM",
+      "bagevm"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/bagevm-light-9cdbc067.webp",
+    "dark": "/app-icons/merchants/bagevm-dark-e0471819.webp"
+  },
+  {
+    "key": "merchant-panstar",
+    "label": "PanstarCloud（小妈云）",
+    "aliases": [
+      "PanstarCloud",
+      "小妈云",
+      "panstar"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/panstar-light-ee1ba87f.webp",
+    "dark": "/app-icons/merchants/panstar-dark-4ccccc1b.webp"
+  },
+  {
+    "key": "merchant-ppflight",
+    "label": "PPFlight",
+    "aliases": [
+      "PPFlight",
+      "ppflight"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/ppflight-light-038812bb.webp",
+    "dark": "/app-icons/merchants/ppflight-dark-70d7e95d.webp"
+  },
+  {
+    "key": "merchant-yt",
+    "label": "YT.NET（云途）",
+    "aliases": [
+      "YT.NET",
+      "云途"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/yt-light-5ea5bce3.webp",
+    "dark": "/app-icons/merchants/yt-light-5ea5bce3.webp"
+  },
+  {
+    "key": "merchant-pqs",
+    "label": "PittQiao（PQS）",
+    "aliases": [
+      "PittQiao",
+      "PQS",
+      "pqs"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/pqs-light-5fa3fa9b.webp",
+    "dark": "/app-icons/merchants/pqs-light-5fa3fa9b.webp"
+  },
+  {
+    "key": "merchant-dogyun",
+    "label": "DogYun（狗云）",
+    "aliases": [
+      "DogYun",
+      "狗云",
+      "dogyun"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/dogyun-light-bfefda86.webp",
+    "dark": "/app-icons/merchants/dogyun-light-bfefda86.webp"
+  },
+  {
+    "key": "merchant-digitalvirt",
+    "label": "DigitalVirt",
+    "aliases": [
+      "DigitalVirt",
+      "digitalvirt"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/digitalvirt-light-ff90c450.webp",
+    "dark": "/app-icons/merchants/digitalvirt-light-ff90c450.webp"
+  },
+  {
+    "key": "merchant-100tb",
+    "label": "100TB",
+    "aliases": [
+      "100TB",
+      "100tb"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/100tb-light-01db59eb.webp",
+    "dark": "/app-icons/merchants/100tb-light-01db59eb.webp"
+  },
+  {
+    "key": "merchant-legendvps",
+    "label": "LegendVPS",
+    "aliases": [
+      "LegendVPS",
+      "legendvps"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/legendvps-light-3b763d63.webp",
+    "dark": "/app-icons/merchants/legendvps-light-3b763d63.webp"
+  },
+  {
+    "key": "merchant-cubecloud",
+    "label": "CubeCloud（魔方云）",
+    "aliases": [
+      "CubeCloud",
+      "魔方云",
+      "cubecloud"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/cubecloud-light-36ee9a6c.webp",
+    "dark": "/app-icons/merchants/cubecloud-dark-25c5f3f1.webp"
+  },
+  {
+    "key": "merchant-tokyonline",
+    "label": "Tokyonline",
+    "aliases": [
+      "Tokyonline",
+      "tokyonline"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/tokyonline-light-f4271f4e.webp",
+    "dark": "/app-icons/merchants/tokyonline-light-f4271f4e.webp"
+  },
+  {
+    "key": "merchant-wap-ac",
+    "label": "wap.ac",
+    "aliases": [
+      "wap.ac",
+      "wap-ac"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/wap-ac-light-f062b8a8.webp",
+    "dark": "/app-icons/merchants/wap-ac-light-f062b8a8.webp"
+  },
+  {
+    "key": "merchant-backwaves",
+    "label": "Back Waves",
+    "aliases": [
+      "Back Waves",
+      "backwaves"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/backwaves-light-4e3bb487.webp",
+    "dark": "/app-icons/merchants/backwaves-light-4e3bb487.webp"
+  },
+  {
+    "key": "merchant-isvoro",
+    "label": "isvoro",
+    "aliases": [
+      "isvoro"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/isvoro-light-a3c7a66a.webp",
+    "dark": "/app-icons/merchants/isvoro-dark-1d430510.webp"
+  },
+  {
+    "key": "merchant-flawlessnode",
+    "label": "Flawless Node",
+    "aliases": [
+      "Flawless Node",
+      "flawlessnode"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/flawlessnode-light-58c6ac24.webp",
+    "dark": "/app-icons/merchants/flawlessnode-dark-f0e34bc4.webp"
+  },
+  {
+    "key": "merchant-lightlayer",
+    "label": "Lightlayer",
+    "aliases": [
+      "Lightlayer",
+      "lightlayer"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/lightlayer-light-a43116c2.webp",
+    "dark": "/app-icons/merchants/lightlayer-light-a43116c2.webp"
+  },
+  {
+    "key": "merchant-cloudleadinno",
+    "label": "CloudLeadInno",
+    "aliases": [
+      "CloudLeadInno",
+      "cloudleadinno"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/cloudleadinno-light-9f409d75.webp",
+    "dark": "/app-icons/merchants/cloudleadinno-light-9f409d75.webp"
+  },
+  {
+    "key": "merchant-tothost",
+    "label": "TotHost",
+    "aliases": [
+      "TotHost",
+      "tothost"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/tothost-light-7d058fee.webp",
+    "dark": "/app-icons/merchants/tothost-light-7d058fee.webp"
+  },
+  {
+    "key": "merchant-yecaoyun",
+    "label": "野草云",
+    "aliases": [
+      "野草云",
+      "yecaoyun"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/yecaoyun-light-8f5e8a95.webp",
+    "dark": "/app-icons/merchants/yecaoyun-light-8f5e8a95.webp"
+  },
+  {
+    "key": "merchant-svyun",
+    "label": "速维云",
+    "aliases": [
+      "速维云",
+      "svyun"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/svyun-light-9b3b5812.webp",
+    "dark": "/app-icons/merchants/svyun-light-9b3b5812.webp"
+  },
+  {
+    "key": "merchant-vmshell",
+    "label": "VmShell",
+    "aliases": [
+      "VmShell",
+      "vmshell"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/vmshell-light-201efd66.webp",
+    "dark": "/app-icons/merchants/vmshell-light-201efd66.webp"
+  },
+  {
+    "key": "merchant-lcayun",
+    "label": "莱卡云",
+    "aliases": [
+      "莱卡云",
+      "lcayun"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/lcayun-light-5d2bff22.webp",
+    "dark": "/app-icons/merchants/lcayun-light-5d2bff22.webp"
+  },
+  {
+    "key": "merchant-fiberstate",
+    "label": "FiberState（FS）",
+    "aliases": [
+      "FiberState",
+      "FS",
+      "fiberstate"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/fiberstate-light-e28b47d9.webp",
+    "dark": "/app-icons/merchants/fiberstate-light-e28b47d9.webp"
+  },
+  {
+    "key": "merchant-dataonline",
+    "label": "DataOnline",
+    "aliases": [
+      "DataOnline",
+      "dataonline"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/dataonline-light-d90dd2f4.webp",
+    "dark": "/app-icons/merchants/dataonline-light-d90dd2f4.webp"
+  },
+  {
+    "key": "merchant-halocloud",
+    "label": "HaloCloud",
+    "aliases": [
+      "HaloCloud",
+      "halocloud"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/halocloud-light-629e6220.webp",
+    "dark": "/app-icons/merchants/halocloud-light-629e6220.webp"
+  },
+  {
+    "key": "merchant-bestvm",
+    "label": "BestVM（富婆）",
+    "aliases": [
+      "BestVM",
+      "富婆",
+      "bestvm"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/bestvm-light-19ca1380.webp",
+    "dark": "/app-icons/merchants/bestvm-dark-7095e0ac.webp"
+  },
+  {
+    "key": "merchant-cloudcone",
+    "label": "CloudCone（CC）",
+    "aliases": [
+      "CloudCone",
+      "CC",
+      "cloudcone"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/cloudcone-light-cff40cf4.webp",
+    "dark": "/app-icons/merchants/cloudcone-light-cff40cf4.webp"
+  },
+  {
+    "key": "merchant-highendnetwork",
+    "label": "HighEndNetwork",
+    "aliases": [
+      "HighEndNetwork",
+      "highendnetwork"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/highendnetwork-light-43143c7e.webp",
+    "dark": "/app-icons/merchants/highendnetwork-light-43143c7e.webp"
+  },
+  {
+    "key": "merchant-vmrack",
+    "label": "VMRack",
+    "aliases": [
+      "VMRack",
+      "vmrack"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/vmrack-light-d47dfe43.webp",
+    "dark": "/app-icons/merchants/vmrack-dark-8dcf9d91.webp"
+  },
+  {
+    "key": "merchant-goodlyclouds",
+    "label": "吉云",
+    "aliases": [
+      "吉云",
+      "goodlyclouds"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/goodlyclouds-light-a6e0583f.webp",
+    "dark": "/app-icons/merchants/goodlyclouds-light-a6e0583f.webp"
+  },
+  {
+    "key": "merchant-ciallonetworks",
+    "label": "Ciallo Networks",
+    "aliases": [
+      "Ciallo Networks",
+      "ciallonetworks"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/ciallonetworks-light-d106b676.webp",
+    "dark": "/app-icons/merchants/ciallonetworks-dark-fae7abd5.webp"
+  },
+  {
+    "key": "merchant-gfvps",
+    "label": "数掘科技",
+    "aliases": [
+      "数掘科技",
+      "gfvps"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/gfvps-light-c887a626.webp",
+    "dark": "/app-icons/merchants/gfvps-light-c887a626.webp"
+  },
+  {
+    "key": "merchant-zovps",
+    "label": "慈云数据",
+    "aliases": [
+      "慈云数据",
+      "zovps"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/zovps-light-a42fc5e7.webp",
+    "dark": "/app-icons/merchants/zovps-light-a42fc5e7.webp"
+  },
+  {
+    "key": "merchant-raksmart",
+    "label": "RakSmart",
+    "aliases": [
+      "RakSmart",
+      "raksmart"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/raksmart-light-52ac2ff5.webp",
+    "dark": "/app-icons/merchants/raksmart-light-52ac2ff5.webp"
+  },
+  {
+    "key": "merchant-cstonecloud",
+    "label": "CstoneCloud",
+    "aliases": [
+      "CstoneCloud",
+      "cstonecloud"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/cstonecloud-light-79ee1b4d.webp",
+    "dark": "/app-icons/merchants/cstonecloud-light-79ee1b4d.webp"
+  },
+  {
+    "key": "merchant-hostdare",
+    "label": "HostDare",
+    "aliases": [
+      "HostDare",
+      "hostdare"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/hostdare-light-2265b2d3.webp",
+    "dark": "/app-icons/merchants/hostdare-light-2265b2d3.webp"
+  },
+  {
+    "key": "merchant-fast-line",
+    "label": "Fast Line（台灣速連）",
+    "aliases": [
+      "Fast Line",
+      "台灣速連",
+      "台湾速连",
+      "fast-line"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/fast-line-light-194ba868.webp",
+    "dark": "/app-icons/merchants/fast-line-light-194ba868.webp"
+  },
+  {
+    "key": "merchant-desivps",
+    "label": "DesiVPS",
+    "aliases": [
+      "DesiVPS",
+      "desivps"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/desivps-light-a69661b0.webp",
+    "dark": "/app-icons/merchants/desivps-light-a69661b0.webp"
+  },
+  {
+    "key": "merchant-justg",
+    "label": "JUSTG",
+    "aliases": [
+      "JUSTG",
+      "justg"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/justg-light-d0b44f6e.webp",
+    "dark": "/app-icons/merchants/justg-light-d0b44f6e.webp"
+  },
+  {
+    "key": "merchant-vipcloud",
+    "label": "VIP Cloud",
+    "aliases": [
+      "VIP Cloud",
+      "vipcloud"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/vipcloud-light-f5f88052.webp",
+    "dark": "/app-icons/merchants/vipcloud-light-f5f88052.webp"
+  },
+  {
+    "key": "merchant-neburst",
+    "label": "Neburst（奶爸）",
+    "aliases": [
+      "Neburst",
+      "奶爸",
+      "Neburst Networks",
+      "neburst"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/neburst-light-7419895b.webp",
+    "dark": "/app-icons/merchants/neburst-light-7419895b.webp"
+  },
+  {
+    "key": "merchant-terabix",
+    "label": "Terabix",
+    "aliases": [
+      "Terabix",
+      "terabix"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/terabix-light-d515144a.webp",
+    "dark": "/app-icons/merchants/terabix-light-d515144a.webp"
+  },
+  {
+    "key": "merchant-orangevps",
+    "label": "OrangeVPS",
+    "aliases": [
+      "OrangeVPS",
+      "orangevps"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/orangevps-light-45197118.webp",
+    "dark": "/app-icons/merchants/orangevps-light-45197118.webp"
+  },
+  {
+    "key": "merchant-v5",
+    "label": "V5 Server",
+    "aliases": [
+      "V5 Server"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/v5-light-d6f59d34.webp",
+    "dark": "/app-icons/merchants/v5-light-d6f59d34.webp"
+  },
+  {
+    "key": "merchant-kjvps",
+    "label": "跨境VPS",
+    "aliases": [
+      "跨境VPS",
+      "kjvps"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/kjvps-light-fa545d2d.webp",
+    "dark": "/app-icons/merchants/kjvps-light-fa545d2d.webp"
+  },
+  {
+    "key": "merchant-rabisu",
+    "label": "Rabisu",
+    "aliases": [
+      "Rabisu",
+      "rabisu"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/rabisu-light-afe47f2d.webp",
+    "dark": "/app-icons/merchants/rabisu-dark-8cdbf28b.webp"
+  },
+  {
+    "key": "merchant-skywolf",
+    "label": "SKYWOLF",
+    "aliases": [
+      "SKYWOLF",
+      "skywolf"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/skywolf-light-2a5e89c8.webp",
+    "dark": "/app-icons/merchants/skywolf-light-2a5e89c8.webp"
+  },
+  {
+    "key": "merchant-sakura",
+    "label": "Sakura（樱络云）",
+    "aliases": [
+      "Sakura",
+      "樱络云",
+      "sakura"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/sakura-light-eec25e5e.webp",
+    "dark": "/app-icons/merchants/sakura-light-eec25e5e.webp"
+  },
+  {
+    "key": "merchant-ipraft",
+    "label": "iPRaft",
+    "aliases": [
+      "iPRaft",
+      "ipraft"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/ipraft-light-0e035cf3.webp",
+    "dark": "/app-icons/merchants/ipraft-light-0e035cf3.webp"
+  },
+  {
+    "key": "merchant-starrydns",
+    "label": "StarryDNS（星光网络）",
+    "aliases": [
+      "StarryDNS",
+      "星光网络",
+      "starrydns"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/starrydns-light-76910674.webp",
+    "dark": "/app-icons/merchants/starrydns-light-76910674.webp"
+  },
+  {
+    "key": "merchant-zhaomu",
+    "label": "朝暮数据",
+    "aliases": [
+      "朝暮数据",
+      "zhaomu"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/zhaomu-light-d69f4c80.webp",
+    "dark": "/app-icons/merchants/zhaomu-light-d69f4c80.webp"
+  },
+  {
+    "key": "merchant-quicksrv",
+    "label": "quicksrv",
+    "aliases": [
+      "quicksrv"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/quicksrv-light-85805e13.webp",
+    "dark": "/app-icons/merchants/quicksrv-dark-27fb56f4.webp"
+  },
+  {
+    "key": "merchant-moe",
+    "label": "MoeCloud",
+    "aliases": [
+      "MoeCloud"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/moe-light-9ba26763.webp",
+    "dark": "/app-icons/merchants/moe-light-9ba26763.webp"
+  },
+  {
+    "key": "merchant-tarekcloud",
+    "label": "Tarekcloud",
+    "aliases": [
+      "Tarekcloud",
+      "tarekcloud"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/tarekcloud-light-e7d5780e.webp",
+    "dark": "/app-icons/merchants/tarekcloud-dark-0ae89ac7.webp"
+  },
+  {
+    "key": "merchant-speedonline",
+    "label": "SpeedOnline",
+    "aliases": [
+      "SpeedOnline",
+      "speedonline"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/speedonline-light-21819ca7.webp",
+    "dark": "/app-icons/merchants/speedonline-light-21819ca7.webp"
+  },
+  {
+    "key": "merchant-qde",
+    "label": "QDE",
+    "aliases": [
+      "QDE",
+      "qde"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/qde-light-72edb311.webp",
+    "dark": "/app-icons/merchants/qde-light-72edb311.webp"
+  },
+  {
+    "key": "merchant-niihost",
+    "label": "NiiHost",
+    "aliases": [
+      "NiiHost",
+      "niihost"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/niihost-light-145b1ff3.webp",
+    "dark": "/app-icons/merchants/niihost-light-145b1ff3.webp"
+  },
+  {
+    "key": "merchant-bug",
+    "label": "BUG NET",
+    "aliases": [
+      "BUG NET"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/bug-light-44f804e1.webp",
+    "dark": "/app-icons/merchants/bug-light-44f804e1.webp"
+  },
+  {
+    "key": "merchant-tnahosting",
+    "label": "TNAHosting",
+    "aliases": [
+      "TNAHosting",
+      "tnahosting"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/tnahosting-light-67de0b6b.webp",
+    "dark": "/app-icons/merchants/tnahosting-light-67de0b6b.webp"
+  },
+  {
+    "key": "merchant-colocrossing",
+    "label": "ColoCrossing（CCS）",
+    "aliases": [
+      "ColoCrossing",
+      "CCS",
+      "colocrossing"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/colocrossing-light-9fe306b2.webp",
+    "dark": "/app-icons/merchants/colocrossing-light-9fe306b2.webp"
+  },
+  {
+    "key": "merchant-duocloud",
+    "label": "DuoCloud",
+    "aliases": [
+      "DuoCloud",
+      "duocloud"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/duocloud-light-6ff97ebe.webp",
+    "dark": "/app-icons/merchants/duocloud-light-6ff97ebe.webp"
+  },
+  {
+    "key": "merchant-md5host",
+    "label": "Md5Host",
+    "aliases": [
+      "Md5Host",
+      "md5host"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/md5host-light-cca24f15.webp",
+    "dark": "/app-icons/merchants/md5host-light-cca24f15.webp"
+  },
+  {
+    "key": "merchant-spartan",
+    "label": "Spartan（斯巴达）",
+    "aliases": [
+      "Spartan",
+      "斯巴达",
+      "spartan"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/spartan-light-79543127.webp",
+    "dark": "/app-icons/merchants/spartan-light-79543127.webp"
+  },
+  {
+    "key": "merchant-ethernetservers",
+    "label": "Ethernet Servers",
+    "aliases": [
+      "Ethernet Servers",
+      "ethernetservers"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/ethernetservers-light-1275769b.webp",
+    "dark": "/app-icons/merchants/ethernetservers-light-1275769b.webp"
+  },
+  {
+    "key": "merchant-eugamehost",
+    "label": "EUGamehost",
+    "aliases": [
+      "EUGamehost",
+      "eugamehost"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/eugamehost-light-0d441fa1.webp",
+    "dark": "/app-icons/merchants/eugamehost-light-0d441fa1.webp"
+  },
+  {
+    "key": "merchant-moack",
+    "label": "MOACK（蘑菇）",
+    "aliases": [
+      "MOACK",
+      "蘑菇",
+      "moack"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/moack-light-a7ef44b6.webp",
+    "dark": "/app-icons/merchants/moack-light-a7ef44b6.webp"
+  },
+  {
+    "key": "merchant-079idc",
+    "label": "七九网络",
+    "aliases": [
+      "七九网络",
+      "079idc"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/079idc-light-076b12f0.webp",
+    "dark": "/app-icons/merchants/079idc-light-076b12f0.webp"
+  },
+  {
+    "key": "merchant-jiluoyun",
+    "label": "极络云",
+    "aliases": [
+      "极络云",
+      "jiluoyun"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/jiluoyun-light-1744b3e2.webp",
+    "dark": "/app-icons/merchants/jiluoyun-light-1744b3e2.webp"
+  },
+  {
+    "key": "merchant-black",
+    "label": "BlackHOST",
+    "aliases": [
+      "BlackHOST"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/black-light-32080cf2.webp",
+    "dark": "/app-icons/merchants/black-light-32080cf2.webp"
+  },
+  {
+    "key": "merchant-kfcloud",
+    "label": "KFCloud",
+    "aliases": [
+      "KFCloud",
+      "kfcloud"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/kfcloud-light-783c41b8.webp",
+    "dark": "/app-icons/merchants/kfcloud-light-783c41b8.webp"
+  },
+  {
+    "key": "merchant-hncloud",
+    "label": "华纳云",
+    "aliases": [
+      "华纳云",
+      "hncloud"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/hncloud-light-c689ea4d.webp",
+    "dark": "/app-icons/merchants/hncloud-light-c689ea4d.webp"
+  },
+  {
+    "key": "merchant-zenlayer",
+    "label": "Zenlayer Cloud",
+    "aliases": [
+      "Zenlayer Cloud",
+      "zenlayer"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/zenlayer-light-539b213b.webp",
+    "dark": "/app-icons/merchants/zenlayer-light-539b213b.webp"
+  },
+  {
+    "key": "merchant-haruka",
+    "label": "Haruka",
+    "aliases": [
+      "Haruka",
+      "haruka"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/haruka-light-25134501.webp",
+    "dark": "/app-icons/merchants/haruka-light-25134501.webp"
+  },
+  {
+    "key": "merchant-churros",
+    "label": "Churros",
+    "aliases": [
+      "Churros",
+      "churros"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/churros-light-d910b336.webp",
+    "dark": "/app-icons/merchants/churros-light-d910b336.webp"
+  },
+  {
+    "key": "merchant-vollcloud",
+    "label": "VollCloud",
+    "aliases": [
+      "VollCloud",
+      "vollcloud"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/vollcloud-light-30165c9c.webp",
+    "dark": "/app-icons/merchants/vollcloud-light-30165c9c.webp"
+  },
+  {
+    "key": "merchant-reliablesite",
+    "label": "ReliableSite（RS）",
+    "aliases": [
+      "ReliableSite",
+      "RS",
+      "reliablesite"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/reliablesite-light-3abf9548.webp",
+    "dark": "/app-icons/merchants/reliablesite-light-3abf9548.webp"
+  },
+  {
+    "key": "merchant-kkidc",
+    "label": "快快網絡",
+    "aliases": [
+      "快快網絡",
+      "kkidc"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/kkidc-light-d5226670.webp",
+    "dark": "/app-icons/merchants/kkidc-light-d5226670.webp"
+  },
+  {
+    "key": "merchant-tencent",
+    "label": "腾讯云（Tencent）",
+    "aliases": [
+      "腾讯云",
+      "Tencent",
+      "Tencent Cloud",
+      "TencentCloud",
+      "tencent"
+    ],
+    "domains": [
+      "cloud.tencent.com",
+      "tencentcloud.com"
+    ],
+    "light": "/app-icons/merchants/tencent-light-6dd605da.webp",
+    "dark": "/app-icons/merchants/tencent-light-6dd605da.webp"
+  },
+  {
+    "key": "merchant-yxvm",
+    "label": "YxVM",
+    "aliases": [
+      "YxVM",
+      "yxvm"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/yxvm-light-07fbb05d.webp",
+    "dark": "/app-icons/merchants/yxvm-light-07fbb05d.webp"
+  },
+  {
+    "key": "merchant-aliyun",
+    "label": "阿里云",
+    "aliases": [
+      "阿里云",
+      "Aliyun",
+      "Alibaba Cloud",
+      "aliyun"
+    ],
+    "domains": [
+      "aliyun.com",
+      "alibabacloud.com"
+    ],
+    "light": "/app-icons/merchants/aliyun-light-096f1e3c.webp",
+    "dark": "/app-icons/merchants/aliyun-light-096f1e3c.webp"
+  },
+  {
+    "key": "merchant-as211392",
+    "label": "DreamCloud",
+    "aliases": [
+      "DreamCloud",
+      "as211392"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/as211392-light-3ffe8d17.webp",
+    "dark": "/app-icons/merchants/as211392-light-3ffe8d17.webp"
+  },
+  {
+    "key": "merchant-langlangy",
+    "label": "浪浪云",
+    "aliases": [
+      "浪浪云",
+      "langlangy"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/langlangy-light-40e4ec46.webp",
+    "dark": "/app-icons/merchants/langlangy-light-40e4ec46.webp"
+  },
+  {
+    "key": "merchant-kfchost",
+    "label": "KFCHost",
+    "aliases": [
+      "KFCHost",
+      "kfchost"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/kfchost-light-8c89d1cf.webp",
+    "dark": "/app-icons/merchants/kfchost-light-8c89d1cf.webp"
+  },
+  {
+    "key": "merchant-lcyidc",
+    "label": "领创云",
+    "aliases": [
+      "领创云",
+      "lcyidc"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/lcyidc-light-ddc6d814.webp",
+    "dark": "/app-icons/merchants/lcyidc-light-ddc6d814.webp"
+  },
+  {
+    "key": "merchant-lycheen",
+    "label": "荔枝云（Lycheen）",
+    "aliases": [
+      "荔枝云",
+      "Lycheen",
+      "lycheen"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/lycheen-light-9573882d.webp",
+    "dark": "/app-icons/merchants/lycheen-light-9573882d.webp"
+  },
+  {
+    "key": "merchant-nube",
+    "label": "Nube Cloud",
+    "aliases": [
+      "Nube Cloud",
+      "nube"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/nube-light-372f8299.webp",
+    "dark": "/app-icons/merchants/nube-light-372f8299.webp"
+  },
+  {
+    "key": "merchant-nbdnet",
+    "label": "NoBrand Cloud",
+    "aliases": [
+      "NoBrand Cloud"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/nbdnet-light-d2fac16a.webp",
+    "dark": "/app-icons/merchants/nbdnet-light-d2fac16a.webp"
+  },
+  {
+    "key": "merchant-skystroll",
+    "label": "SkyStroll",
+    "aliases": [
+      "SkyStroll",
+      "skystroll"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/skystroll-light-f0afa378.webp",
+    "dark": "/app-icons/merchants/skystroll-light-f0afa378.webp"
+  },
+  {
+    "key": "merchant-huaruidc",
+    "label": "华瑞云",
+    "aliases": [
+      "华瑞云",
+      "huaruidc"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/huaruidc-light-913fc5b3.webp",
+    "dark": "/app-icons/merchants/huaruidc-light-913fc5b3.webp"
+  },
+  {
+    "key": "merchant-faconhost",
+    "label": "Faconhost",
+    "aliases": [
+      "Faconhost",
+      "faconhost"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/faconhost-light-ef88e439.webp",
+    "dark": "/app-icons/merchants/faconhost-light-ef88e439.webp"
+  },
+  {
+    "key": "merchant-onidel",
+    "label": "Onidel Cloud",
+    "aliases": [
+      "Onidel Cloud",
+      "onidel"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/onidel-light-9404e928.webp",
+    "dark": "/app-icons/merchants/onidel-dark-e6855979.webp"
+  },
+  {
+    "key": "merchant-ishosting",
+    "label": "is*hosting",
+    "aliases": [
+      "is*hosting",
+      "ishosting"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/ishosting-light-9efa36e2.webp",
+    "dark": "/app-icons/merchants/ishosting-light-9efa36e2.webp"
+  },
+  {
+    "key": "merchant-geelinx",
+    "label": "Geelinx",
+    "aliases": [
+      "Geelinx",
+      "geelinx"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/geelinx-light-f96d7e4b.webp",
+    "dark": "/app-icons/merchants/geelinx-light-f96d7e4b.webp"
+  },
+  {
+    "key": "merchant-limee",
+    "label": "Lime（烧纸云）",
+    "aliases": [
+      "Lime",
+      "烧纸云",
+      "Lime Network",
+      "limee"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/limee-light-d1dc191f.webp",
+    "dark": "/app-icons/merchants/limee-light-d1dc191f.webp"
+  },
+  {
+    "key": "merchant-acck",
+    "label": "AcckCloud",
+    "aliases": [
+      "AcckCloud",
+      "acck"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/acck-light-bb14e570.webp",
+    "dark": "/app-icons/merchants/acck-light-bb14e570.webp"
+  },
+  {
+    "key": "merchant-linkcli",
+    "label": "LinkCLi免备案服务器",
+    "aliases": [
+      "LinkCLi免备案服务器",
+      "linkcli"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/linkcli-light-355f0ea1.webp",
+    "dark": "/app-icons/merchants/linkcli-light-355f0ea1.webp"
+  },
+  {
+    "key": "merchant-modelflare",
+    "label": "Modelflare",
+    "aliases": [
+      "Modelflare",
+      "modelflare"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/modelflare-light-b58a9b2d.webp",
+    "dark": "/app-icons/merchants/modelflare-dark-91dc3abf.webp"
+  },
+  {
+    "key": "merchant-taphip",
+    "label": "TapHip",
+    "aliases": [
+      "TapHip",
+      "taphip"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/taphip-light-2f875704.webp",
+    "dark": "/app-icons/merchants/taphip-light-2f875704.webp"
+  },
+  {
+    "key": "merchant-vkvm",
+    "label": "VKVM",
+    "aliases": [
+      "VKVM",
+      "vkvm"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/vkvm-light-1a273e32.webp",
+    "dark": "/app-icons/merchants/vkvm-light-1a273e32.webp"
+  },
+  {
+    "key": "merchant-easy",
+    "label": "EasyVM",
+    "aliases": [
+      "EasyVM"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/easy-light-b90b6cd1.webp",
+    "dark": "/app-icons/merchants/easy-light-b90b6cd1.webp"
+  },
+  {
+    "key": "merchant-wawo",
+    "label": "哇沃",
+    "aliases": [
+      "哇沃",
+      "wawo"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/wawo-light-6fe27b4b.webp",
+    "dark": "/app-icons/merchants/wawo-light-6fe27b4b.webp"
+  },
+  {
+    "key": "merchant-techno",
+    "label": "TechnoVM",
+    "aliases": [
+      "TechnoVM",
+      "techno"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/techno-light-7b61a80f.webp",
+    "dark": "/app-icons/merchants/techno-light-7b61a80f.webp"
+  },
+  {
+    "key": "merchant-claw",
+    "label": "ClawCloud（爪云）",
+    "aliases": [
+      "ClawCloud",
+      "爪云"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/claw-light-d95d8147.webp",
+    "dark": "/app-icons/merchants/claw-dark-bc5a62f3.webp"
+  },
+  {
+    "key": "merchant-omao",
+    "label": "OMAO（欧猫）",
+    "aliases": [
+      "OMAO",
+      "欧猫",
+      "omao"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/omao-light-b87b361f.webp",
+    "dark": "/app-icons/merchants/omao-light-b87b361f.webp"
+  },
+  {
+    "key": "merchant-vircs",
+    "label": "VIRCS",
+    "aliases": [
+      "VIRCS",
+      "vircs"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/vircs-light-13f78fc8.webp",
+    "dark": "/app-icons/merchants/vircs-light-13f78fc8.webp"
+  },
+  {
+    "key": "merchant-hostblazer",
+    "label": "HostBlazer",
+    "aliases": [
+      "HostBlazer",
+      "hostblazer"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/hostblazer-light-ce70c67e.webp",
+    "dark": "/app-icons/merchants/hostblazer-light-ce70c67e.webp"
+  },
+  {
+    "key": "merchant-voyracloud",
+    "label": "VoyraCloud",
+    "aliases": [
+      "VoyraCloud",
+      "voyracloud"
+    ],
+    "domains": [],
+    "light": "/app-icons/merchants/voyracloud-light-7c1563b7.webp",
+    "dark": "/app-icons/merchants/voyracloud-dark-76122183.webp"
+  },
+  {
+    "key": "merchant-po0",
+    "label": "po0",
+    "aliases": [
+      "po0"
+    ],
+    "domains": [
+      "po0.io"
+    ],
+    "light": "/app-icons/merchants/po0.webp",
+    "dark": "/app-icons/merchants/po0.webp"
+  }
+]

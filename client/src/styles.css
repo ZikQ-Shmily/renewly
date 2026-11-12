@@ -2460,6 +2460,11 @@ html[data-input-mode="keyboard"] .switch-control input:focus + .switch-track { o
 .app-icon { display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-selected, #202e48); color: var(--text); }
 .app-icon-preset { display: block; }
 .app-icon-image { object-fit: contain; border-radius: 3px; }
+.app-icon-brand { background: #f4f6fb; }
+.app-icon-brand-dark { display: none; }
+:root[data-theme="dark"] .app-icon-brand-themed { background: #202e48; }
+:root[data-theme="dark"] .app-icon-brand-themed .app-icon-brand-light { display: none; }
+:root[data-theme="dark"] .app-icon-brand-themed .app-icon-brand-dark { display: block; }
 .app-icon-picker { display: grid; gap: 8px; }
 .app-icon-picker-label { font-size: 12px; color: var(--secondary); }
 .app-icon-picker-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }

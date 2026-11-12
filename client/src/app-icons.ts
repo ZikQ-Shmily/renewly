@@ -1,3 +1,5 @@
+import merchantCatalog from "./merchant-icons.json" with { type: "json" };
+
 export const maxUploadBytes = 64 * 1024;
 const rasterData = /^data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/;
 const nameSegmenter = typeof Intl.Segmenter === "function"
@@ -25,6 +27,36 @@ export const appIconPresets = [
   { key: "github", label: "GitHub", domains: ["github.com"], names: /\bgithub\b/i, color: "currentColor" },
 ] as const;
 
+export interface IconPreset {
+  key: string;
+  label: string;
+  domains: readonly string[];
+  names: RegExp;
+  color: string;
+  image?: { light: string; dark: string };
+}
+
+function merchantName(value: string) {
+  return value.normalize("NFKC").toLowerCase().replace(/\s+/g, "");
+}
+
+const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+export const merchantIconPresets: IconPreset[] = merchantCatalog.map(merchant => ({
+  key: merchant.key,
+  label: merchant.label,
+  domains: merchant.domains,
+  // Short aliases (CC, AK, etc.) only match the complete merchant field.
+  names: new RegExp(merchant.aliases.map(alias => {
+    const name = merchantName(alias);
+    return name.length <= 2 ? `^${escapeRegex(name)}$` : `(?:^|[^a-z0-9])${escapeRegex(name)}(?=$|[^a-z0-9])`;
+  }).join("|"), "i"),
+  color: "currentColor",
+  image: { light: merchant.light, dark: merchant.dark },
+}));
+
+const allIconPresets: readonly IconPreset[] = [...appIconPresets, ...merchantIconPresets];
+
 function websiteUrl(website: string) {
   try {
     const url = new URL(website);
@@ -34,10 +66,11 @@ function websiteUrl(website: string) {
   }
 }
 
-export function matchedAppIcon(name: string, website: string) {
+export function matchedAppIcon(name: string, website: string): IconPreset | undefined {
   const host = websiteUrl(website)?.hostname.toLowerCase().replace(/\.$/, "");
-  const byDomain = host && appIconPresets.find(preset => preset.domains.some(domain => host === domain || host.endsWith(`.${domain}`)));
-  return byDomain || appIconPresets.find(preset => preset.names.test(name.normalize("NFKC")));
+  const byDomain = host && allIconPresets.find(preset => preset.domains.some(domain => host === domain || host.endsWith(`.${domain}`)));
+  return byDomain || appIconPresets.find(preset => preset.names.test(name.normalize("NFKC")))
+    || merchantIconPresets.find(preset => preset.names.test(merchantName(name)));
 }
 
 /** Only attempt merchant favicons in the browser; never proxy arbitrary URLs. */
@@ -61,7 +94,7 @@ export function isUploadedAppIcon(value: string) {
 }
 
 export function resolveAppIcon(name: string, website: string, value = "auto") {
-  const manual = appIconPresets.find(preset => preset.key === value);
+  const manual = allIconPresets.find(preset => preset.key === value);
   const automatic = value === "auto" || value === "";
   const preset = manual || (automatic ? matchedAppIcon(name, website) : undefined);
   const src = isUploadedAppIcon(value) ? value : automatic && !preset ? appFaviconUrl(website) : null;

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ChangeEvent, type CSSProperties } fro
 import { AppWindow, ImagePlus } from "lucide-react";
 import { Select } from "./Select";
 
-import { appIconInitial, appIconPresets, matchedAppIcon, isUploadedAppIcon, maxUploadBytes, resolveAppIcon } from "./app-icons";
+import { appIconInitial, appIconPresets, merchantIconPresets, matchedAppIcon, isUploadedAppIcon, maxUploadBytes, resolveAppIcon } from "./app-icons";
 
 interface AppIconProps {
   name: string;
@@ -15,11 +15,25 @@ interface AppIconProps {
 export function AppIcon({ name, website, value = "auto", size = 36, fallbackInitial = false }: AppIconProps) {
   const { preset, src } = resolveAppIcon(name, website, value);
   const [failedSource, setFailedSource] = useState<string | null>(null);
-  const imageSize = Math.max(16, Math.round(size * 0.62));
+  const brand = preset?.image;
+  const primarySource = brand?.light || src;
+  const themeVariant = brand && brand.dark !== brand.light;
+  const imageSize = Math.max(16, Math.round(size * (brand ? 0.78 : 0.62)));
   const frameStyle: CSSProperties = { width: size, height: size, flexShrink: 0 };
   return (
-    <span className="app-icon" style={frameStyle} aria-hidden="true">
-      {preset ? (
+    <span className={`app-icon${brand ? " app-icon-brand" : ""}${themeVariant ? " app-icon-brand-themed" : ""}`} style={frameStyle} aria-hidden="true">
+      {primarySource && primarySource !== failedSource ? (
+        <>
+          <img key={primarySource} className={`app-icon-image${themeVariant ? " app-icon-brand-light" : ""}`}
+            src={primarySource} width={imageSize} height={imageSize} alt=""
+            referrerPolicy="no-referrer" crossOrigin="anonymous" loading="lazy" decoding="async"
+            onError={() => setFailedSource(primarySource)} />
+          {themeVariant && <img key={brand.dark} className="app-icon-image app-icon-brand-dark"
+            src={brand.dark} width={imageSize} height={imageSize} alt=""
+            referrerPolicy="no-referrer" crossOrigin="anonymous" loading="lazy" decoding="async"
+            onError={() => setFailedSource(primarySource)} />}
+        </>
+      ) : preset && !brand ? (
         <span className="app-icon-preset" style={{
           width: imageSize,
           height: imageSize,
@@ -33,20 +47,6 @@ export function AppIcon({ name, website, value = "auto", size = 36, fallbackInit
           maskPosition: "center",
           WebkitMaskPosition: "center",
         }} />
-      ) : src && src !== failedSource ? (
-        <img
-          key={src}
-          className="app-icon-image"
-          src={src}
-          width={imageSize}
-          height={imageSize}
-          alt=""
-          referrerPolicy="no-referrer"
-          crossOrigin="anonymous"
-          loading="lazy"
-          decoding="async"
-          onError={() => setFailedSource(src)}
-        />
       ) : fallbackInitial ? <span className="app-icon-initial">{appIconInitial(name)}</span> : <AppWindow size={imageSize} aria-hidden="true" />}
     </span>
   );
@@ -94,7 +94,8 @@ export function AppIconPicker({ name, website, value, onChange, disabled = false
   const options = [
     { value: "auto", label: "自动匹配" },
     { value: "generic", label: fallbackInitial ? "商家首字母" : "通用订阅图标" },
-    ...appIconPresets.map(p => ({ value: p.key, label: p.label })),
+    ...(fallbackInitial ? merchantIconPresets : appIconPresets).map(p => ({ value: p.key, label: p.label })),
+    ...((fallbackInitial ? appIconPresets : merchantIconPresets).filter(p => p.key === value).map(p => ({ value: p.key, label: p.label }))),
     ...(uploaded ? [{ value: "uploaded", label: "已上传的图标" }] : []),
   ];
   async function upload(event: ChangeEvent<HTMLInputElement>) {
