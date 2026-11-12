@@ -1,8 +1,40 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { termProgress, durationLabel, trafficLabel } from "../client/src/utils.js";
+import { currencies, money, termProgress, durationLabel, trafficLabel } from "../client/src/utils.js";
 import { parseNumberInput } from "../client/src/number.js";
-import type { Subscription } from "../client/src/types.js";
+import type { Currency, Subscription } from "../client/src/types.js";
+
+test("all ten original billing currencies have usable labels and formatted amounts", () => {
+  const prefixes: Record<Currency, string> = {
+    CNY: "¥", USD: "$", EUR: "€", GBP: "£", NGN: "₦",
+    TRY: "₺", PHP: "₱", JPY: "JP¥", TWD: "NT$", HKD: "HK$",
+  };
+  assert.equal(currencies.length, 10);
+  assert.equal(new Set(currencies.map((currency) => currency.value)).size, 10);
+  assert.deepEqual(currencies.map((currency) => currency.value).sort(), Object.keys(prefixes).sort());
+  for (const { value, label } of currencies) {
+    assert.match(label, /\S+\s+\S+/u, `${value} must be identifiable in the currency picker`);
+    assert.equal(money(1234.5, value), `${prefixes[value]}1,234.50`, value);
+    assert.equal(money(0, value), `${prefixes[value]}0.00`, `${value} preserves a free subscription`);
+  }
+});
+
+test("yen, Taiwan and Hong Kong dollars stay distinct from CNY and USD", () => {
+  assert.equal(money(100, "CNY"), "¥100.00");
+  assert.equal(money(100, "JPY"), "JP¥100.00");
+  assert.equal(money(100, "USD"), "$100.00");
+  assert.equal(money(100, "TWD"), "NT$100.00");
+  assert.equal(money(100, "HKD"), "HK$100.00");
+  const values = (["CNY", "JPY", "USD", "TWD", "HKD"] as Currency[])
+    .map((currency) => money(100, currency));
+  assert.equal(new Set(values).size, values.length);
+  for (const { value } of currencies) {
+    assert.equal(money(null, value), "—");
+    assert.equal(money(undefined, value), "—");
+    assert.equal(money(NaN, value), "—");
+    assert.equal(money(Infinity, value), "—");
+  }
+});
 
 test("traffic labels retain quota and distinguish single and bidirectional accounting", () => {
   const quota = { trafficMode: "limited", trafficQuota: 300, trafficUnit: "GB" } as const;

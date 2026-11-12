@@ -18,6 +18,7 @@ const fxFetch: typeof fetch = async () =>
       { base: "CNY", quote: "USD", rate: 0.15, date: "2026-11-10" },
       { base: "CNY", quote: "EUR", rate: 0.13, date: "2026-11-10" },
       { base: "CNY", quote: "GBP", rate: 0.11, date: "2026-11-10" },
+      ...["NGN", "TRY", "PHP", "JPY", "TWD", "HKD"].map(quote => ({ base: "CNY", quote, rate: 10, date: "2026-11-10" })),
     ]),
     { headers: { "content-type": "application/json" } },
   );
@@ -335,7 +336,7 @@ test("v1 migration preserves existing subscription and user data and is repeatab
     assert.equal(subscription.diskValue, null);
     assert.deepEqual(subscription.ipAddresses, []);
     assert.equal((db.prepare("SELECT due_date FROM reminder_deliveries").get() as any).due_date, "2027-01-01T00:00");
-    assert.deepEqual(db.prepare("SELECT version FROM schema_migrations ORDER BY version").all(), [{ version: 1 }, { version: 2 }, { version: 3 }, { version: 4 }, { version: 5 }, { version: 6 }]);
+    assert.deepEqual(db.prepare("SELECT version FROM schema_migrations ORDER BY version").all(), [{ version: 1 }, { version: 2 }, { version: 3 }, { version: 4 }, { version: 5 }, { version: 6 }, { version: 7 }]);
   } finally { db.close(); }
 });
 
@@ -588,6 +589,163 @@ test("FX first failure is partial, successful rates persist and survive upstream
   } finally {
     db.close();
   }
+});
+
+test("App subscriptions round trip, stay owner scoped, renew and aggregate separately in CNY", async () => {
+  const f = await fixture();
+  try {
+    const { cookie, user } = await f.seedAccount("app-owner@example.com");
+    const { cookie: other } = await f.seedAccount("other-owner@example.com");
+    const appInput = {
+      type: "app", name: "Notion", appPlan: "Plus", appChannel: "App Store",
+      appAccount: "my-account@example.com", appIcon: "notion", currency: "JPY",
+      purchasePrice: 1000, renewalPrice: 1000, paidAmount: 1000, billingMonths: 1,
+      periodStart: "2026-11-01T20:00", nextRenewal: "2026-12-01T20:00", autoRenew: true,
+    };
+    const created = await f.request("/subscriptions", "POST", appInput, cookie);
+    assert.equal(created.status, 201, await created.clone().text());
+    const item = (await created.json() as any).subscription;
+    assert.equal(item.type, "app");
+    assert.equal(item.vendor, "");
+    assert.equal(item.website, "");
+    assert.equal(item.appPlan, "Plus");
+    assert.equal(item.appChannel, "App Store");
+    assert.equal(item.appAccount, appInput.appAccount);
+    assert.equal(item.appIcon, "notion");
+    assert.equal(item.autoRenew, true);
+    assert.equal(item.currency, "JPY");
+    assert.equal((f.runtime.db.prepare("SELECT COUNT(*) n FROM server_details WHERE subscription_id=?").get(item.id) as any).n, 0);
+    assert.equal((f.runtime.db.prepare("SELECT COUNT(*) n FROM app_details WHERE subscription_id=?").get(item.id) as any).n, 1);
+    const update = { ...appInput, name: "Notion Plus", appPlan: "Plus 年度优惠", appAccount: "工作账户", appChannel: "官网" };
+    const edited = await f.request(`/subscriptions/${item.id}`, "PUT", update, cookie);
+    assert.equal(edited.status, 200, await edited.clone().text());
+    assert.equal((await edited.json() as any).subscription.appAccount, "工作账户");
+    const olderClient = { ...update } as any;
+    for (const key of ["appPlan", "appChannel", "appAccount", "appIcon"]) delete olderClient[key];
+    const preserved = await f.request(`/subscriptions/${item.id}`, "PUT", olderClient, cookie);
+    assert.equal(preserved.status, 200);
+    assert.equal((await preserved.json() as any).subscription.appPlan, "Plus 年度优惠");
+    for (const method of ["PUT", "DELETE"])
+      assert.equal((await f.request(`/subscriptions/${item.id}`, method, method === "PUT" ? update : undefined, other)).status, 404);
+    const renewal = { paidAmount: 1000, periodStart: "2026-12-01T20:00", nextRenewal: "2027-01-01T20:00" };
+    assert.equal((await f.request(`/subscriptions/${item.id}/renew`, "POST", renewal, other)).status, 404);
+    assert.equal((await f.request("/subscriptions", "GET", undefined, other).then(r => r.json()) as any).subscriptions.length, 0);
+    assert.equal((await f.request(`/subscriptions/${item.id}`, "PUT", { ...input, type: "cloud" }, cookie)).status, 400);
+    const cloud = await f.request("/subscriptions", "POST", { ...input, purchasePrice: 30, renewalPrice: 30, paidAmount: 30, billingMonths: 1, periodStart: appInput.periodStart, nextRenewal: appInput.nextRenewal }, cookie);
+    assert.equal(cloud.status, 201);
+    // A legacy preference and old query parameters must never change summary currency.
+    f.runtime.db.prepare("UPDATE users SET currency='USD' WHERE id=?").run(user.id);
+    const all = await f.request("/dashboard?currency=USD", "GET", undefined, cookie).then(r => r.json()) as any;
+    const apps = await f.request("/dashboard?currency=JPY&type=app", "GET", undefined, cookie).then(r => r.json()) as any;
+    const clouds = await f.request("/dashboard?type=cloud", "GET", undefined, cookie).then(r => r.json()) as any;
+    assert.equal(all.currency, "CNY");
+    assert.equal(apps.currency, "CNY");
+    assert.equal(apps.annualTotal, 1200);
+    assert.equal(clouds.annualTotal, 360);
+    assert.equal(all.annualTotal, 1560);
+    assert.equal(apps.remainingValue, 66.67);
+    assert.equal(all.remainingValue, 86.67);
+    assert.equal(apps.upcomingTotal, 100);
+    assert.deepEqual(apps.nextDue.map((s: any) => s.id), [item.id]);
+    assert.equal(apps.subscriptions[0].currency, "JPY");
+    const preferences = await f.request("/me/preferences", "PUT", { currency: "HKD", timeZone: "Asia/Shanghai" }, cookie);
+    assert.equal(preferences.status, 200);
+    assert.equal((await preferences.json() as any).user.currency, "CNY");
+    assert.equal((await f.request("/types", "GET", undefined, cookie).then(r => r.json()) as any).types.some((t: any) => t.key === "app"), true);
+    assert.equal((await f.request(`/subscriptions/${item.id}/renew`, "POST", renewal, cookie)).status, 200);
+    assert.equal((f.runtime.db.prepare("SELECT COUNT(*) n FROM billing_periods WHERE subscription_id=?").get(item.id) as any).n, 2);
+    await f.request(`/subscriptions/${item.id}`, "DELETE", undefined, cookie);
+    const archived = (await f.request("/subscriptions", "GET", undefined, cookie).then(r => r.json()) as any).subscriptions.find((s: any) => s.id === item.id);
+    assert.equal(archived.status, "archived");
+    assert.equal(archived.appAccount, "工作账户");
+    assert.equal((await f.request("/dashboard?type=app", "GET", undefined, cookie).then(r => r.json()) as any).activeCount, 0);
+  } finally { f.cleanup(); }
+});
+
+test("v7 upgrade preserves foreign-currency cloud records, paid history and mail while pinning summaries to CNY", async () => {
+  const f = await fixture();
+  try {
+    const { cookie, user } = await f.seedAccount("migrate-app@example.com");
+    const response = await f.request("/subscriptions", "POST", { ...input, currency: "USD", ipAddresses: [{ type: "static", address: "203.0.113.17" }], autoRenew: true }, cookie);
+    assert.equal(response.status, 201);
+    const before = (await response.json() as any).subscription;
+    const periods = f.runtime.db.prepare("SELECT * FROM billing_periods").all();
+    const mail = f.runtime.db.prepare("SELECT * FROM mail_settings").all();
+    f.runtime.db.prepare("UPDATE users SET currency='GBP' WHERE id=?").run(user.id);
+    f.runtime.db.exec("DROP TABLE app_details; DELETE FROM schema_migrations WHERE version=7;");
+    migrate(f.runtime.db); migrate(f.runtime.db);
+    assert.equal((f.runtime.db.prepare("SELECT currency FROM users WHERE id=?").get(user.id) as any).currency, "CNY");
+    assert.deepEqual((await f.request("/subscriptions", "GET", undefined, cookie).then(r => r.json()) as any).subscriptions[0], before);
+    assert.deepEqual(f.runtime.db.prepare("SELECT * FROM billing_periods").all(), periods);
+    assert.deepEqual(f.runtime.db.prepare("SELECT * FROM mail_settings").all(), mail);
+    assert.equal((f.runtime.db.prepare("SELECT COUNT(*) n FROM schema_migrations WHERE version=7").get() as any).n, 1);
+    assert.equal((f.runtime.db.prepare("PRAGMA foreign_key_check").all()).length, 0);
+    assert.equal((f.runtime.db.prepare("PRAGMA quick_check").get() as any).quick_check, "ok");
+  } finally { f.cleanup(); }
+});
+
+test("all new original currencies validate and unsafe or oversized App images are rejected", () => {
+  const app = { ...input, type: "app", vendor: "", website: "", appPlan: "Plus", appChannel: "Google Play" };
+  for (const appIcon of ["auto", "generic", "notion", "spotify", "icloud", "1password", "netflix", "youtube", "microsoft", "adobe", "chatgpt", "github"])
+    assert.equal(subscriptionSchema.parse({ ...app, appIcon }).appIcon, appIcon);
+  for (const currency of ["CNY", "USD", "EUR", "GBP", "NGN", "TRY", "PHP", "JPY", "TWD", "HKD"])
+    assert.equal(subscriptionSchema.parse({ ...app, currency }).currency, currency);
+  for (const website of ["javascript:alert(1)", "https://name:password@example.com"])
+    assert.equal(subscriptionSchema.safeParse({ ...app, website }).success, false);
+  for (const appIcon of ["data:image/svg+xml;base64,PHN2Zz48L3N2Zz4=", "javascript:alert(1)", "https://evil.example/logo.png", "data:image/png;base64,bm90LXBpY3R1cmU=", "data:image/png;base64," + Buffer.alloc(70_000).toString("base64")])
+    assert.equal(subscriptionSchema.safeParse({ ...app, appIcon }).success, false);
+  const png = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
+  assert.equal(subscriptionSchema.parse({ ...app, appIcon: png }).appIcon, png);
+  assert.equal(subscriptionSchema.safeParse({ ...input, vendor: "", website: "" }).success, false);
+});
+
+test("automatic-renewal Apps still send shared reminder emails without extending their paid period", async () => {
+  const messages: Parameters<SendMail>[0][] = [];
+  const f = await fixture(async message => { messages.push(message); });
+  try {
+    const admin = await f.login("admin@example.com", "test-admin-password-strong-2026");
+    const { cookie, user } = await f.seedAccount("app-reminder@example.com");
+    await f.request("/admin/mail", "PUT", { enabled: true, transport: "resend", senderEmail: "sender@example.com", resendApiKey: "example-test-app-reminder-key" }, admin);
+    f.runtime.db.prepare("UPDATE notification_settings SET recipient_email='app-recipient@example.com',email_verified=1 WHERE user_id=?").run(user.id);
+    const created = await f.request("/subscriptions", "POST", { ...input, type: "app", name: "Spotify", vendor: "Spotify", website: "", currency: "NGN", appPlan: "Premium", appChannel: "官网", appAccount: "personal-account", autoRenew: true, reminderDays: [3] }, cookie);
+    assert.equal(created.status, 201, await created.clone().text());
+    const item = (await created.json() as any).subscription;
+    assert.deepEqual(await f.runtime.runReminders(testNow), { sent: 1, failed: 0 });
+    assert.equal(messages[0]!.to, "app-recipient@example.com");
+    assert.match(messages[0]!.subject, /Spotify/);
+    assert.match(messages[0]!.text, /自动续费/);
+    assert.match(messages[0]!.text, /NGN|₦/);
+    assert.equal((f.runtime.db.prepare("SELECT next_renewal FROM subscriptions WHERE id=?").get(item.id) as any).next_renewal, item.nextRenewal);
+    assert.equal((f.runtime.db.prepare("SELECT COUNT(*) n FROM billing_periods WHERE subscription_id=?").get(item.id) as any).n, 1);
+    assert.deepEqual(await f.runtime.runReminders(testNow), { sent: 0, failed: 0 });
+  } finally { f.cleanup(); }
+});
+
+test("FX loads every original currency, keeps valid quotes during partial failures and does not invent missing rates", async () => {
+  const db = openDatabase(":memory:"); migrate(db);
+  try {
+    let requested = "";
+    const rates = await createFx(db, async (url, options) => { requested = String(url); assert.ok(options?.signal); return fxFetch(url, options); }).get();
+    for (const currency of ["NGN", "TRY", "PHP", "JPY", "TWD", "HKD"]) {
+      assert.ok(requested.includes(currency)); assert.equal(rates.rates[currency], 0.1);
+    }
+    assert.equal(rates.stale, false);
+    db.prepare("UPDATE exchange_rates SET fetched_at='2000-01-01T00:00:00Z'").run();
+    const partial = await createFx(db, async () => new Response(JSON.stringify([
+      { base: "CNY", quote: "USD", rate: 0.2, date: "2026-11-12" },
+      { base: "CNY", quote: "NGN", rate: -1, date: "2026-11-12" },
+      { base: "CNY", quote: "JPY", rate: 20, date: "2026-02-30" },
+    ]))).get();
+    assert.equal(partial.rates.USD, 5);
+    assert.equal(partial.rates.NGN, 0.1);
+    assert.equal(partial.rates.JPY, 0.1);
+    assert.equal(partial.stale, true);
+    db.prepare("DELETE FROM exchange_rates").run();
+    const freshPartial = await createFx(db, async () => new Response(JSON.stringify([{ base: "CNY", quote: "USD", rate: 0.2, date: "2026-11-12" }]))).get();
+    assert.deepEqual(freshPartial.rates, { CNY: 1, USD: 5 });
+    assert.equal(freshPartial.stale, true);
+    assert.equal(freshPartial.available, true);
+  } finally { db.close(); }
 });
 
 test("concurrent renewal requests append exactly one paid billing period", async () => {
