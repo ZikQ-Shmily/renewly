@@ -81,6 +81,7 @@ export const subscriptionSchema = z
     nextRenewal: dateSchema,
     region: z.string().trim().max(100).default(""),
     model: z.string().trim().max(200).default(""),
+    serverIcon: appIconSchema,
     cpuCores: serverNumber.default(null),
     memoryValue: serverNumber.default(null),
     memoryUnit: z.enum(["MB", "GB"]).default("GB"),
@@ -169,6 +170,7 @@ export function recurringInstant(value: string, timeZone: string) {
 }
 export function serverConfiguration(details: any) {
   return {
+    serverIcon: details?.icon || "auto",
     cpuCores: details?.cpu_cores ?? null,
     memoryValue: details?.memory_value ?? null,
     memoryUnit: details?.memory_unit || "GB",

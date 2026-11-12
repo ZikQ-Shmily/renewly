@@ -397,7 +397,7 @@ export async function createApp(options: AppOptions = {}) {
         now,
         Number(v.autoRenew),
       );
-      if (v.type === "cloud") db.prepare("INSERT INTO server_details(subscription_id,region,model,traffic_mode,traffic_quota_bytes,traffic_unit,bandwidth_value,bandwidth_unit,cpu_cores,memory_value,memory_unit,disk_value,disk_unit,ip_addresses,traffic_direction) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)").run(
+      if (v.type === "cloud") db.prepare("INSERT INTO server_details(subscription_id,region,model,traffic_mode,traffic_quota_bytes,traffic_unit,bandwidth_value,bandwidth_unit,cpu_cores,memory_value,memory_unit,disk_value,disk_unit,ip_addresses,traffic_direction,icon) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)").run(
         id,
         v.region,
         v.model,
@@ -415,6 +415,7 @@ export async function createApp(options: AppOptions = {}) {
         v.diskUnit,
         JSON.stringify(v.ipAddresses),
         v.trafficDirection,
+        v.serverIcon,
       );
       else db.prepare("INSERT INTO app_details(subscription_id,plan,purchase_channel,account,icon) VALUES(?,?,?,?,?)").run(id,v.appPlan,v.appChannel,v.appAccount,v.appIcon);
       db.prepare(
@@ -492,7 +493,7 @@ export async function createApp(options: AppOptions = {}) {
         userId(c),
       );
       if (v.type === "cloud") db.prepare(
-        "UPDATE server_details SET region=?,model=?,traffic_mode=?,traffic_quota_bytes=?,traffic_unit=?,bandwidth_value=?,bandwidth_unit=?,cpu_cores=?,memory_value=?,memory_unit=?,disk_value=?,disk_unit=?,ip_addresses=?,traffic_direction=? WHERE subscription_id=?",
+        "UPDATE server_details SET region=?,model=?,traffic_mode=?,traffic_quota_bytes=?,traffic_unit=?,bandwidth_value=?,bandwidth_unit=?,cpu_cores=?,memory_value=?,memory_unit=?,disk_value=?,disk_unit=?,ip_addresses=?,traffic_direction=?,icon=? WHERE subscription_id=?",
       ).run(
         v.region,
         v.model,
@@ -510,6 +511,7 @@ export async function createApp(options: AppOptions = {}) {
         v.diskUnit,
         JSON.stringify(v.ipAddresses),
         v.trafficDirection,
+        v.serverIcon,
         old.id,
       );
       else db.prepare("INSERT INTO app_details(subscription_id,plan,purchase_channel,account,icon) VALUES(?,?,?,?,?) ON CONFLICT(subscription_id) DO UPDATE SET plan=excluded.plan,purchase_channel=excluded.purchase_channel,account=excluded.account,icon=excluded.icon").run(old.id,v.appPlan,v.appChannel,v.appAccount,v.appIcon);

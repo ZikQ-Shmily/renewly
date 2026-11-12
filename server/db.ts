@@ -129,4 +129,8 @@ export function migrate(db: DB) {
     `);
     db.prepare("INSERT INTO schema_migrations VALUES(8,?)").run(new Date().toISOString());
   })();
+  if ((version.version || 0) < 9) db.transaction(() => {
+    db.exec("ALTER TABLE server_details ADD COLUMN icon TEXT NOT NULL DEFAULT 'auto'");
+    db.prepare("INSERT INTO schema_migrations VALUES(9,?)").run(new Date().toISOString());
+  })();
 }
