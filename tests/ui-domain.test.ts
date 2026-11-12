@@ -19,7 +19,7 @@ test("progress uses the paid period covering today after early renewal", () => {
     progressPeriod: { startsAt: "2026-11-03", endsAt: "2026-12-03" },
   } as Subscription;
   assert.deepEqual(termProgress(item, "Asia/Shanghai", "2026-11-11"), {
-    percent: 73, label: "剩余 22 天", tone: "normal",
+    percent: 73.33, label: "剩余 22 天", tone: "normal",
   });
   assert.equal(termProgress(item, "Asia/Shanghai", "2026-12-03").label, "已到期");
   assert.deepEqual(termProgress(item, "Asia/Shanghai", "2026-12-04"), {
@@ -60,8 +60,16 @@ test("progress color follows the unrounded remaining period ratio", () => {
   for (const { ratio, tone } of cases) {
     const progress = termProgress(item, "UTC", new Date(end - duration * ratio));
     assert.equal(progress.tone, tone, `remaining ratio ${ratio}`);
-    assert.equal(progress.percent, Math.round(ratio * 100));
+    assert.equal(progress.percent, Math.round(ratio * 10_000) / 100);
   }
+});
+
+test("annual billing progress retains small daily and hourly changes", () => {
+  const item = { periodStart: "2026-01-01", nextRenewal: "2027-01-01" } as Subscription;
+  assert.equal(termProgress(item, "UTC", "2026-12-31").percent, 0.27);
+  assert.equal(termProgress(item, "UTC", "2026-12-31T23:00").percent, 0.01);
+  assert.equal(termProgress(item, "UTC", "2027-01-01").percent, 0);
+  assert.equal(termProgress(item, "UTC", "2025-12-31").percent, 100);
 });
 
 test("upcoming deadlines intensify progress color for short billing periods", () => {

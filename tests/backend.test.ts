@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createApp } from "../server/app.js";
 import { addMonths, serializeSubscription, subscriptionSchema, totals } from "../server/domain.js";
-import { createSession, hashPassword, sessionUser } from "../server/auth.js";
+import { createSession, createUser, hashPassword, sessionUser } from "../server/auth.js";
 import { openDatabase, migrate } from "../server/db.js";
 import { createFx } from "../server/fx.js";
 import type { Config } from "../server/config.js";
@@ -87,10 +87,23 @@ async function fixture(sendMail?: SendMail, now: () => Date = () => testNow) {
     assert.equal(res.status, 200, await res.clone().text());
     return res.headers.get("set-cookie")!.split(";")[0]!;
   };
+  // These fixtures exercise ownership, reminders and account administration;
+  // self-registration and its email proof are covered in registration.test.ts.
+  const seedAccount = async (email: string, name = email) => {
+    const user = await createUser(
+      runtime.db,
+      email,
+      name,
+      "normal-user-password-2026",
+    );
+    const session = createSession(runtime.db, user.id);
+    return { user, cookie: `renewly_session=${session.token}` };
+  };
   return {
     runtime,
     request,
     login,
+    seedAccount,
     cleanup() {
       runtime.close();
       rmSync(dir, { recursive: true, force: true });
@@ -101,17 +114,8 @@ async function fixture(sendMail?: SendMail, now: () => Date = () => testNow) {
 test("account ownership, role enforcement, CSRF, and quota validation", async () => {
   const f = await fixture();
   try {
-    const register = async (email: string) => {
-      const r = await f.request("/auth/register", "POST", {
-        name: email,
-        email,
-        password: "normal-user-password-2026",
-      });
-      assert.equal(r.status, 200);
-      return r.headers.get("set-cookie")!.split(";")[0]!;
-    };
-    const a = await register("a@example.com"),
-      b = await register("b@example.com");
+    const { cookie: a } = await f.seedAccount("a@example.com"),
+      { cookie: b } = await f.seedAccount("b@example.com");
     const created = await f.request("/subscriptions", "POST", input, a);
     assert.equal(created.status, 201, await created.clone().text());
     const { subscription } = (await created.json()) as any;
@@ -331,7 +335,7 @@ test("v1 migration preserves existing subscription and user data and is repeatab
     assert.equal(subscription.diskValue, null);
     assert.deepEqual(subscription.ipAddresses, []);
     assert.equal((db.prepare("SELECT due_date FROM reminder_deliveries").get() as any).due_date, "2027-01-01T00:00");
-    assert.deepEqual(db.prepare("SELECT version FROM schema_migrations ORDER BY version").all(), [{ version: 1 }, { version: 2 }, { version: 3 }, { version: 4 }, { version: 5 }]);
+    assert.deepEqual(db.prepare("SELECT version FROM schema_migrations ORDER BY version").all(), [{ version: 1 }, { version: 2 }, { version: 3 }, { version: 4 }, { version: 5 }, { version: 6 }]);
   } finally { db.close(); }
 });
 
@@ -376,7 +380,7 @@ test("v5 migration marks existing traffic direction unknown and preserves v4 sub
     assert.equal(created.status, 201);
     const before = (await created.json() as any).subscription;
     // Recreate a v4 schema so the production upgrade path is exercised directly.
-    f.runtime.db.exec("ALTER TABLE server_details DROP COLUMN traffic_direction; DELETE FROM schema_migrations WHERE version=5;");
+    f.runtime.db.exec("ALTER TABLE server_details DROP COLUMN traffic_direction; DROP TABLE registration_codes; DROP TABLE registration_code_requests; DELETE FROM schema_migrations WHERE version>=5;");
     migrate(f.runtime.db);
     migrate(f.runtime.db);
     const after = await f.request("/subscriptions", "GET", undefined, cookie).then(response => response.json()) as any;
@@ -435,10 +439,7 @@ test("structured server configuration and static or dynamic IPs round trip and s
     assert.equal(subscriptionSchema.safeParse({ ...input, memoryUnit: "TB" }).success, false);
     assert.equal(subscriptionSchema.safeParse({ ...input, diskUnit: "MB" }).success, false);
 
-    const registration = await f.request("/auth/register", "POST", {
-      name: "其他用户", email: "other-ip@example.com", password: "normal-user-password-2026",
-    });
-    const other = registration.headers.get("set-cookie")!.split(";")[0]!;
+    const { cookie: other } = await f.seedAccount("other-ip@example.com", "其他用户");
     assert.equal((await f.request(`/subscriptions/${item.id}`, "PUT", { ...input, ...configuration }, other)).status, 404);
     assert.equal((await f.request("/subscriptions", "GET", undefined, other).then(r => r.json()) as any).subscriptions.length, 0);
   } finally { f.cleanup(); }
@@ -526,9 +527,7 @@ test("admin user management protects admins, revokes sessions and enforces accou
   const f = await fixture();
   try {
     const adminCookie = await f.login("admin@example.com", "test-admin-password-strong-2026");
-    const registered = await f.request("/auth/register", "POST", { name: "普通用户", email: "managed@example.com", password: "normal-user-password-2026" });
-    const userCookie = registered.headers.get("set-cookie")!.split(";")[0]!;
-    const user = (await registered.json() as any).user;
+    const { user, cookie: userCookie } = await f.seedAccount("managed@example.com", "普通用户");
     await f.request("/subscriptions", "POST", input, userCookie);
     f.runtime.db.prepare("UPDATE notification_settings SET recipient_email='receive@example.com',email_verified=1 WHERE user_id=?").run(user.id);
     const list = await f.request("/admin/users", "GET", undefined, adminCookie);
@@ -836,9 +835,7 @@ test("disabled users are excluded from both reminder enqueue and queued retries"
   });
   try {
     const adminCookie = await f.login("admin@example.com", "test-admin-password-strong-2026");
-    const registered = await f.request("/auth/register", "POST", { name: "提醒测试", email: "disabled-reminder@example.com", password: "normal-user-password-2026" });
-    const cookie = registered.headers.get("set-cookie")!.split(";")[0]!;
-    const user = (await registered.json() as any).user;
+    const { user, cookie } = await f.seedAccount("disabled-reminder@example.com", "提醒测试");
     await f.request("/admin/mail", "PUT", { enabled: true, transport: "resend", senderName: "续记", senderEmail: "sender@example.com", resendApiKey: "example-key-reminder-status-test" }, adminCookie);
     f.runtime.db.prepare("UPDATE notification_settings SET recipient_email='reminder@example.com',email_verified=1 WHERE user_id=?").run(user.id);
     await f.request("/subscriptions", "POST", { ...input, autoRenew: true, reminderDays: [3] }, cookie);
@@ -859,10 +856,7 @@ test("in-flight login rechecks account status and password before creating a ses
   const f = await fixture();
   try {
     const adminCookie = await f.login("admin@example.com", "test-admin-password-strong-2026");
-    const registered = await f.request("/auth/register", "POST", {
-      name: "并发登录测试", email: "login-race@example.com", password: "normal-user-password-2026",
-    });
-    const user = (await registered.json() as any).user;
+    const { user } = await f.seedAccount("login-race@example.com", "并发登录测试");
     let snapshotRead = () => {};
     const prepare = f.runtime.db.prepare.bind(f.runtime.db);
     t.mock.method(f.runtime.db, "prepare", (sql: string) => {
@@ -959,7 +953,7 @@ test("minute reminders wait for the matching local time and preserve midnight de
     // Recreate the old date-only database representation and its sent delivery.
     for (const column of ["cpu_cores", "memory_value", "memory_unit", "disk_value", "disk_unit", "ip_addresses", "traffic_direction"])
       f.runtime.db.exec(`ALTER TABLE server_details DROP COLUMN ${column}`);
-    f.runtime.db.exec("UPDATE subscriptions SET next_renewal=substr(next_renewal,1,10); UPDATE billing_periods SET starts_at=substr(starts_at,1,10),ends_at=substr(ends_at,1,10); UPDATE reminder_deliveries SET due_date=substr(due_date,1,10); DELETE FROM schema_migrations WHERE version>=3;");
+    f.runtime.db.exec("UPDATE subscriptions SET next_renewal=substr(next_renewal,1,10); UPDATE billing_periods SET starts_at=substr(starts_at,1,10),ends_at=substr(ends_at,1,10); UPDATE reminder_deliveries SET due_date=substr(due_date,1,10); DROP TABLE registration_codes; DROP TABLE registration_code_requests; DELETE FROM schema_migrations WHERE version>=3;");
     migrate(f.runtime.db);
     migrate(f.runtime.db);
     assert.equal((f.runtime.db.prepare("SELECT due_date FROM reminder_deliveries WHERE kind='reminder'").get() as any).due_date, "2026-11-14T00:00");
