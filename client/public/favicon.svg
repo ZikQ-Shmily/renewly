@@ -1,1 +1,19 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48"><rect width="48" height="48" rx="13" fill="#151d32"/><path d="M16 32h17a7 7 0 0 0 0-14 10 10 0 0 0-19-1 7.5 7.5 0 0 0 2 15Z" fill="none" stroke="#8490e5" stroke-width="3" stroke-linejoin="round"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="8 8 48 48" fill="none">
+  <style>
+    :root { --renewly-start:#416FE0; --renewly-end:#756BC7; }
+    @media (prefers-color-scheme:dark) {
+      :root { --renewly-start:#83A8FF; --renewly-end:#B5A8F3; }
+    }
+  </style>
+  <defs>
+    <linearGradient id="renewly-subscriptions" x1="12" y1="12" x2="52" y2="51" gradientUnits="userSpaceOnUse">
+      <stop style="stop-color:var(--renewly-start)"/>
+      <stop offset="1" style="stop-color:var(--renewly-end)"/>
+    </linearGradient>
+  </defs>
+  <g stroke="url(#renewly-subscriptions)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M16 36h-1a3 3 0 0 1-3-3V16a4 4 0 0 1 4-4h21a4 4 0 0 1 4 4v1"/>
+    <rect x="24" y="24" width="28" height="27" rx="4"/>
+    <path d="M33 38h10"/>
+  </g>
+</svg>
