@@ -66,7 +66,7 @@ export const subscriptionSchema = z
         );
       }, "网站须为 HTTP(S) 地址")]).default(""),
     appPlan: z.string().trim().max(200).default(""),
-    appChannel: z.enum(["官网", "App Store", "Google Play", "其他"]).default("官网"),
+    appChannel: z.enum(["官网", "App Store", "Google Play", "应用内购", "其他"]).default("官网"),
     appAccount: z.string().trim().max(254).default(""),
     appIcon: appIconSchema,
     currency: z.enum(currencies),

@@ -113,4 +113,20 @@ export function migrate(db: DB) {
     `);
     db.prepare("INSERT INTO schema_migrations VALUES(7,?)").run(new Date().toISOString());
   })();
+  if ((version.version || 0) < 8) db.transaction(() => {
+    db.exec(`
+      CREATE TABLE app_details_v8(
+        subscription_id TEXT PRIMARY KEY REFERENCES subscriptions(id) ON DELETE CASCADE,
+        plan TEXT NOT NULL DEFAULT '',
+        purchase_channel TEXT NOT NULL DEFAULT '官网' CHECK(purchase_channel IN ('官网','App Store','Google Play','应用内购','其他')),
+        account TEXT NOT NULL DEFAULT '',
+        icon TEXT NOT NULL DEFAULT 'auto'
+      );
+      INSERT INTO app_details_v8(subscription_id,plan,purchase_channel,account,icon)
+        SELECT subscription_id,plan,purchase_channel,account,icon FROM app_details;
+      DROP TABLE app_details;
+      ALTER TABLE app_details_v8 RENAME TO app_details;
+    `);
+    db.prepare("INSERT INTO schema_migrations VALUES(8,?)").run(new Date().toISOString());
+  })();
 }
