@@ -77,4 +77,27 @@ export function migrate(db: DB) {
     db.exec("ALTER TABLE server_details ADD COLUMN traffic_direction TEXT NOT NULL DEFAULT 'unknown' CHECK(traffic_direction IN ('one_way','two_way','unknown'))");
     db.prepare("INSERT INTO schema_migrations VALUES(5,?)").run(new Date().toISOString());
   })();
+  if ((version.version || 0) < 6) db.transaction(() => {
+    db.exec(`
+      CREATE TABLE registration_codes(
+        email TEXT PRIMARY KEY COLLATE NOCASE,
+        id TEXT NOT NULL UNIQUE,
+        code_hash TEXT NOT NULL,
+        expires_at INTEGER NOT NULL,
+        attempts INTEGER NOT NULL DEFAULT 0 CHECK(attempts BETWEEN 0 AND 5),
+        status TEXT NOT NULL CHECK(status IN ('sending','sent'))
+      );
+      CREATE INDEX registration_codes_expiry ON registration_codes(expires_at);
+      CREATE TABLE registration_code_requests(
+        id TEXT PRIMARY KEY,
+        email TEXT NOT NULL COLLATE NOCASE,
+        ip_hash TEXT NOT NULL,
+        created_at INTEGER NOT NULL
+      );
+      CREATE INDEX registration_requests_email ON registration_code_requests(email,created_at);
+      CREATE INDEX registration_requests_ip ON registration_code_requests(ip_hash,created_at);
+      CREATE INDEX registration_requests_time ON registration_code_requests(created_at);
+    `);
+    db.prepare("INSERT INTO schema_migrations VALUES(6,?)").run(new Date().toISOString());
+  })();
 }

@@ -34,6 +34,7 @@ import {
 import { createFx } from "./fx.js";
 import { createMail, type SendMail } from "./mail.js";
 import { createReminders } from "./reminders.js";
+import { createRegistration, RegistrationError } from "./registration.js";
 import { dateTimeInstant } from "../shared/datetime.js";
 
 class ApiError extends Error {
@@ -96,6 +97,7 @@ export async function createApp(options: AppOptions = {}) {
   await bootstrap(db, config);
   const fx = createFx(db, options.fetcher),
     mail = createMail(db, config, options.fetcher, options.sendMail),
+    registration = createRegistration(db, config, mail, clock),
     runReminders = createReminders(db, mail, config);
   const dummyHash = await hashPassword(randomUUID());
   const app = new Hono<{ Variables: { user: any } }>();
@@ -174,6 +176,7 @@ export async function createApp(options: AppOptions = {}) {
       "/api/v1/auth/config",
       "/api/v1/auth/login",
       "/api/v1/auth/register",
+      "/api/v1/auth/register/code",
       "/api/v1/notifications/verify",
     ];
     if (!publicPaths.includes(c.req.path)) {
@@ -184,6 +187,10 @@ export async function createApp(options: AppOptions = {}) {
     await next();
   });
   app.onError((error, c) => {
+    if (error instanceof RegistrationError) {
+      if (error.retryAfter) c.header("Retry-After", String(error.retryAfter));
+      return c.json({ error: { code: error.code, message: error.message, ...(error.retryAfter ? { retryAfter: error.retryAfter } : {}) } }, error.status);
+    }
     if (error instanceof ApiError)
       return c.json(
         { error: { code: error.code, message: error.message } },
@@ -260,28 +267,27 @@ export async function createApp(options: AppOptions = {}) {
   app.get("/api/v1/auth/config", (c) =>
     c.json({
       registrationEnabled: config.registrationEnabled,
+      registrationVerificationRequired: true,
+      registrationMailAvailable: mail.available(),
       adminConfigured: !!db
         .prepare("SELECT id FROM users WHERE role='admin' LIMIT 1")
         .get(),
     }),
   );
+  app.post("/api/v1/auth/register/code", async (c) => {
+    if (!config.registrationEnabled)
+      fail(403, "REGISTRATION_DISABLED", "注册已关闭，请联系管理员。");
+    const v = z.object({ email }).parse(await c.req.json());
+    return c.json(await registration.sendCode(v.email, ip(c)));
+  });
   app.post("/api/v1/auth/register", async (c) => {
     if (!config.registrationEnabled)
       fail(403, "REGISTRATION_DISABLED", "注册已关闭，请联系管理员。");
     rate(`register:${ip(c)}`, 6, 3600_000);
     const v = z
-      .object({ email, password, name: z.string().trim().min(1).max(60) })
+      .object({ email, password, name: z.string().trim().min(1).max(60), verificationCode: z.string().trim().regex(/^\d{6}$/, "请输入6位邮箱验证码。") })
       .parse(await c.req.json());
-    if (db.prepare("SELECT id FROM users WHERE email=?").get(v.email))
-      fail(409, "EMAIL_EXISTS", "此邮箱已注册。");
-    let user;
-    try {
-      user = await createUser(db, v.email, v.name, v.password);
-    } catch (error) {
-      if ((error as any).code === "SQLITE_CONSTRAINT_UNIQUE")
-        fail(409, "EMAIL_EXISTS", "此邮箱已注册。");
-      throw error;
-    }
+    const user = await registration.register(v);
     return attachSession(c, user);
   });
   app.post("/api/v1/auth/login", async (c) => {

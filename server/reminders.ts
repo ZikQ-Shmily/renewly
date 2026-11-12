@@ -1,10 +1,10 @@
 import { randomUUID } from "node:crypto";
 import type { DB } from "./db.js";
 import type { MailService } from "./mail.js";
-import { htmlEscape } from "./mail.js";
 import type { Config } from "./config.js";
 import { localDate, dateDiff, recurringInstant, shiftCalendarDays } from "./domain.js";
 import { formatDateTime } from "../shared/datetime.js";
+import { renewalReminderEmail } from "./email-templates.js";
 
 export function createReminders(db: DB, mail: MailService, config: Config) {
   let running = false;
@@ -142,18 +142,19 @@ export function createReminders(db: DB, mail: MailService, config: Config) {
           style: "currency",
           currency: delivery.currency,
         }).format(delivery.renewal_minor / 100);
-        const instruction = delivery.auto_renew
-          ? "此订阅已标记商家自动续费，请检查余额并确认商家扣款成功，再在续记登记。"
-          : "请前往商家完成续费，并在续记登记。";
-        const dueTime = `${formatDateTime(delivery.due_date)}（${delivery.time_zone}）`;
-        const text = `${delivery.name} ${when}。\n商家：${delivery.vendor}\n续费时间：${dueTime}\n续费价格：${price}\n${instruction}\n${config.appUrl}`;
-
         try {
           await mail.send({
             to: delivery.recipient_email,
-            subject: `续记 · ${delivery.name} ${when}`,
-            text,
-            html: `<h2>${htmlEscape(delivery.name)} ${when}</h2><p>商家：${htmlEscape(delivery.vendor)}</p><p>续费时间：${htmlEscape(dueTime)}</p><p>续费价格：${htmlEscape(price)}</p><p>${htmlEscape(instruction)}</p><a href="${htmlEscape(config.appUrl)}">打开续记</a>`,
+            ...renewalReminderEmail({
+              name: delivery.name,
+              vendor: delivery.vendor,
+              price,
+              dueTime: formatDateTime(delivery.due_date),
+              timeZone: delivery.time_zone,
+              when,
+              autoRenew: !!delivery.auto_renew,
+              appUrl: config.appUrl,
+            }),
             idempotencyKey: `renewly-${delivery.id}`,
           });
           db.prepare(
