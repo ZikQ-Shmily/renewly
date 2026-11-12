@@ -37,7 +37,7 @@ docker run --rm node:24-bookworm-slim node -e "process.stdout.write(require('nod
 | `APP_SECRET` | 随机应用密钥；后续更新继续保留，备份时也要安全保存 |
 | `BOOTSTRAP_ADMIN_EMAIL` | 首次初始化管理员邮箱 |
 | `BOOTSTRAP_ADMIN_PASSWORD` | 首次初始化管理员强密码 |
-| `ALLOW_REGISTRATION` | 是否允许普通用户注册，默认 `true` |
+| `ALLOW_REGISTRATION` | 是否允许普通用户注册，默认 `true`；注册时必须通过邮箱验证码验证，需先启用管理员发件服务 |
 | `COOKIE_SECURE` | 生产 HTTPS 使用 `true` |
 | `TRUST_PROXY` | 默认 `false`，在单个可信反向代理入口且应用端口仅限本机访问时设置为 `true` |
 | `RENEWLY_IMAGE` | `latest` 标签、完整提交标签或镜像摘要 |
@@ -70,7 +70,11 @@ curl --fail http://127.0.0.1:3000/api/health
 
 首次使用浏览器登录前，先确保 `APP_URL`、HTTPS 和 `COOKIE_SECURE` 一致。若只在本机临时通过 HTTP 调试，使用相应的 HTTP `APP_URL` 与 `COOKIE_SECURE=false`。
 
-登录管理员后，在系统邮件页配置发件身份与 SMTP / Resend 服务，测试成功后再启用。普通用户只填写收件邮箱并完成验证。定时提醒由应用单实例后台执行，保持一个 `app` 实例。
+登录管理员后，在系统邮件页配置发件身份与 SMTP / Resend 服务，测试成功后再启用。普通用户不需要配置发件凭据。定时提醒由应用单实例后台执行，保持一个 `app` 实例。
+
+开放注册后，新用户在注册页填写邮箱并发送 6 位验证码，验证后才能创建账户；验证码 10 分钟有效，60 秒后可重新发送，最多尝试 5 次，重新发送会使旧码失效。注册使用上述发件服务，未启用或邮件发送失败时不允许跳过验证。已有账户的登录和管理员创建账户流程不受影响。
+
+注册成功的邮箱会作为已验证的默认提醒收件地址；用户以后更换收件地址仍须验证新地址。应用会将验证码摘要、有效期、失败次数和发送限流记录保存在 SQLite 中，重启后继续生效，并按邮箱、来源和全站限制发送频率。应保留原 `APP_SECRET`，也应按前述说明正确配置可信代理来源。
 
 ## 4. 更新应用
 
