@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { ArrowRight, LockKeyhole, RefreshCw } from "lucide-react";
 import { api, errorMessage, json } from "./api";
 import { Banner, Button, Field } from "./components";
@@ -20,10 +20,123 @@ export function Auth({
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [verificationCode, setVerificationCode] = useState("");
+  const [sendingCode, setSendingCode] = useState(false);
+  const [codeNotice, setCodeNotice] = useState("");
+  const [cooldowns, setCooldowns] = useState<Record<string, number>>({});
+  const [currentTime, setCurrentTime] = useState(Date.now);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const feedbackVersion = useRef(0);
+  const mounted = useRef(true);
+  const normalizedEmail = email.trim().toLowerCase();
+  const cooldownUntil = cooldowns[normalizedEmail] || 0;
+  const resendSeconds = Math.max(
+    0,
+    Math.ceil((cooldownUntil - currentTime) / 1000),
+  );
+  const validEmail =
+    normalizedEmail.length <= 254 &&
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail);
+  const registrationUnavailable =
+    register && (!config?.registrationEnabled || !config.registrationMailAvailable);
+
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+      feedbackVersion.current += 1;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!register || cooldownUntil <= Date.now()) return;
+    const tick = () => setCurrentTime(Date.now());
+    tick();
+    const interval = window.setInterval(() => {
+      tick();
+      if (Date.now() >= cooldownUntil) window.clearInterval(interval);
+    }, 1000);
+    window.addEventListener("focus", tick);
+    document.addEventListener("visibilitychange", tick);
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener("focus", tick);
+      document.removeEventListener("visibilitychange", tick);
+    };
+  }, [register, cooldownUntil]);
+
+  useEffect(() => {
+    if (config && !config.registrationEnabled && register) {
+      setRegister(false);
+      feedbackVersion.current += 1;
+      setVerificationCode("");
+      setCodeNotice("");
+      setPassword("");
+      setError("");
+    }
+  }, [config, register]);
+
+  function clearVerificationFeedback() {
+    feedbackVersion.current += 1;
+    setVerificationCode("");
+    setCodeNotice("");
+    setError("");
+    setCurrentTime(Date.now());
+  }
+
+  async function sendCode() {
+    if (
+      sendingCode ||
+      busy ||
+      !register ||
+      !validEmail ||
+      !config?.adminConfigured ||
+      registrationUnavailable ||
+      cooldownUntil > Date.now()
+    ) return;
+    const address = normalizedEmail;
+    const version = feedbackVersion.current;
+    setSendingCode(true);
+    setError("");
+    setCodeNotice("");
+    try {
+      const result = await api<{
+        message: string;
+        retryAfter: number;
+        expiresIn: number;
+      }>("/auth/register/code", json("POST", { email: address }));
+      if (!mounted.current) return;
+      // Preserve this address's cooldown even if the user edits the email field.
+      const now = Date.now();
+      setCooldowns((previous) => ({
+        ...previous,
+        [address]: now + result.retryAfter * 1000,
+      }));
+      setCurrentTime(now);
+      if (feedbackVersion.current === version) {
+        setVerificationCode("");
+        setCodeNotice(result.message);
+      }
+    } catch (e) {
+      if (mounted.current && feedbackVersion.current === version)
+        setError(errorMessage(e));
+    } finally {
+      if (mounted.current) setSendingCode(false);
+    }
+  }
+
   async function submit(event: FormEvent) {
     event.preventDefault();
+    if (busy || (register && sendingCode)) return;
+    if (registrationUnavailable) {
+      setError("注册暂不可用，请稍后重试或联系管理员。");
+      return;
+    }
+    if (register && !/^\d{6}$/.test(verificationCode)) {
+      setError("请填写邮箱收到的6位验证码。");
+      return;
+    }
     setBusy(true);
     setError("");
     try {
@@ -32,7 +145,9 @@ export function Auth({
         json("POST", {
           email: email.trim(),
           password,
-          ...(register ? { name: name.trim() } : {}),
+          ...(register
+            ? { name: name.trim(), verificationCode }
+            : {}),
         }),
       );
       setPassword("");
@@ -85,7 +200,7 @@ export function Auth({
           <h2>{register ? "创建你的订阅空间" : "欢迎回来"}</h2>
           <p>
             {register
-              ? "注册后即可管理自己的订阅。"
+              ? "验证邮箱后，即可创建自己的订阅空间。"
               : "登录后继续掌握每一次续费。"}
           </p>
         </div>
@@ -116,9 +231,17 @@ export function Auth({
             </Button>
           </Banner>
         )}
+        {register && config?.registrationEnabled && !config.registrationMailAvailable && (
+          <Banner>
+            注册验证码服务暂不可用，请稍后重试或联系管理员。
+            <Button variant="ghost" type="button" onClick={onRetry}>
+              重新检查
+            </Button>
+          </Banner>
+        )}
         {error && <Banner tone="error">{error}</Banner>}
         <form onSubmit={submit}>
-          <fieldset disabled={busy || !config?.adminConfigured}>
+          <fieldset disabled={busy || !config?.adminConfigured || registrationUnavailable}>
             <legend className="sr-only">{register ? "注册" : "登录"}</legend>
             {register && (
               <Field label="你的称呼">
@@ -136,7 +259,10 @@ export function Auth({
             <Field label="邮箱">
               <input
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  clearVerificationFeedback();
+                }}
                 type="email"
                 required
                 autoComplete="username"
@@ -144,6 +270,51 @@ export function Auth({
                 placeholder="you@example.com"
               />
             </Field>
+            {register && (
+              <div className="field auth-code-field">
+                <label htmlFor="registration-code">邮箱验证码</label>
+                <div className="auth-code-row">
+                  <input
+                    id="registration-code"
+                    value={verificationCode}
+                    onChange={(e) =>
+                      setVerificationCode(e.target.value.replace(/\D/g, "").slice(0, 6))
+                    }
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    pattern="[0-9]{6}"
+                    minLength={6}
+                    maxLength={6}
+                    required
+                    spellCheck={false}
+                    aria-describedby="registration-code-help"
+                    placeholder="6位验证码"
+                  />
+                  <Button
+                    type="button"
+                    onClick={sendCode}
+                    busy={sendingCode}
+                    disabled={!validEmail || resendSeconds > 0}
+                    className="auth-send-code"
+                  >
+                    {sendingCode
+                      ? "发送中…"
+                      : resendSeconds > 0
+                        ? `${resendSeconds}秒后重发`
+                        : cooldownUntil
+                          ? "重新发送"
+                          : "发送验证码"}
+                  </Button>
+                </div>
+                <small id="registration-code-help">验证码10分钟内有效</small>
+                {codeNotice && (
+                  <div className="auth-code-notice" role="status" aria-live="polite">
+                    <Banner tone="success">{codeNotice}</Banner>
+                  </div>
+                )}
+              </div>
+            )}
             <Field
               label="密码"
               help={register ? "至少 12 位，可使用长口令。" : undefined}
@@ -163,6 +334,7 @@ export function Auth({
               type="submit"
               variant="primary"
               busy={busy}
+              disabled={register && (sendingCode || !/^\d{6}$/.test(verificationCode))}
               className="full-width"
             >
               {register ? "创建账户" : "登录空间"}
@@ -175,9 +347,10 @@ export function Auth({
             {register ? "已有账户？" : "还没有账户？"}
             <button
               type="button"
+              disabled={busy}
               onClick={() => {
                 setRegister(!register);
-                setError("");
+                clearVerificationFeedback();
                 setPassword("");
               }}
             >

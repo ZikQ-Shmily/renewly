@@ -97,7 +97,7 @@ export function termProgress(item: Subscription, timeZone: string, currentTime?:
     return { percent: 0, label: "暂无有效账期", tone: "muted" };
   const remaining = end - current;
   const remainingRatio = Math.max(0, Math.min(1, remaining / (end - start)));
-  const percent = Math.round(remainingRatio * 100);
+  const percent = Math.round(remainingRatio * 10_000) / 100;
   let tone = "normal";
   if (remaining <= 0) {
     tone = "expired";

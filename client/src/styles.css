@@ -1482,6 +1482,22 @@ fieldset {
 .auth-panel input {
   min-height: 43px;
 }
+.auth-code-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: stretch;
+  gap: 10px;
+}
+.auth-code-row input {
+  font-variant-numeric: tabular-nums;
+}
+.auth-send-code {
+  min-width: 110px;
+  font-variant-numeric: tabular-nums;
+}
+.auth-code-notice .banner {
+  margin: 0;
+}
 .auth-panel .full-width {
   margin-top: 5px;
   min-height: 43px;
@@ -2153,7 +2169,7 @@ fieldset {
   border-radius: 3px;
 }
 .term-progress.expired .term-track { background: var(--surface-progress-expired, #54303d); }
-.term-note { flex: none; min-width: 4ch; text-align: right; font-variant-numeric: tabular-nums; }
+.term-note { flex: none; min-width: 7ch; text-align: right; font-variant-numeric: tabular-nums; }
 input[type="datetime-local"] { min-width: 0; width: 100%; }
 .term-progress.soon .term-note { color: var(--color-warning, #edb68c); }
 .term-progress.warning .term-note { color: var(--color-caution, #e5c17c); }

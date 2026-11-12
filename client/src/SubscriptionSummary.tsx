@@ -5,13 +5,14 @@ import { bandwidthLabel, formatDateTime, money, periodLabel, termProgress, traff
 
 export function TermProgress({ item, timeZone }: { item: Subscription; timeZone: string }) {
   const progress = termProgress(item, timeZone);
+  const percentLabel = `${progress.percent.toFixed(2)}%`;
   return (
     <div className={`term-progress ${progress.tone}`}>
       <span>账期剩余</span>
-      <div className="term-track" role="progressbar" aria-label={`${item.name}账期剩余`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress.percent} aria-valuetext={`${progress.percent}% · ${progress.label}`}>
+      <div className="term-track" role="progressbar" aria-label={`${item.name}账期剩余`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress.percent} aria-valuetext={`${percentLabel} · ${progress.label}`}>
         <span style={{ clipPath: `inset(0 ${100 - progress.percent}% 0 0 round 3px)` }} />
       </div>
-      <span className="term-note">{progress.percent}%</span>
+      <span className="term-note">{percentLabel}</span>
     </div>
   );
 }

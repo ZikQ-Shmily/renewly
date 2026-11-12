@@ -20,6 +20,8 @@ export interface AdminUser {
 }
 export interface AuthConfig {
   registrationEnabled: boolean;
+  registrationVerificationRequired: boolean;
+  registrationMailAvailable: boolean;
   adminConfigured: boolean;
 }
 export interface ServerIpAddress {
