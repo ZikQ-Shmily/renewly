@@ -1,7 +1,10 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
+import { initializeTheme } from "./theme";
 import "./styles.css";
+
+initializeTheme();
 
 document.addEventListener("pointerdown", () => {
   document.documentElement.dataset.inputMode = "pointer";

@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   AlarmClock,
   Bell,
-  Cloud,
   Layers,
   LoaderCircle,
   LogOut,
@@ -22,6 +21,7 @@ import { Select } from "./Select";
 import { UserManagement } from "./Users";
 import { TermProgress } from "./SubscriptionSummary";
 import { DashboardMetrics, RatesFooter } from "./DashboardMetrics";
+import { ThemeSwitch } from "./ThemeSwitch";
 import type {
   AuthConfig,
   Currency,
@@ -262,7 +262,7 @@ export default function App() {
   if (booting)
     return (
       <main className="boot">
-        <Cloud size={35} className="accent-icon" />
+        <img src="/favicon.svg?v=20261112-cards" width={35} height={35} alt="" />
         <span className="brand gradient">续记 Renewly</span>
         <p>
           <LoaderCircle className="spin" size={16} />
@@ -382,6 +382,7 @@ export default function App() {
             <strong>{breadcrumb}</strong>
           </div>
           <div className="topbar-actions">
+            <ThemeSwitch />
             <span className="account-role">
               {user.role === "admin" ? "管理员" : "个人账户"}
             </span>

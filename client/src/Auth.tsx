@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from "react";
-import { ArrowRight, Cloud, LockKeyhole, RefreshCw } from "lucide-react";
+import { ArrowRight, LockKeyhole, RefreshCw } from "lucide-react";
 import { api, errorMessage, json } from "./api";
 import { Banner, Button, Field } from "./components";
+import { ThemeSwitch } from "./ThemeSwitch";
 import type { AuthConfig, User } from "./types";
 
 export function Auth({
@@ -44,9 +45,10 @@ export function Auth({
   }
   return (
     <main className="auth-layout">
+      <div className="auth-theme-control"><ThemeSwitch /></div>
       <div className="auth-intro">
         <span className="brand gradient">
-          <Cloud size={26} aria-hidden="true" />
+          <img src="/favicon.svg?v=20261112-cards" width={26} height={26} alt="" />
           续记 Renewly
         </span>
         <span className="eyebrow gradient">YOUR SUBSCRIPTIONS, ORGANIZED</span>
