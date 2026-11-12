@@ -372,7 +372,7 @@ export function SubscriptionEditor({
               <Select
                 value={draft.appChannel}
                 onValueChange={(value) => field("appChannel", value)}
-                options={["官网", "App Store", "Google Play", "其他"].map((value) => ({ value, label: value }))}
+                options={["官网", "App Store", "Google Play", "应用内购", "其他"].map((value) => ({ value, label: value }))}
                 name="appChannel"
                 aria-label="购买渠道"
                 disabled={busy}
