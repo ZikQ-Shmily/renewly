@@ -1,7 +1,17 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { appIconPresets, matchedAppIcon, appFaviconUrl, isUploadedAppIcon, resolveAppIcon } from "../client/src/app-icons.js";
+import { appIconInitial, appIconPresets, matchedAppIcon, appFaviconUrl, isUploadedAppIcon, resolveAppIcon } from "../client/src/app-icons.js";
+
+test("merchant initials preserve complete Unicode graphemes and use a cloud for empty names", () => {
+  assert.equal(appIconInitial("腾讯云"), "腾");
+  assert.equal(appIconInitial("  DMIT  "), "D");
+  assert.equal(appIconInitial(""), "云");
+  assert.equal(appIconInitial(" \t\n"), "云");
+  assert.equal(appIconInitial("e\u0301dge"), "é");
+  assert.equal(appIconInitial("👩🏽‍💻 Cloud"), "👩🏽‍💻");
+  assert.equal(appIconInitial("🇨🇳云服务"), "🇨🇳");
+});
 
 test("app icons match real brand domains and recognizable names without domain substring spoofing", () => {
   assert.equal(matchedAppIcon("我的效率工具", "https://www.notion.so/settings")?.key, "notion");

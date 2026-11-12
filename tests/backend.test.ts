@@ -334,9 +334,10 @@ test("v1 migration preserves existing subscription and user data and is repeatab
     assert.equal(subscription.cpuCores, null);
     assert.equal(subscription.memoryValue, null);
     assert.equal(subscription.diskValue, null);
+    assert.equal(subscription.serverIcon, "auto");
     assert.deepEqual(subscription.ipAddresses, []);
     assert.equal((db.prepare("SELECT due_date FROM reminder_deliveries").get() as any).due_date, "2027-01-01T00:00");
-    assert.deepEqual(db.prepare("SELECT version FROM schema_migrations ORDER BY version").all(), [{ version: 1 }, { version: 2 }, { version: 3 }, { version: 4 }, { version: 5 }, { version: 6 }, { version: 7 }, { version: 8 }]);
+    assert.deepEqual(db.prepare("SELECT version FROM schema_migrations ORDER BY version").all(), [{ version: 1 }, { version: 2 }, { version: 3 }, { version: 4 }, { version: 5 }, { version: 6 }, { version: 7 }, { version: 8 }, { version: 9 }]);
   } finally { db.close(); }
 });
 
@@ -370,6 +371,85 @@ test("traffic direction persists, validates and survives edits from older client
   } finally { f.cleanup(); }
 });
 
+test("cloud vendor icons round trip, preserve older client edits and renewals, and stay owner scoped", async () => {
+  const f = await fixture();
+  try {
+    const { cookie } = await f.seedAccount("cloud-icons@example.com");
+    const { cookie: other } = await f.seedAccount("other-cloud-icons@example.com");
+    const png = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
+    const created = await f.request("/subscriptions", "POST", { ...input, serverIcon: "aws" }, cookie);
+    assert.equal(created.status, 201, await created.clone().text());
+    const item = (await created.json() as any).subscription;
+    assert.equal(item.serverIcon, "aws");
+    assert.equal(item.appIcon, "auto");
+    const storedIcon = () => (f.runtime.db.prepare("SELECT icon FROM server_details WHERE subscription_id=?").get(item.id) as any).icon;
+    assert.equal(storedIcon(), "aws");
+
+    for (const serverIcon of ["hetzner", "custom-provider", png]) {
+      const edited = await f.request(`/subscriptions/${item.id}`, "PUT", { ...input, serverIcon }, cookie);
+      assert.equal(edited.status, 200, await edited.clone().text());
+      assert.equal((await edited.json() as any).subscription.serverIcon, serverIcon);
+      assert.equal(storedIcon(), serverIcon);
+    }
+    const oldClient = await f.request(`/subscriptions/${item.id}`, "PUT", { ...input, notes: "旧客户端保留自定义商家图标" }, cookie);
+    assert.equal(oldClient.status, 200, await oldClient.clone().text());
+    assert.equal((await oldClient.json() as any).subscription.serverIcon, png);
+    assert.equal(storedIcon(), png);
+
+    const renewal = { paidAmount: 120, periodStart: item.nextRenewal, nextRenewal: addMonths(item.nextRenewal, 12) };
+    for (const method of ["PUT", "DELETE"])
+      assert.equal((await f.request(`/subscriptions/${item.id}`, method, method === "PUT" ? { ...input, serverIcon: "cloudflare" } : undefined, other)).status, 404);
+    assert.equal((await f.request(`/subscriptions/${item.id}/renew`, "POST", renewal, other)).status, 404);
+    assert.equal((await f.request("/subscriptions", "GET", undefined, other).then(response => response.json()) as any).subscriptions.length, 0);
+    assert.equal(storedIcon(), png);
+    const renewed = await f.request(`/subscriptions/${item.id}/renew`, "POST", renewal, cookie);
+    assert.equal(renewed.status, 200, await renewed.clone().text());
+    assert.equal((await renewed.json() as any).subscription.serverIcon, png);
+    assert.equal(storedIcon(), png);
+    assert.equal((f.runtime.db.prepare("SELECT COUNT(*) n FROM billing_periods WHERE subscription_id=?").get(item.id) as any).n, 2);
+
+    for (const serverIcon of [png, undefined]) {
+      const result = await f.request("/subscriptions", "POST", { ...input, serverIcon }, cookie);
+      assert.equal(result.status, 201, await result.clone().text());
+      assert.equal((await result.json() as any).subscription.serverIcon, serverIcon ?? "auto");
+    }
+    const app = await f.request("/subscriptions", "POST", { ...input, type: "app", appIcon: "notion", serverIcon: "aws" }, cookie);
+    assert.equal(app.status, 201, await app.clone().text());
+    const appItem = (await app.json() as any).subscription;
+    assert.equal(appItem.appIcon, "notion");
+    assert.equal(appItem.serverIcon, "auto");
+    assert.equal(f.runtime.db.prepare("SELECT * FROM server_details WHERE subscription_id=?").get(appItem.id), undefined);
+    const list = await f.request("/subscriptions", "GET", undefined, cookie).then(response => response.json()) as any;
+    assert.equal(list.subscriptions.find((subscription: any) => subscription.id === item.id).serverIcon, png);
+    const dashboard = await f.request("/dashboard?type=cloud", "GET", undefined, cookie).then(response => response.json()) as any;
+    assert.equal(dashboard.subscriptions.find((subscription: any) => subscription.id === item.id).serverIcon, png);
+    const cleared = await f.request(`/subscriptions/${item.id}`, "PUT", { ...input, ...renewal, serverIcon: "auto" }, cookie);
+    assert.equal(cleared.status, 200, await cleared.clone().text());
+    assert.equal((await cleared.json() as any).subscription.serverIcon, "auto");
+    assert.equal(storedIcon(), "auto");
+  } finally { f.cleanup(); }
+});
+
+test("cloud vendor icons reject unsafe, malformed and oversized images without changing stored records", async () => {
+  const f = await fixture();
+  try {
+    const { cookie } = await f.seedAccount("cloud-icon-validation@example.com");
+    const created = await f.request("/subscriptions", "POST", { ...input, serverIcon: "aws" }, cookie);
+    assert.equal(created.status, 201, await created.clone().text());
+    const item = (await created.json() as any).subscription;
+    const db = f.runtime.db;
+    const snapshot = () => ["subscriptions", "server_details", "billing_periods"].map(table => db.prepare(`SELECT * FROM ${table} ORDER BY rowid`).all());
+    const before = snapshot();
+    const oversizedPng = Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), Buffer.alloc(65_536)]);
+    for (const serverIcon of [null, 1, "", "../aws", "AWS", "a".repeat(41), "javascript:alert(1)", "https://evil.example/logo.png", "data:image/svg+xml;base64,PHN2Zz48L3N2Zz4=", "data:image/png;base64,bm90LXBpY3R1cmU=", "data:image/jpeg;base64,iVBORw0KGgo=", "data:image/png;base64,iVBORw0KGgp=", `data:image/png;base64,${oversizedPng.toString("base64")}`]) {
+      assert.equal((await f.request("/subscriptions", "POST", { ...input, serverIcon }, cookie)).status, 400);
+      assert.equal((await f.request(`/subscriptions/${item.id}`, "PUT", { ...input, serverIcon }, cookie)).status, 400);
+    }
+    assert.deepEqual(snapshot(), before);
+    assert.equal((await f.request("/subscriptions", "GET", undefined, cookie).then(response => response.json()) as any).subscriptions[0].serverIcon, "aws");
+  } finally { f.cleanup(); }
+});
+
 test("v5 migration marks existing traffic direction unknown and preserves v4 subscription details", async () => {
   const f = await fixture();
   try {
@@ -381,7 +461,7 @@ test("v5 migration marks existing traffic direction unknown and preserves v4 sub
     assert.equal(created.status, 201);
     const before = (await created.json() as any).subscription;
     // Recreate a v4 schema so the production upgrade path is exercised directly.
-    f.runtime.db.exec("ALTER TABLE server_details DROP COLUMN traffic_direction; DROP TABLE registration_codes; DROP TABLE registration_code_requests; DELETE FROM schema_migrations WHERE version>=5;");
+    f.runtime.db.exec("ALTER TABLE server_details DROP COLUMN icon; ALTER TABLE server_details DROP COLUMN traffic_direction; DROP TABLE registration_codes; DROP TABLE registration_code_requests; DELETE FROM schema_migrations WHERE version>=5;");
     migrate(f.runtime.db);
     migrate(f.runtime.db);
     const after = await f.request("/subscriptions", "GET", undefined, cookie).then(response => response.json()) as any;
@@ -732,12 +812,16 @@ test("v8 migration preserves populated v7 Apps and related data, rolls back fail
         INSERT INTO app_details_v7 SELECT * FROM app_details;
         DROP TABLE app_details;
         ALTER TABLE app_details_v7 RENAME TO app_details;
+        ALTER TABLE server_details DROP COLUMN icon;
         DELETE FROM schema_migrations WHERE version>=8;
       `);
     })();
     assert.throws(() => db.prepare("UPDATE app_details SET purchase_channel='应用内购' WHERE subscription_id=?").run(appIds[0]), /CHECK constraint failed/);
     const tables = ["users", "sessions", "notification_settings", "subscriptions", "server_details", "app_details", "billing_periods", "mail_settings"];
-    const snapshot = () => Object.fromEntries(tables.map(table => [table, db.prepare(`SELECT * FROM ${table} ORDER BY rowid`).all()]));
+    const snapshot = () => Object.fromEntries(tables.map(table => [table, db.prepare(`SELECT * FROM ${table} ORDER BY rowid`).all().map((row: any) => {
+      if (table === "server_details") { const { icon, ...details } = row; return details; }
+      return row;
+    })]));
     const before = snapshot();
     const oldSchema = db.prepare("SELECT sql FROM sqlite_master WHERE name='app_details'").get();
     const foreignKeys = db.prepare("PRAGMA foreign_key_list(app_details)").all();
@@ -754,7 +838,7 @@ test("v8 migration preserves populated v7 Apps and related data, rolls back fail
     migrate(db);
     assert.deepEqual(snapshot(), before);
     assert.deepEqual(db.prepare("SELECT * FROM schema_migrations WHERE version<8 ORDER BY version").all(), oldMigrations);
-    assert.equal((db.prepare("SELECT MAX(version) version FROM schema_migrations").get() as any).version, 8);
+    assert.equal((db.prepare("SELECT MAX(version) version FROM schema_migrations").get() as any).version, 9);
     assert.equal((db.prepare("SELECT COUNT(*) n FROM schema_migrations WHERE version=8").get() as any).n, 1);
     assert.deepEqual(db.prepare("PRAGMA foreign_key_list(app_details)").all(), foreignKeys);
     assert.deepEqual(db.prepare("PRAGMA foreign_key_check").all(), []);
@@ -774,6 +858,78 @@ test("v8 migration preserves populated v7 Apps and related data, rolls back fail
   } finally { f.cleanup(); }
 });
 
+test("v9 migration defaults populated v8 cloud icons and preserves data with rollback and repeatability", async () => {
+  const f = await fixture();
+  try {
+    const { cookie, user } = await f.seedAccount("v9-cloud-owner@example.com");
+    const { cookie: other } = await f.seedAccount("v9-other-owner@example.com");
+    const cloud = await f.request("/subscriptions", "POST", {
+      ...input, currency: "USD", autoRenew: true, trafficDirection: "two_way", bandwidthValue: 1.25, bandwidthUnit: "Gbps",
+      cpuCores: 2.5, memoryValue: 512, memoryUnit: "MB", diskValue: 1.5, diskUnit: "TB",
+      ipAddresses: [{ type: "static", address: "203.0.113.9" }, { type: "dynamic", address: "" }], notes: "保留云服务器配置",
+    }, cookie);
+    assert.equal(cloud.status, 201, await cloud.clone().text());
+    const cloudItem = (await cloud.json() as any).subscription;
+    const renewal = await f.request(`/subscriptions/${cloudItem.id}/renew`, "POST", { paidAmount: 99, periodStart: cloudItem.nextRenewal, nextRenewal: addMonths(cloudItem.nextRenewal, 12) }, cookie);
+    assert.equal(renewal.status, 200, await renewal.clone().text());
+    const app = await f.request("/subscriptions", "POST", {
+      ...input, type: "app", name: "保留应用", currency: "JPY", appPlan: "Premium 年付", appChannel: "应用内购", appAccount: "saved-account@example.com", appIcon: "spotify",
+    }, cookie);
+    assert.equal(app.status, 201, await app.clone().text());
+    const appItem = (await app.json() as any).subscription;
+    assert.equal((await f.request("/subscriptions", "POST", { ...input, name: "另一用户的云服务器", currency: "EUR" }, other)).status, 201);
+    const beforeList = await f.request("/subscriptions", "GET", undefined, cookie).then(response => response.json()) as any;
+    const db = f.runtime.db;
+    db.prepare("UPDATE users SET currency='GBP' WHERE id=?").run(user.id);
+    db.prepare("UPDATE notification_settings SET recipient_email='saved-recipient@example.com',email_verified=1,reminder_days='[14,7,0]' WHERE user_id=?").run(user.id);
+    db.exec("UPDATE mail_settings SET enabled=1,transport='resend',sender_email='saved-sender@example.com',secrets_cipher='preserved-encrypted-secret'");
+    db.prepare("INSERT INTO audit_logs(actor_id,action,created_at) VALUES(?,?,?)").run(user.id, "preserved.migration.fixture", testNow.toISOString());
+    db.prepare("INSERT INTO reminder_deliveries(id,user_id,subscription_id,subscription_name,due_date,days_before,status,attempts,created_at,updated_at,sent_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)").run(
+      "v9-preserved-reminder", user.id, cloudItem.id, cloudItem.name, cloudItem.nextRenewal, 3, "sent", 1, testNow.toISOString(), testNow.toISOString(), testNow.toISOString(),
+    );
+    // Restore the deployed v8 schema with populated cloud, App, billing and account tables.
+    db.exec("ALTER TABLE server_details DROP COLUMN icon; DELETE FROM schema_migrations WHERE version=9");
+    const tables = (db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name!='schema_migrations' ORDER BY name").all() as { name: string }[]).map(row => row.name);
+    const snapshot = () => Object.fromEntries(tables.map(table => [table, db.prepare(`SELECT * FROM ${table} ORDER BY rowid`).all()]));
+    const before = snapshot();
+    const oldMigrations = db.prepare("SELECT * FROM schema_migrations ORDER BY version").all();
+    assert.equal((oldMigrations.at(-1) as any).version, 8);
+    const oldSchema = db.prepare("SELECT sql FROM sqlite_master WHERE name='server_details'").get();
+    const foreignKeys = db.prepare("PRAGMA foreign_key_list(server_details)").all();
+    db.exec("CREATE TRIGGER fail_v9_migration BEFORE INSERT ON schema_migrations WHEN NEW.version=9 BEGIN SELECT RAISE(ABORT,'simulated v9 marker failure'); END");
+    assert.throws(() => migrate(db), /simulated v9 marker failure/);
+    assert.deepEqual(snapshot(), before);
+    assert.deepEqual(db.prepare("SELECT sql FROM sqlite_master WHERE name='server_details'").get(), oldSchema);
+    assert.deepEqual(db.prepare("SELECT * FROM schema_migrations ORDER BY version").all(), oldMigrations);
+    db.exec("DROP TRIGGER fail_v9_migration");
+
+    migrate(db);
+    assert.deepEqual(snapshot(), { ...before, server_details: before.server_details!.map((row: any) => ({ ...row, icon: "auto" })) });
+    assert.deepEqual(db.prepare("SELECT * FROM schema_migrations WHERE version<9 ORDER BY version").all(), oldMigrations);
+    assert.equal((db.prepare("SELECT COUNT(*) n FROM schema_migrations WHERE version=9").get() as any).n, 1);
+    const iconColumn = (db.prepare("PRAGMA table_info(server_details)").all() as any[]).find(column => column.name === "icon");
+    assert.equal(iconColumn.notnull, 1);
+    assert.equal(iconColumn.dflt_value, "'auto'");
+    assert.throws(() => db.prepare("UPDATE server_details SET icon=NULL WHERE subscription_id=?").run(cloudItem.id), /NOT NULL constraint failed/);
+    const migratedData = snapshot();
+    const migratedMarkers = db.prepare("SELECT * FROM schema_migrations ORDER BY version").all();
+    const migratedSchema = db.prepare("SELECT sql FROM sqlite_master WHERE name='server_details'").get();
+    migrate(db);
+    assert.deepEqual(snapshot(), migratedData);
+    assert.deepEqual(db.prepare("SELECT * FROM schema_migrations ORDER BY version").all(), migratedMarkers);
+    assert.deepEqual(db.prepare("SELECT sql FROM sqlite_master WHERE name='server_details'").get(), migratedSchema);
+    assert.deepEqual(db.prepare("PRAGMA foreign_key_list(server_details)").all(), foreignKeys);
+    assert.deepEqual(db.prepare("PRAGMA foreign_key_check").all(), []);
+    assert.equal((db.prepare("PRAGMA quick_check").get() as any).quick_check, "ok");
+    const afterList = await f.request("/subscriptions", "GET", undefined, cookie).then(response => response.json()) as any;
+    assert.deepEqual(afterList, beforeList);
+    assert.equal(afterList.subscriptions.find((subscription: any) => subscription.id === appItem.id).appIcon, "spotify");
+    db.prepare("UPDATE server_details SET icon='hetzner' WHERE subscription_id=?").run(cloudItem.id);
+    migrate(db);
+    assert.equal((db.prepare("SELECT icon FROM server_details WHERE subscription_id=?").get(cloudItem.id) as any).icon, "hetzner");
+  } finally { f.cleanup(); }
+});
+
 test("v7 upgrade preserves foreign-currency cloud records, paid history and mail while pinning summaries to CNY", async () => {
   const f = await fixture();
   try {
@@ -784,7 +940,7 @@ test("v7 upgrade preserves foreign-currency cloud records, paid history and mail
     const periods = f.runtime.db.prepare("SELECT * FROM billing_periods").all();
     const mail = f.runtime.db.prepare("SELECT * FROM mail_settings").all();
     f.runtime.db.prepare("UPDATE users SET currency='GBP' WHERE id=?").run(user.id);
-    f.runtime.db.exec("DROP TABLE app_details; DELETE FROM schema_migrations WHERE version>=7;");
+    f.runtime.db.exec("DROP TABLE app_details; ALTER TABLE server_details DROP COLUMN icon; DELETE FROM schema_migrations WHERE version>=7;");
     migrate(f.runtime.db); migrate(f.runtime.db);
     assert.equal((f.runtime.db.prepare("SELECT currency FROM users WHERE id=?").get(user.id) as any).currency, "CNY");
     assert.deepEqual((await f.request("/subscriptions", "GET", undefined, cookie).then(r => r.json()) as any).subscriptions[0], before);
@@ -1221,7 +1377,7 @@ test("minute reminders wait for the matching local time and preserve midnight de
     assert.doesNotMatch(messages[1].subject, /已到续费时间/);
 
     // Recreate the old date-only database representation and its sent delivery.
-    for (const column of ["cpu_cores", "memory_value", "memory_unit", "disk_value", "disk_unit", "ip_addresses", "traffic_direction"])
+    for (const column of ["cpu_cores", "memory_value", "memory_unit", "disk_value", "disk_unit", "ip_addresses", "traffic_direction", "icon"])
       f.runtime.db.exec(`ALTER TABLE server_details DROP COLUMN ${column}`);
     f.runtime.db.exec("UPDATE subscriptions SET next_renewal=substr(next_renewal,1,10); UPDATE billing_periods SET starts_at=substr(starts_at,1,10),ends_at=substr(ends_at,1,10); UPDATE reminder_deliveries SET due_date=substr(due_date,1,10); DROP TABLE registration_codes; DROP TABLE registration_code_requests; DELETE FROM schema_migrations WHERE version>=3;");
     migrate(f.runtime.db);
