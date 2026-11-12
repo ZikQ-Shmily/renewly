@@ -17,17 +17,17 @@
   --gradient: linear-gradient(110deg, #477ff3 0%, #9291dc 55%, #d99a7c 100%);
 }
 
-/* Light mode overrides semantic roles; existing dark colors remain the fallbacks. */
+/* Light mode keeps a soft, tinted fallback when backdrop blur is unavailable. */
 :root[data-theme="light"] {
   color-scheme: light;
   --background: #f4f6fb;
   --text: #243047;
   --secondary: #52627d;
-  --muted: #61718b;
+  --muted: #5b6b84;
   --line: #dfe5f0;
-  --panel: #ffffff;
-  --panel-raised: #f0f3fa;
-  --input: #f8fafd;
+  --panel: #f5f8fd;
+  --panel-raised: #edf2fa;
+  --input: #f3f6fc;
   --color-text-strong: var(--text);
   --color-text-body: var(--secondary);
   --color-text-muted: var(--muted);
@@ -40,10 +40,10 @@
   --color-focus-border: #6586c5;
   --color-placeholder: #71809a;
   --color-on-primary: #ffffff;
-  --ambient-cool: #edf2ff;
-  --ambient-warm: #f4f0f8;
-  --surface-sidebar: #fafbfe;
-  --surface-topbar: #ffffff;
+  --ambient-cool: #dce7fa;
+  --ambient-warm: #e9e2f1;
+  --surface-sidebar: #f0f4fc;
+  --surface-topbar: #f5f8fd;
   --surface-nav-hover: #eef2fa;
   --surface-selected: #eaf0ff;
   --surface-avatar: #eaf0ff;
@@ -80,25 +80,78 @@
   --border-success: #c8e0d6;
   --color-success: #32745a;
   --surface-accent: #edf2ff;
-  --surface-inset: #f8fafd;
-  --surface-search: #f8fafd;
-  --surface-popup: #ffffff;
+  --surface-inset: #f2f6fc;
+  --surface-search: #f3f6fc;
+  --surface-popup: #f8fafd;
   --shadow-popup: #2130541f;
   --surface-option-highlight: #eaf0ff;
   --color-option-highlight: #294f9f;
   --color-check: #3768e8;
-  --surface-auth: #ffffff;
-  --shadow-auth: #30456b12;
-  --surface-table-heading: #f5f7fc;
+  --surface-auth: #f5f8fd;
+  --shadow-auth: #405d8a0f;
+  --surface-table-heading: #edf2fa;
   --surface-expired: #f3dde2;
   --color-expired: #a45265;
   --surface-progress: #e4e9f2;
   --surface-progress-expired: #f3dde2;
-  --panel-shadow: 0 3px 15px #283c6909;
+  --panel-shadow: 0 8px 28px #405d8a0a, inset 0 1px 0 #ffffffb3;
   --surface-switch: #cbd4e2;
   --color-switch-knob: #ffffff;
   --color-status-active: #3f8975;
   --color-status-disabled: #8793a5;
+}
+
+/* Only surfaces become translucent; text, controls and data stay fully opaque. */
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root[data-theme="light"] {
+    --panel: rgb(255 255 255 / 62%);
+    --panel-raised: rgb(237 242 250 / 76%);
+    --input: rgb(248 250 255 / 80%);
+    --surface-sidebar: rgb(244 248 255 / 68%);
+    --surface-topbar: rgb(248 250 255 / 70%);
+    --surface-auth: rgb(255 255 255 / 68%);
+    --surface-inset: rgb(242 246 252 / 76%);
+    --surface-search: rgb(248 250 255 / 78%);
+    --surface-table-heading: rgb(237 242 250 / 78%);
+  }
+  :root[data-theme="light"] .panel {
+    -webkit-backdrop-filter: blur(16px) saturate(110%);
+    backdrop-filter: blur(16px) saturate(110%);
+  }
+  :root[data-theme="light"] :is(.sidebar, .topbar) {
+    -webkit-backdrop-filter: blur(22px) saturate(110%);
+    backdrop-filter: blur(22px) saturate(110%);
+  }
+  @media (max-width: 700px) {
+    :root[data-theme="light"] {
+      --panel: rgb(250 252 255 / 76%);
+      --surface-sidebar: rgb(244 248 255 / 80%);
+      --surface-topbar: rgb(248 250 255 / 82%);
+      --surface-auth: rgb(250 252 255 / 78%);
+    }
+    :root[data-theme="light"] :is(.panel, .sidebar, .topbar) {
+      -webkit-backdrop-filter: blur(12px);
+      backdrop-filter: blur(12px);
+    }
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  :root[data-theme="light"] {
+    --panel: #f5f8fd;
+    --panel-raised: #edf2fa;
+    --input: #f3f6fc;
+    --surface-sidebar: #f0f4fc;
+    --surface-topbar: #f5f8fd;
+    --surface-auth: #f5f8fd;
+    --surface-inset: #f2f6fc;
+    --surface-search: #f3f6fc;
+    --surface-table-heading: #edf2fa;
+  }
+  :root[data-theme="light"] :is(.panel, .sidebar, .topbar) {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
 }
 
 * {
