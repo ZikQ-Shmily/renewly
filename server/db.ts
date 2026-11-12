@@ -100,4 +100,17 @@ export function migrate(db: DB) {
     `);
     db.prepare("INSERT INTO schema_migrations VALUES(6,?)").run(new Date().toISOString());
   })();
+  if ((version.version || 0) < 7) db.transaction(() => {
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS app_details(
+        subscription_id TEXT PRIMARY KEY REFERENCES subscriptions(id) ON DELETE CASCADE,
+        plan TEXT NOT NULL DEFAULT '',
+        purchase_channel TEXT NOT NULL DEFAULT '官网' CHECK(purchase_channel IN ('官网','App Store','Google Play','其他')),
+        account TEXT NOT NULL DEFAULT '',
+        icon TEXT NOT NULL DEFAULT 'auto'
+      );
+      UPDATE users SET currency='CNY' WHERE currency!='CNY';
+    `);
+    db.prepare("INSERT INTO schema_migrations VALUES(7,?)").run(new Date().toISOString());
+  })();
 }

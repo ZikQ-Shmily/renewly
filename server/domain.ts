@@ -2,7 +2,7 @@ import { z } from "zod";
 import { isIP } from "node:net";
 import type { DB } from "./db.js";
 import { normalizeDateTime, dateTimeInstant, addDateTimeMonths, localDateTime } from "../shared/datetime.js";
-export const currencies = ["CNY", "USD", "EUR", "GBP"] as const;
+export const currencies = ["CNY", "USD", "EUR", "GBP", "NGN", "TRY", "PHP", "JPY", "TWD", "HKD"] as const;
 export const dayMs = 86_400_000;
 export function validDate(s: string) {
   return (
@@ -39,12 +39,22 @@ const ipAddressSchema = z.object({
   value => (value.type === "dynamic" && value.address === "") || isIP(value.address) !== 0,
   { message: "请填写有效的 IPv4 或 IPv6 地址。", path: ["address"] },
 );
+const appIconSchema = z.string().max(90_000).default("auto").refine(value => {
+  if (/^[a-z0-9][a-z0-9-]{0,39}$/.test(value)) return true;
+  const match = /^data:image\/(png|jpeg|webp);base64,([A-Za-z0-9+/]+={0,2})$/.exec(value);
+  if (!match || match[2]!.length % 4 !== 0) return false;
+  const bytes = Buffer.from(match[2]!, "base64");
+  if (bytes.length > 65_536 || bytes.toString("base64") !== match[2]) return false;
+  return match[1] === "png" ? bytes.subarray(0, 8).equals(Buffer.from([137,80,78,71,13,10,26,10]))
+    : match[1] === "jpeg" ? bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff
+    : bytes.subarray(0, 4).toString() === "RIFF" && bytes.subarray(8, 12).toString() === "WEBP";
+}, "图标须为内置图标，或不超过 64 KB 的 PNG、JPEG、WebP 图片。");
 export const subscriptionSchema = z
   .object({
-    type: z.literal("cloud"),
+    type: z.enum(["cloud", "app"]),
     name: z.string().trim().min(1).max(100),
-    vendor: z.string().trim().min(1).max(100),
-    website: z
+    vendor: z.string().trim().max(100).default(""),
+    website: z.union([z.literal(""), z
       .string()
       .trim()
       .max(2048)
@@ -54,7 +64,11 @@ export const subscriptionSchema = z
         return (
           ["https:", "http:"].includes(u.protocol) && !u.username && !u.password
         );
-      }, "网站须为 HTTP(S) 地址"),
+      }, "网站须为 HTTP(S) 地址")]).default(""),
+    appPlan: z.string().trim().max(200).default(""),
+    appChannel: z.enum(["官网", "App Store", "Google Play", "其他"]).default("官网"),
+    appAccount: z.string().trim().max(254).default(""),
+    appIcon: appIconSchema,
     currency: z.enum(currencies),
     purchasePrice: money,
     renewalPrice: money,
@@ -85,6 +99,10 @@ export const subscriptionSchema = z
     reminderDays: daysSchema.optional(),
   })
   .superRefine((v, c) => {
+    if (v.type === "cloud") {
+      if (!v.vendor) c.addIssue({ code: "custom", message: "请填写商家 / 服务商", path: ["vendor"] });
+      if (!v.website) c.addIssue({ code: "custom", message: "请填写商家网站", path: ["website"] });
+    }
     if (v.nextRenewal <= v.periodStart)
       c.addIssue({
         code: "custom",
@@ -96,7 +114,7 @@ export const subscriptionSchema = z
         ? 0
         : Math.round(v.trafficQuota * (v.trafficUnit === "TB" ? 1e12 : 1e9));
     if (
-      v.trafficMode === "limited" &&
+      v.type === "cloud" && v.trafficMode === "limited" &&
       (!v.trafficQuota || !Number.isSafeInteger(quota) || quota < 1)
     )
       c.addIssue({
@@ -160,6 +178,14 @@ export function serverConfiguration(details: any) {
     trafficDirection: details?.traffic_direction || "unknown",
   };
 }
+export function appConfiguration(details: any) {
+  return {
+    appPlan: details?.plan || "",
+    appChannel: details?.purchase_channel || "官网",
+    appAccount: details?.account || "",
+    appIcon: details?.icon || "auto",
+  };
+}
 export function serializeSubscription(db: DB, row: any, timeZone?: string, now = new Date()) {
   const details = db
     .prepare("SELECT * FROM server_details WHERE subscription_id=?")
@@ -183,6 +209,7 @@ export function serializeSubscription(db: DB, row: any, timeZone?: string, now =
     name: row.name,
     vendor: row.vendor,
     website: row.website,
+    ...appConfiguration(db.prepare("SELECT * FROM app_details WHERE subscription_id=?").get(row.id)),
     currency: row.currency,
     purchasePrice: row.purchase_minor / 100,
     renewalPrice: row.renewal_minor / 100,

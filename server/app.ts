@@ -22,6 +22,7 @@ import {
 } from "./auth.js";
 import {
   currencies,
+  appConfiguration,
   dateSchema,
   daysSchema,
   listSubscriptions,
@@ -129,7 +130,7 @@ export async function createApp(options: AppOptions = {}) {
         defaultSrc: ["'self'"],
         scriptSrc: ["'self'"],
         styleSrc: ["'self'", "'unsafe-inline'"],
-        imgSrc: ["'self'", "data:"],
+        imgSrc: ["'self'", "data:", "https:"],
         fontSrc: ["'self'"],
         connectSrc: ["'self'"],
         objectSrc: ["'none'"],
@@ -347,7 +348,7 @@ export async function createApp(options: AppOptions = {}) {
       .parse(await c.req.json());
     validateStoredTimeZone(userId(c), v.timeZone);
     db.prepare("UPDATE users SET currency=?,time_zone=? WHERE id=?").run(
-      v.currency,
+      "CNY",
       v.timeZone,
       userId(c),
     );
@@ -358,7 +359,7 @@ export async function createApp(options: AppOptions = {}) {
     });
   });
   app.get("/api/v1/types", (c) =>
-    c.json({ types: [{ key: "cloud", name: "云服务器", icon: "server" }] }),
+    c.json({ types: [{ key: "cloud", name: "云服务器", icon: "server" }, { key: "app", name: "App 订阅", icon: "app-window" }] }),
   );
   app.get("/api/v1/subscriptions", (c) =>
     c.json({ subscriptions: listSubscriptions(db, userId(c), c.get("user").time_zone, clock()) }),
@@ -396,7 +397,7 @@ export async function createApp(options: AppOptions = {}) {
         now,
         Number(v.autoRenew),
       );
-      db.prepare("INSERT INTO server_details(subscription_id,region,model,traffic_mode,traffic_quota_bytes,traffic_unit,bandwidth_value,bandwidth_unit,cpu_cores,memory_value,memory_unit,disk_value,disk_unit,ip_addresses,traffic_direction) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)").run(
+      if (v.type === "cloud") db.prepare("INSERT INTO server_details(subscription_id,region,model,traffic_mode,traffic_quota_bytes,traffic_unit,bandwidth_value,bandwidth_unit,cpu_cores,memory_value,memory_unit,disk_value,disk_unit,ip_addresses,traffic_direction) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)").run(
         id,
         v.region,
         v.model,
@@ -415,6 +416,7 @@ export async function createApp(options: AppOptions = {}) {
         JSON.stringify(v.ipAddresses),
         v.trafficDirection,
       );
+      else db.prepare("INSERT INTO app_details(subscription_id,plan,purchase_channel,account,icon) VALUES(?,?,?,?,?)").run(id,v.appPlan,v.appChannel,v.appAccount,v.appIcon);
       db.prepare(
         "INSERT INTO billing_periods(subscription_id,user_id,starts_at,ends_at,paid_minor,currency,created_at) VALUES(?,?,?,?,?,?,?)",
       ).run(
@@ -435,9 +437,11 @@ export async function createApp(options: AppOptions = {}) {
   app.put("/api/v1/subscriptions/:id", async (c) => {
     const old = owned(c.req.param("id"), userId(c));
     const details = db.prepare("SELECT * FROM server_details WHERE subscription_id=?").get(old.id);
+    const appDetails = db.prepare("SELECT * FROM app_details WHERE subscription_id=?").get(old.id);
     const payload = z.object({}).catchall(z.unknown()).parse(await c.req.json());
     // Preserve stored detail fields omitted by older clients.
-    const v = subscriptionSchema.parse({ ...serverConfiguration(details), ...payload });
+    const v = subscriptionSchema.parse({ ...serverConfiguration(details), ...appConfiguration(appDetails), ...payload });
+    if (v.type !== old.type_key) fail(400, "IMMUTABLE_SUBSCRIPTION_TYPE", "订阅类别不能在编辑时更改，请在对应类别新增记录。");
     const now = clock().toISOString();
     const timeZone = c.get("user").time_zone;
     const instants = validatePeriod(v.periodStart, v.nextRenewal, timeZone);
@@ -487,7 +491,7 @@ export async function createApp(options: AppOptions = {}) {
         old.id,
         userId(c),
       );
-      db.prepare(
+      if (v.type === "cloud") db.prepare(
         "UPDATE server_details SET region=?,model=?,traffic_mode=?,traffic_quota_bytes=?,traffic_unit=?,bandwidth_value=?,bandwidth_unit=?,cpu_cores=?,memory_value=?,memory_unit=?,disk_value=?,disk_unit=?,ip_addresses=?,traffic_direction=? WHERE subscription_id=?",
       ).run(
         v.region,
@@ -508,6 +512,7 @@ export async function createApp(options: AppOptions = {}) {
         v.trafficDirection,
         old.id,
       );
+      else db.prepare("INSERT INTO app_details(subscription_id,plan,purchase_channel,account,icon) VALUES(?,?,?,?,?) ON CONFLICT(subscription_id) DO UPDATE SET plan=excluded.plan,purchase_channel=excluded.purchase_channel,account=excluded.account,icon=excluded.icon").run(old.id,v.appPlan,v.appChannel,v.appAccount,v.appIcon);
       db.prepare(
         "UPDATE billing_periods SET starts_at=?,ends_at=?,paid_minor=?,currency=? WHERE id=? AND user_id=?",
       ).run(
@@ -583,10 +588,8 @@ export async function createApp(options: AppOptions = {}) {
   });
   app.get("/api/v1/exchange-rates", async (c) => c.json(await fx.get()));
   app.get("/api/v1/dashboard", async (c) => {
-    const typeKey = z.enum(["cloud"]).optional().parse(c.req.query("type"));
-    const target = z
-        .enum(currencies)
-        .parse(c.req.query("currency") || c.get("user").currency),
+    const typeKey = z.enum(["cloud", "app"]).optional().parse(c.req.query("type"));
+    const target = "CNY",
       rates = await fx.get();
     return c.json({
       ...totals(
@@ -807,6 +810,7 @@ export async function createApp(options: AppOptions = {}) {
   if (existsSync(join(config.clientDir, "index.html"))) {
     app.use("/assets/*", serveStatic({ root: config.clientDir }));
     app.use("/favicon.svg", serveStatic({ root: config.clientDir }));
+    app.use("/app-icons/*", serveStatic({ root: config.clientDir }));
     app.use("/theme-init.js", async (c, next) => {
       c.header("Cache-Control", "no-cache");
       await next();

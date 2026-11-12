@@ -40,7 +40,7 @@ export function publicUser(row: any) {
     name: row.name,
     email: row.email,
     role: row.role,
-    currency: row.currency,
+    currency: "CNY",
     timeZone: row.time_zone,
   };
 }
