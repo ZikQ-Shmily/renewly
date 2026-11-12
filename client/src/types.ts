@@ -34,6 +34,7 @@ export interface SubscriptionInput {
   appChannel?: string;
   appAccount?: string;
   appIcon?: string;
+  serverIcon?: string;
   name: string;
   vendor: string;
   website: string;

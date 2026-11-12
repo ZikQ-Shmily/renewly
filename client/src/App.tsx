@@ -598,15 +598,22 @@ function Management({
         {list.length ? (
           list.map((item) => (
             <article className="management-row" key={item.id}>
-              <div className="management-header">
-                <div className="management-name">
-                  {isApp && <AppIcon name={item.name} website={item.website} value={item.appIcon} />}
+              <div className={`management-header ${isApp ? "" : "cloud-management-header"}`}>
+                {isApp ? <div className="management-name">
+                  <AppIcon name={item.name} website={item.website} value={item.appIcon} />
                   <div className="management-title">
                     <strong>{item.name}</strong>
                     {item.autoRenew && <span className="auto-renew-tag">自动续费</span>}
                   </div>
                   <span className="management-vendor">{item.vendor}</span>
-                </div>
+                </div> : <>
+                  <AppIcon name={item.vendor} website={item.website} value={item.serverIcon} fallbackInitial />
+                  <strong className="cloud-management-vendor" title={item.vendor}>{item.vendor}</strong>
+                  <div className="cloud-management-title">
+                    <span className="cloud-management-subscription" title={item.name}>{item.name}</span>
+                    {item.autoRenew && <span className="auto-renew-tag">自动续费</span>}
+                  </div>
+                </>}
                 <DueBadge item={item} timeZone={user.timeZone} />
               </div>
               <div className="management-body">

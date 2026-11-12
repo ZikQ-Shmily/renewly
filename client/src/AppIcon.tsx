@@ -2,16 +2,17 @@ import { useEffect, useRef, useState, type ChangeEvent, type CSSProperties } fro
 import { AppWindow, ImagePlus } from "lucide-react";
 import { Select } from "./Select";
 
-import { appIconPresets, matchedAppIcon, isUploadedAppIcon, maxUploadBytes, resolveAppIcon } from "./app-icons";
+import { appIconInitial, appIconPresets, matchedAppIcon, isUploadedAppIcon, maxUploadBytes, resolveAppIcon } from "./app-icons";
 
 interface AppIconProps {
   name: string;
   website: string;
   value?: string;
   size?: number;
+  fallbackInitial?: boolean;
 }
 
-export function AppIcon({ name, website, value = "auto", size = 36 }: AppIconProps) {
+export function AppIcon({ name, website, value = "auto", size = 36, fallbackInitial = false }: AppIconProps) {
   const { preset, src } = resolveAppIcon(name, website, value);
   const [failedSource, setFailedSource] = useState<string | null>(null);
   const imageSize = Math.max(16, Math.round(size * 0.62));
@@ -46,7 +47,7 @@ export function AppIcon({ name, website, value = "auto", size = 36 }: AppIconPro
           decoding="async"
           onError={() => setFailedSource(src)}
         />
-      ) : <AppWindow size={imageSize} aria-hidden="true" />}
+      ) : fallbackInitial ? <span className="app-icon-initial">{appIconInitial(name)}</span> : <AppWindow size={imageSize} aria-hidden="true" />}
     </span>
   );
 }
@@ -75,9 +76,10 @@ interface AppIconPickerProps extends Omit<AppIconProps, "size" | "value"> {
   value: string;
   onChange: (value: string) => void;
   disabled?: boolean;
+  label?: string;
 }
 
-export function AppIconPicker({ name, website, value, onChange, disabled = false }: AppIconPickerProps) {
+export function AppIconPicker({ name, website, value, onChange, disabled = false, label = "订阅图标", fallbackInitial = false }: AppIconPickerProps) {
   const [error, setError] = useState("");
   const [reading, setReading] = useState(false);
   const request = useRef(0);
@@ -91,7 +93,7 @@ export function AppIconPicker({ name, website, value, onChange, disabled = false
   const selectedValue = uploaded ? "uploaded" : value || "auto";
   const options = [
     { value: "auto", label: "自动匹配" },
-    { value: "generic", label: "通用订阅图标" },
+    { value: "generic", label: fallbackInitial ? "商家首字母" : "通用订阅图标" },
     ...appIconPresets.map(p => ({ value: p.key, label: p.label })),
     ...(uploaded ? [{ value: "uploaded", label: "已上传的图标" }] : []),
   ];
@@ -120,23 +122,33 @@ export function AppIconPicker({ name, website, value, onChange, disabled = false
   }
   return (
     <div className="app-icon-picker">
-      <div className="app-icon-picker-label">订阅图标</div>
+      <div className="app-icon-picker-label">{label}</div>
       <div className="app-icon-picker-controls">
-        <AppIcon name={name} website={website} value={value} size={42} />
+        <AppIcon name={name} website={website} value={value} size={42} fallbackInitial={fallbackInitial} />
         <Select value={selectedValue} options={options} onValueChange={next => {
           request.current++;
           setReading(false);
           setError("");
           if (next !== "uploaded") onChange(next);
-        }} disabled={disabled || reading} aria-label="订阅图标" />
+        }} disabled={disabled || reading} aria-label={label} />
         <label className={`button app-icon-upload ${disabled || reading ? "disabled" : ""}`}>
           <ImagePlus size={15} aria-hidden="true" />
           {reading ? "读取中…" : "上传图标"}
-          <input className="app-icon-file" type="file" accept="image/png,image/jpeg,image/webp" disabled={disabled || reading} onChange={upload} aria-label="上传订阅图标" />
+          <input className="app-icon-file" type="file" accept="image/png,image/jpeg,image/webp" disabled={disabled || reading} onChange={upload} aria-label={`上传${label}`} />
         </label>
       </div>
       <p className="app-icon-picker-help">
-        {selectedValue === "auto" ? preset ? `已匹配 ${preset.label}；修改名称或官网会自动更新。` : "按名称或官网匹配；未匹配时尝试官网图标，失败则显示通用图标。" : uploaded ? "使用你上传的图标。" : "使用手动选择的图标。"}
+        {selectedValue === "auto"
+          ? preset
+            ? `已匹配 ${preset.label}；修改${fallbackInitial ? "商家或网址" : "名称或官网"}会自动更新。`
+            : fallbackInitial
+              ? "按商家或网址匹配；未匹配时尝试网站图标，无法获取时显示商家首字母，未填商家时显示「云」。"
+              : "按名称或官网匹配；未匹配时尝试官网图标，失败则显示通用图标。"
+          : uploaded
+            ? "使用你上传的图标。"
+            : selectedValue === "generic" && fallbackInitial
+              ? "使用商家首字母，未填商家时显示「云」。"
+              : "使用手动选择的图标。"}
         <span>上传支持 PNG、JPEG、WebP，最大 64 KB。</span>
       </p>
       {error && <p className="error-text" role="alert">{error}</p>}

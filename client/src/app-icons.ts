@@ -1,5 +1,16 @@
 export const maxUploadBytes = 64 * 1024;
 const rasterData = /^data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/;
+const nameSegmenter = typeof Intl.Segmenter === "function"
+  ? new Intl.Segmenter(undefined, { granularity: "grapheme" })
+  : null;
+
+export function appIconInitial(name: string): string {
+  const normalized = name.trim().normalize("NFC");
+  if (!normalized) return "云";
+  return nameSegmenter?.segment(normalized)[Symbol.iterator]().next().value?.segment
+    ?? Array.from(normalized)[0]
+    ?? "云";
+}
 
 export const appIconPresets = [
   { key: "notion", label: "Notion", domains: ["notion.so", "notion.com"], names: /\bnotion\b/i, color: "currentColor" },

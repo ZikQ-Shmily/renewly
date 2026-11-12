@@ -51,6 +51,7 @@ type Draft = Omit<
   | "appChannel"
   | "appAccount"
   | "appIcon"
+  | "serverIcon"
 > & {
   renewalPrice: string;
   billingMonths: string;
@@ -69,6 +70,7 @@ type Draft = Omit<
   appChannel: string;
   appAccount: string;
   appIcon: string;
+  serverIcon: string;
 };
 function initialDraft(
   item: Subscription | null,
@@ -84,6 +86,7 @@ function initialDraft(
         appChannel: item.appChannel || "官网",
         appAccount: item.appAccount || "",
         appIcon: item.appIcon || "auto",
+        serverIcon: item.serverIcon || "auto",
         periodStart: normalizeDateTime(item.periodStart),
         nextRenewal: normalizeDateTime(item.nextRenewal),
         renewalPrice: String(item.renewalPrice),
@@ -120,6 +123,7 @@ function initialDraft(
         appChannel: "官网",
         appAccount: "",
         appIcon: "auto",
+        serverIcon: "auto",
         region: "",
         model: "",
         cpuCores: "",
@@ -400,6 +404,17 @@ export function SubscriptionEditor({
             </div>
           </>}
           {!isApp && <>
+          <div className="wide">
+            <AppIconPicker
+              label="商家图标"
+              name={draft.vendor}
+              website={draft.website}
+              value={draft.serverIcon}
+              onChange={(value) => field("serverIcon", value)}
+              fallbackInitial
+              disabled={busy}
+            />
+          </div>
           <h2 className="form-section">云服务器信息</h2>
           <Field label="地区 *">
             <input

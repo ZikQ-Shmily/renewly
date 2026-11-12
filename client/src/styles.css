@@ -2470,3 +2470,20 @@ html[data-input-mode="keyboard"] .switch-control input:focus + .switch-track { o
 .app-icon-file { position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%; cursor: inherit; }
 .app-icon-upload:focus-within { outline: 2px solid var(--color-focus, #89adff); outline-offset: 2px; }
 .app-icon-upload.disabled { opacity: .5; cursor: default; }
+
+/* Cloud identities: icon, fixed vendor column, subscription name, due badge. */
+.cloud-management-header { grid-template-columns: 36px 95px minmax(0,1fr) max-content; gap: 11px; }
+.cloud-management-vendor { min-width: 0; font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cloud-management-title { min-width: 0; display: flex; align-items: center; gap: 8px; }
+.cloud-management-subscription { min-width: 0; font-size: 13px; color: var(--secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cloud-management-title .auto-renew-tag { flex: none; }
+.cloud-management-header > .badge { white-space: nowrap; max-width: none; }
+.app-icon-initial { font-size: 17px; line-height: 1; font-weight: 600; color: var(--color-link, #a5c0f1); }
+@media (max-width: 700px) {
+  .cloud-management-header { grid-template-columns: 36px minmax(0,1fr) max-content; gap: 6px 9px; }
+  .cloud-management-header > .app-icon { grid-column: 1; grid-row: 1 / 3; align-self: start; }
+  .cloud-management-vendor { grid-column: 2; grid-row: 1; }
+  .cloud-management-title { grid-column: 2 / -1; grid-row: 2; align-items: flex-start; flex-wrap: wrap; gap: 5px 8px; }
+  .cloud-management-subscription { white-space: normal; overflow-wrap: anywhere; }
+  .cloud-management-header > .badge { grid-column: 3; grid-row: 1; }
+}
