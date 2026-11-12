@@ -1,4 +1,4 @@
-export type Currency = "CNY" | "USD" | "EUR" | "GBP";
+export type Currency = "CNY" | "USD" | "EUR" | "GBP" | "NGN" | "TRY" | "PHP" | "JPY" | "TWD" | "HKD";
 export interface User {
   id: string;
   name: string;
@@ -29,7 +29,11 @@ export interface ServerIpAddress {
   address: string;
 }
 export interface SubscriptionInput {
-  type: "cloud";
+  type: "cloud" | "app";
+  appPlan?: string;
+  appChannel?: string;
+  appAccount?: string;
+  appIcon?: string;
   name: string;
   vendor: string;
   website: string;

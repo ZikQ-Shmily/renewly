@@ -7,12 +7,24 @@ export const currencies: { value: Currency; label: string }[] = [
   { value: "USD", label: "$ 美元" },
   { value: "EUR", label: "€ 欧元" },
   { value: "GBP", label: "£ 英镑" },
+  { value: "NGN", label: "NGN 尼日利亚奈拉" },
+  { value: "TRY", label: "TRY 土耳其里拉" },
+  { value: "PHP", label: "PHP 菲律宾比索" },
+  { value: "JPY", label: "JPY 日元" },
+  { value: "TWD", label: "TWD 新台币" },
+  { value: "HKD", label: "HKD 港币" },
 ];
 const symbols: Record<Currency, string> = {
   CNY: "¥",
   USD: "$",
   EUR: "€",
   GBP: "£",
+  NGN: "₦",
+  TRY: "₺",
+  PHP: "₱",
+  JPY: "JP¥",
+  TWD: "NT$",
+  HKD: "HK$",
 };
 export function money(value: number | null | undefined, currency: Currency) {
   return value == null || !Number.isFinite(value)

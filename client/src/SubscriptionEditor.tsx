@@ -4,6 +4,7 @@ import { api, errorMessage, json } from "./api";
 import { Banner, Button, Field } from "./components";
 import { Select } from "./Select";
 import { NumberInput, parseNumberInput } from "./NumberInput";
+import { AppIconPicker } from "./AppIcon";
 import { dateTimeInstant, normalizeDateTime } from "../../shared/datetime.js";
 import type {
   Currency,
@@ -24,6 +25,7 @@ import {
 interface EditorProps {
   item: Subscription | null;
   draftKey: number;
+  category: "cloud" | "app";
   types: SubscriptionType[];
   timeZone: string;
   defaultDays: number[];
@@ -45,6 +47,10 @@ type Draft = Omit<
   | "diskUnit"
   | "ipAddresses"
   | "reminderDays"
+  | "appPlan"
+  | "appChannel"
+  | "appAccount"
+  | "appIcon"
 > & {
   renewalPrice: string;
   billingMonths: string;
@@ -59,9 +65,14 @@ type Draft = Omit<
   diskUnit: "GB" | "TB";
   ipAddresses: ServerIpAddress[];
   reminderDays: string;
+  appPlan: string;
+  appChannel: string;
+  appAccount: string;
+  appIcon: string;
 };
 function initialDraft(
   item: Subscription | null,
+  category: "cloud" | "app",
   timeZone: string,
   defaultDays: number[],
 ): Draft {
@@ -69,6 +80,10 @@ function initialDraft(
   return item
     ? {
         ...item,
+        appPlan: item.appPlan || "",
+        appChannel: item.appChannel || "官网",
+        appAccount: item.appAccount || "",
+        appIcon: item.appIcon || "auto",
         periodStart: normalizeDateTime(item.periodStart),
         nextRenewal: normalizeDateTime(item.nextRenewal),
         renewalPrice: String(item.renewalPrice),
@@ -90,7 +105,7 @@ function initialDraft(
         reminderDays: item.reminderDays.join(", "),
       }
     : {
-        type: "cloud",
+        type: category,
         name: "",
         vendor: "",
         website: "",
@@ -98,9 +113,13 @@ function initialDraft(
         purchasePrice: 0,
         renewalPrice: "",
         paidAmount: "",
-        billingMonths: "12",
+        billingMonths: category === "app" ? "1" : "12",
         periodStart: start,
-        nextRenewal: addMonths(start, 12),
+        nextRenewal: addMonths(start, category === "app" ? 1 : 12),
+        appPlan: "",
+        appChannel: "官网",
+        appAccount: "",
+        appIcon: "auto",
         region: "",
         model: "",
         cpuCores: "",
@@ -125,6 +144,7 @@ function initialDraft(
 export function SubscriptionEditor({
   item,
   draftKey,
+  category,
   types,
   timeZone,
   defaultDays,
@@ -132,7 +152,7 @@ export function SubscriptionEditor({
   onCancel,
 }: EditorProps) {
   const [draft, setDraft] = useState<Draft>(() =>
-    initialDraft(item, timeZone, defaultDays),
+    initialDraft(item, category, timeZone, defaultDays),
   );
   const [endEdited, setEndEdited] = useState(false);
   const [differentRenewal, setDifferentRenewal] = useState(
@@ -141,11 +161,13 @@ export function SubscriptionEditor({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   useEffect(() => {
-    setDraft(initialDraft(item, timeZone, defaultDays));
+    setDraft(initialDraft(item, category, timeZone, defaultDays));
     setEndEdited(false);
     setDifferentRenewal(item != null && item.renewalPrice !== item.paidAmount);
     setError("");
   }, [draftKey]);
+  const isApp = draft.type === "app";
+  const categoryName = isApp ? "App 订阅" : "云服务器";
   function field<K extends keyof Draft>(key: K, value: Draft[K]) {
     setDraft((previous) => {
       const next = { ...previous, [key]: value };
@@ -203,9 +225,11 @@ export function SubscriptionEditor({
         dateTimeInstant(periodStart, timeZone)
       )
         throw new Error("续费时间需要晚于本期开始时间。");
-      const website = new URL(draft.website);
-      if (!["http:", "https:"].includes(website.protocol))
-        throw new Error("商家网站只支持 HTTP 或 HTTPS 地址。");
+      if (!isApp || draft.website.trim()) {
+        const website = new URL(draft.website.trim());
+        if (!["http:", "https:"].includes(website.protocol) || website.username || website.password)
+          throw new Error("网站只支持不含账户或密码的 HTTP 或 HTTPS 地址。");
+      }
       const quota =
         draft.trafficMode === "limited"
           ? parseNumberInput(draft.trafficQuota, "套餐流量总额度")
@@ -249,6 +273,7 @@ export function SubscriptionEditor({
         throw new Error("请填写静态 IP 地址，或移除空白条目。");
       const data: SubscriptionInput = {
         ...draft,
+        website: draft.website.trim(),
         periodStart,
         nextRenewal,
         purchasePrice: item?.purchasePrice ?? paidAmount,
@@ -284,16 +309,16 @@ export function SubscriptionEditor({
     ? Number(previewPriceText)
     : null;
   return (
-    <section aria-label={item ? "编辑云服务器" : "新增云服务器"}>
+    <section aria-label={`${item ? "编辑" : "新增"}${categoryName}`}>
       <div className="page-heading">
         <div>
-          <span className="eyebrow gradient">SERVER DETAILS</span>
-          <h1>{item ? "编辑云服务器" : "新增云服务器"}</h1>
+          <span className="eyebrow gradient">{isApp ? "APP SUBSCRIPTION" : "SERVER DETAILS"}</span>
+          <h1>{item ? "编辑" : "新增"}{categoryName}</h1>
           <p>录入一次费用，安排下一次续费。</p>
         </div>
         <Button onClick={onCancel} disabled={busy}>
           <ArrowLeft size={15} />
-          返回云服务器
+          返回{categoryName}
         </Button>
       </div>
       {error && <Banner tone="error">{error}</Banner>}
@@ -302,52 +327,79 @@ export function SubscriptionEditor({
           <legend className="sr-only">订阅信息</legend>
           <h2 className="form-section first">通用订阅信息</h2>
           <Field label="订阅类型">
-            {types.length > 1 ? (
-              <Select
-                value={draft.type}
-                onValueChange={(value) => field("type", value as "cloud")}
-                options={types.map((type) => ({
-                  value: type.key,
-                  label: type.name,
-                }))}
-                aria-label="订阅类型"
-                name="type"
-                disabled={busy}
-              />
-            ) : (
-              <span className="static-field">
-                {types[0]?.name || "云服务器"}
-              </span>
-            )}
+            <span className="static-field">
+              {types.find((type) => type.key === draft.type)?.name || categoryName}
+            </span>
           </Field>
-          <Field label="订阅名称 *">
+          <Field label={isApp ? "App 名称 *" : "订阅名称 *"}>
             <input
               value={draft.name}
               onChange={(e) => field("name", e.target.value)}
-              placeholder="例如：香港 · 主站"
+              placeholder={isApp ? "例如：Notion、iCloud+" : "例如：香港 · 主站"}
               required
               maxLength={100}
             />
           </Field>
-          <Field label="商家 / 服务商 *">
+          {isApp && <Field label="套餐 / 版本">
+            <input
+              value={draft.appPlan}
+              onChange={(e) => field("appPlan", e.target.value)}
+              placeholder="例如：Plus、200 GB"
+              maxLength={100}
+            />
+          </Field>}
+          <Field label={isApp ? "服务商" : "商家 / 服务商 *"}>
             <input
               value={draft.vendor}
               onChange={(e) => field("vendor", e.target.value)}
-              placeholder="例如：腾讯云"
-              required
+              placeholder={isApp ? "例如：Apple、Notion" : "例如：腾讯云"}
+              required={!isApp}
               maxLength={100}
             />
           </Field>
-          <Field label="商家网站 *">
+          <Field label={isApp ? "官网 / 管理地址" : "商家网站 *"}>
             <input
               value={draft.website}
               onChange={(e) => field("website", e.target.value)}
               placeholder="https://"
               type="url"
-              required
+              required={!isApp}
               maxLength={1000}
             />
           </Field>
+          {isApp && <>
+            <Field label="购买渠道">
+              <Select
+                value={draft.appChannel}
+                onValueChange={(value) => field("appChannel", value)}
+                options={["官网", "App Store", "Google Play", "其他"].map((value) => ({ value, label: value }))}
+                name="appChannel"
+                aria-label="购买渠道"
+                disabled={busy}
+              />
+            </Field>
+            <Field label="订阅账户" help="只记录邮箱或用户名，无需填写密码。">
+              <input
+                value={draft.appAccount}
+                onChange={(e) => field("appAccount", e.target.value)}
+                placeholder="邮箱或用户名（选填）"
+                maxLength={200}
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+              />
+            </Field>
+            <div className="wide">
+              <AppIconPicker
+                name={draft.name}
+                website={draft.website}
+                value={draft.appIcon}
+                onChange={(value) => field("appIcon", value)}
+                disabled={busy}
+              />
+            </div>
+          </>}
+          {!isApp && <>
           <h2 className="form-section">云服务器信息</h2>
           <Field label="地区 *">
             <input
@@ -552,6 +604,7 @@ export function SubscriptionEditor({
               {draft.ipAddresses.length ? "支持 IPv4 和 IPv6，动态 IP 可手动更新当前地址。" : "可添加静态或动态 IP，支持 IPv4 和 IPv6。"}
             </p>
           </div>
+          </>}
           <h2 className="form-section">价格与账期</h2>
           <div className="price-fields wide">
             <Field label="本期费用 *">
@@ -646,7 +699,9 @@ export function SubscriptionEditor({
               <span className="switch-track" aria-hidden="true" />
               <span>自动续费</span>
             </label>
+            <p className="muted small">自动续费同样发送到期提醒；确认商家扣款成功后，再登记续费。</p>
           </div>
+          {isApp && <p className="muted small wide">邮件提醒沿用「我的提醒」中的收件邮箱，发件服务由管理员统一配置。</p>}
           <Field label="订阅状态">
             <Select
               value={draft.status}

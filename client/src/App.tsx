@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   AlarmClock,
+  AppWindow,
   Bell,
   Layers,
   LoaderCircle,
@@ -22,9 +23,9 @@ import { UserManagement } from "./Users";
 import { TermProgress } from "./SubscriptionSummary";
 import { DashboardMetrics, RatesFooter } from "./DashboardMetrics";
 import { ThemeSwitch } from "./ThemeSwitch";
+import { AppIcon } from "./AppIcon";
 import type {
   AuthConfig,
-  Currency,
   Dashboard,
   NotificationSettings,
   Subscription,
@@ -32,7 +33,6 @@ import type {
   User,
 } from "./types";
 import {
-  currencies,
   daysUntil,
   money,
   periodLabel,
@@ -55,7 +55,7 @@ const pageTitles: Record<Page, string> = {
 function hashRoute(): { page: Page; category: string } {
   const value = window.location.hash.slice(1);
   const category = /^category\/([a-z][a-z0-9_-]*)$/.exec(value)?.[1];
-  if (category) return { page: "manage", category };
+  if (category) return { page: "manage", category: ["cloud", "app"].includes(category) ? category : "cloud" };
   if (value === "manage") return { page: "manage", category: "cloud" };
   return {
     page: ["overview", "reminders", "admin", "users"].includes(value) ? value as Page : "overview",
@@ -80,7 +80,6 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
-  const [preferencesBusy, setPreferencesBusy] = useState(false);
   const [editorItem, setEditorItem] = useState<Subscription | null>(null);
   const [draftKey, setDraftKey] = useState(0);
   const [renewalItem, setRenewalItem] = useState<Subscription | null>(null);
@@ -163,14 +162,14 @@ export default function App() {
     try {
       const [summary, list, categoryData, notificationData] = await Promise.all(
         [
-          api<Dashboard>(`/dashboard?currency=${user.currency}`),
+          api<Dashboard>("/dashboard"),
           api<{ subscriptions: Subscription[] }>("/subscriptions"),
           api<{ types: SubscriptionType[] }>("/types"),
           api<NotificationSettings>("/me/notification-settings"),
         ],
       );
       const scoped = categoryData.types.some((type) => type.key === category)
-        ? await api<Dashboard>(`/dashboard?currency=${user.currency}&type=${encodeURIComponent(category)}`)
+        ? await api<Dashboard>(`/dashboard?type=${encodeURIComponent(category)}`)
         : null;
       if (version !== requestVersion.current) return;
       setCategoryDashboard(scoped);
@@ -221,23 +220,6 @@ export default function App() {
       signOutLocally();
     } catch (e) {
       setError(errorMessage(e));
-    }
-  }
-  async function changeCurrency(currency: Currency) {
-    if (!user) return;
-    setPreferencesBusy(true);
-    try {
-      const result = await api<{ user: User }>(
-        "/me/preferences",
-        json("PUT", { currency, timeZone: user.timeZone }),
-      );
-      setDashboard(null);
-    setCategoryDashboard(null);
-      setUser(result.user);
-    } catch (e) {
-      setError(errorMessage(e));
-    } finally {
-      setPreferencesBusy(false);
     }
   }
   function edit(item: Subscription | null) {
@@ -329,7 +311,7 @@ export default function App() {
                 navigate("manage", type.key);
               }}
             >
-              <Server size={17} />
+              {type.key === "app" ? <AppWindow size={17} /> : <Server size={17} />}
               <span>{type.name}</span>
               <small>
                 {nonArchived.filter((s) => s.type === type.key).length}
@@ -386,18 +368,7 @@ export default function App() {
             <span className="account-role">
               {user.role === "admin" ? "管理员" : "个人账户"}
             </span>
-            <label className="currency-control">
-              <span>汇总币种</span>
-              <Select
-                value={user.currency}
-                onValueChange={(value) =>
-                  void changeCurrency(value as Currency)
-                }
-                options={currencies}
-                disabled={preferencesBusy}
-                aria-label="汇总币种"
-              />
-            </label>
+            <span className="summary-currency">汇总：¥ 人民币</span>
             <button
               type="button"
               className="icon-button mobile-logout"
@@ -434,7 +405,7 @@ export default function App() {
                 <RefreshCw size={15} />刷新
               </Button>
             </div>
-            <DashboardMetrics dashboard={dashboard} currency={user.currency} scope="全部订阅类别" />
+            <DashboardMetrics dashboard={dashboard} currency="CNY" scope="全部订阅类别" />
             <section className="panel upcoming-panel" aria-label="接下来要续费">
               <div className="panel-heading">
                 <h2><AlarmClock size={16} />接下来要续费</h2>
@@ -461,9 +432,11 @@ export default function App() {
           </div>
           <div hidden={page !== "manage"}>
             <Management
+              key={category}
               subscriptions={subscriptions.filter((item) => item.type === category)}
               user={user}
               title={categoryName}
+              category={category === "app" ? "app" : "cloud"}
               dashboard={loadedCategory === category ? categoryDashboard : null}
               onAdd={() => edit(null)}
               onEdit={edit}
@@ -486,6 +459,7 @@ export default function App() {
               item={editorItem}
               draftKey={draftKey}
               types={types}
+              category={category === "app" ? "app" : "cloud"}
               timeZone={user.timeZone}
               defaultDays={notifications?.reminderDays || [7, 3, 1]}
               onSaved={() => saved("订阅已保存。")}
@@ -534,6 +508,7 @@ function Management({
   subscriptions,
   user,
   title,
+  category,
   dashboard,
   onAdd,
   onEdit,
@@ -543,6 +518,7 @@ function Management({
   subscriptions: Subscription[];
   user: User;
   title: string;
+  category: "cloud" | "app";
   dashboard: Dashboard | null;
   onAdd: () => void;
   onEdit: (item: Subscription) => void;
@@ -554,6 +530,7 @@ function Management({
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const isApp = category === "app";
   const list = subscriptions
     .filter(
       (item) =>
@@ -562,7 +539,7 @@ function Management({
         item.status === status,
     )
     .filter((item) =>
-      `${item.name} ${item.vendor} ${item.region} ${configurationLabel(item)} ${(item.ipAddresses || []).map((ip) => ip.address).join(" ")}`
+      `${item.name} ${item.vendor} ${item.appPlan || ""} ${item.appAccount || ""} ${item.region} ${configurationLabel(item)} ${(item.ipAddresses || []).map((ip) => ip.address).join(" ")}`
         .toLowerCase()
         .includes(query.trim().toLowerCase()),
     )
@@ -583,16 +560,16 @@ function Management({
     <section>
       <div className="page-heading">
         <div>
-          <span className="eyebrow gradient">CLOUD SERVERS</span>
-          <h1>{title}<small className="category-count">{subscriptions.filter((item) => item.status !== "archived").length} 台</small></h1>
-          <p>记录配置、IP 与价格，安排每一次续费。</p>
+          <span className="eyebrow gradient">{isApp ? "APP SUBSCRIPTIONS" : "CLOUD SERVERS"}</span>
+          <h1>{title}<small className="category-count">{subscriptions.filter((item) => item.status !== "archived").length} {isApp ? "项" : "台"}</small></h1>
+          <p>{isApp ? "从效率工具到影音服务，让每一次续费都有提醒。" : "记录配置、IP 与价格，安排每一次续费。"}</p>
         </div>
         <Button variant="primary" onClick={onAdd}>
           <Plus size={16} />
-          新增服务器
+          {isApp ? "新增订阅" : "新增服务器"}
         </Button>
       </div>
-      <DashboardMetrics dashboard={dashboard} currency={user.currency} scope={`仅${title}`} />
+      <DashboardMetrics dashboard={dashboard} currency="CNY" scope={`仅${title}`} />
       {error && <Banner tone="error">{error}</Banner>}
       <div className="management-toolbar">
         <label className="search-field">
@@ -600,8 +577,8 @@ function Management({
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="搜索名称、商家、地区或 IP"
-            aria-label="搜索服务器"
+            placeholder={isApp ? "搜索 App、套餐或账户" : "搜索名称、商家、地区或 IP"}
+            aria-label={isApp ? "搜索 App 订阅" : "搜索服务器"}
           />
         </label>
         <Select
@@ -623,6 +600,7 @@ function Management({
             <article className="management-row" key={item.id}>
               <div className="management-header">
                 <div className="management-name">
+                  {isApp && <AppIcon name={item.name} website={item.website} value={item.appIcon} />}
                   <div className="management-title">
                     <strong>{item.name}</strong>
                     {item.autoRenew && <span className="auto-renew-tag">自动续费</span>}
@@ -633,7 +611,11 @@ function Management({
               </div>
               <div className="management-body">
                 <div className="management-details">
-                  <dl className="management-meta">
+                  <dl className={`management-meta ${isApp ? "app-subscription-meta" : ""}`}>
+                    {isApp ? <>
+                      <div><dt>套餐 / 版本</dt><dd>{item.appPlan || "未填写"}</dd></div>
+                      <div><dt>购买渠道</dt><dd>{item.appChannel || "官网"}</dd></div>
+                    </> : <>
                     <div>
                       <dt>地区</dt>
                       <dd>{item.region || "未填写"}</dd>
@@ -646,6 +628,7 @@ function Management({
                       <dt>购买价格</dt>
                       <dd>{money(item.purchasePrice, item.currency)}</dd>
                     </div>
+                    </>}
                     <div>
                       <dt>续费价格</dt>
                       <dd>{money(item.renewalPrice, item.currency)} / {periodLabel(item.billingMonths)}</dd>
@@ -654,7 +637,7 @@ function Management({
                       <dt>下次续费</dt>
                       <dd><time dateTime={item.nextRenewal}>{formatDateTime(item.nextRenewal)}</time></dd>
                     </div>
-                    <div>
+                    {!isApp && <><div>
                       <dt>套餐流量</dt>
                       <dd>{trafficLabel(item)}</dd>
                     </div>
@@ -662,17 +645,18 @@ function Management({
                       <dt>套餐带宽</dt>
                       <dd>{bandwidthLabel(item)}</dd>
                     </div>
+                    </>}
                   </dl>
-                  {item.model && (item.cpuCores != null || item.memoryValue != null || item.diskValue != null) &&
+                  {isApp && <p className="app-subscription-account">账户：{item.appAccount || "未填写"}</p>}
+                  {!isApp && item.model && (item.cpuCores != null || item.memoryValue != null || item.diskValue != null) &&
                     <p className="item-notes">原配置：{item.model}</p>}
-                  {!!item.ipAddresses?.length && <div className="server-ip-list">{item.ipAddresses.map((ip, index) => (
+                  {!isApp && !!item.ipAddresses?.length && <div className="server-ip-list">{item.ipAddresses.map((ip, index) => (
                     <span className="server-ip" key={index}><span>{ip.type === "dynamic" ? "动态 IP" : "静态 IP"}</span><code>{ip.address || "当前地址未填写"}</code></span>
                   ))}</div>}
                   {item.notes && <p className="item-notes">{item.notes}</p>}
                 </div>
                 <div className="row-actions">
                   <Button
-                    variant="ghost"
                     onClick={() => onEdit(item)}
                     disabled={!!busy}
                   >
@@ -702,7 +686,6 @@ function Management({
                         </>
                       ) : (
                         <Button
-                          variant="ghost"
                           onClick={() => setConfirmId(item.id)}
                           disabled={!!busy}
                         >
@@ -726,13 +709,13 @@ function Management({
             detail={
               query || status !== "current"
                 ? "可以调整搜索词或筛选条件。"
-                : "填写商家、配置、价格和续费日期，其他交给续记。"
+                : isApp ? "填写 App、套餐、费用和续费时间，安排下一次提醒。" : "填写商家、配置、价格和续费日期，其他交给续记。"
             }
             action={
               query || status !== "current" ? undefined : (
                 <Button onClick={onAdd} variant="primary">
                   <Plus size={15} />
-                  新增服务器
+                  {isApp ? "新增订阅" : "新增服务器"}
                 </Button>
               )
             }
