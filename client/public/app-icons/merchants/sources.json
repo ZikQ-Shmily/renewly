@@ -1,0 +1,948 @@
+{
+  "catalogSource": "https://digvps.com/review",
+  "dataSource": "https://digvps.com/api/idc/list",
+  "retrieved": "2026-11-13",
+  "files": [
+    {
+      "file": "gomami-light-a3ba8c11.webp",
+      "source": "https://digvps.com/logo-idc/GoMami.webp",
+      "sourceSha256": "6f397fbb81a25309bd35b29221df16742dfb60b342b3c9275215d716ae313deb",
+      "sha256": "a3ba8c11a64d1106867a2bf4e6774afe7c7183c2aa65f860fb9ff6710bb2a050"
+    },
+    {
+      "file": "bandwagon-light-4dfa8ecd.webp",
+      "source": "https://digvps.com/logo-idc/bwg.webp",
+      "sourceSha256": "bf36e1f6f9cb29824b94fb6b5fcb816775d82e862a48b06bd1b890e204a2758a",
+      "sha256": "4dfa8ecd9a5eb612181bda6831c58b0d05197de45424aa3f9c196b42572288ec"
+    },
+    {
+      "file": "dmit-light-aec933bf.webp",
+      "source": "https://digvps.com/logo-idc/dmit.svg",
+      "sourceSha256": "5e70bd44d1b503888cea214341e7d52b12eac23a7cdf6c45ccfb6804db858106",
+      "sha256": "aec933bf873f1d478938f41f3b5ceb1c49d1f5538eec7e457433670778ec5270"
+    },
+    {
+      "file": "zgovps-light-be91a9ea.webp",
+      "source": "https://digvps.com/logo-idc/zgocloud.webp",
+      "sourceSha256": "e506d6d250f436bc4f6970d042d4911bbf76a1d9596af726fa253fab61784d57",
+      "sha256": "be91a9ea676f0f3c4003ae0b7e03fdcad8ab93edd8fbf901e60aa34b9459d8de"
+    },
+    {
+      "file": "bytevirt-light-4ea811df.webp",
+      "source": "https://digvps.com/logo-idc/bytevirt.jpg",
+      "sourceSha256": "d6086f798b5903be66d6211ac090bd2771d9097a0f813cc161537e5a198c5973",
+      "sha256": "4ea811df88edc8ad369bc1ad788f7c6ee215a84aa0a7b1b992b29aeceba51807"
+    },
+    {
+      "file": "evoxt-light-37e16a22.webp",
+      "source": "https://digvps.com/logo-idc/evoxtblack.svg",
+      "sourceSha256": "da732e9174412187d67dce0dfdf4d6e6aeb4779dc53c61a1d67043511140561c",
+      "sha256": "37e16a22db6a4314c0424ff4aad56cdbaf4b48b3ba2a23067a1af3731ba3e28d"
+    },
+    {
+      "file": "lisahost-light-87d0ca47.webp",
+      "source": "https://digvps.com/logo-idc/lisahost.jpg",
+      "sourceSha256": "1956815b60ff28a5c4ba511e37da0a3ff46f438c920068756cc93413508a7373",
+      "sha256": "87d0ca4749161393923acf09eb84c60f29e926ec753ceacc00b5c92190dc5b6c"
+    },
+    {
+      "file": "wepc-light-72d36a56.webp",
+      "source": "https://digvps.com/logo-idc/wepc.jpg",
+      "sourceSha256": "15f21db7ba9252cbfcf32ae8071673b79518fadee7eb93e0db7d60a1c029c11d",
+      "sha256": "72d36a56fdf05b4c1884f6ba0e580299f007da3800fffd0eaff94d5f4d93e3ae"
+    },
+    {
+      "file": "yunyoo-light-46849781.webp",
+      "source": "https://digvps.com/logo-idc/yunyoo.png",
+      "sourceSha256": "cb3ae49ee4e6feb5a4f7c3fe30f99ce47303d137ed2fc5a259b570c6a2c2511a",
+      "sha256": "46849781d7faebd2d3d41e014f81baa3460fd6ea69220869889b6d43f1f998a3"
+    },
+    {
+      "file": "666clouds-light-1a0fa564.webp",
+      "source": "https://digvps.com/logo-idc/666.jpg",
+      "sourceSha256": "789f440c79418af0e24bca2e0de6f5fd93fd47a7fabc0d24ed35bd3a9c0293a2",
+      "sha256": "1a0fa564ec860a29592c1a86b70cd7fe6304116ff599206e753e6b4a985b32bc"
+    },
+    {
+      "file": "qqg-light-ce6c496c.webp",
+      "source": "https://digvps.com/logo-idc/qqg.svg",
+      "sourceSha256": "c923f8e156486f6953c38f99434018e53311669719249b51ba02b04ffc172895",
+      "sha256": "ce6c496ca1f9eec06e35d3bb10e277718a8d9c7969d33f7f11ab1674391270d9"
+    },
+    {
+      "file": "usvps24-light-a34447c7.webp",
+      "source": "https://digvps.com/logo-idc/usvps24.svg",
+      "sourceSha256": "78ed49d4543c59c1144778bb9628ca65e78dd9a18f8ce93e98abea06c6641b5a",
+      "sha256": "a34447c71142d9cb7a14a6a76df81249947a0740e8986b3711b194497cbfada6"
+    },
+    {
+      "file": "zorocloud-light-ad32511d.webp",
+      "source": "https://digvps.com/logo-idc/zoro.jpg",
+      "sourceSha256": "461d6c47193d599609a6035050fefc26ec00412f174517475c389e8fc6b1e9cb",
+      "sha256": "ad32511d6332cb2563443ee35d379aa413944af24e65f99fc05718ab8b140e17"
+    },
+    {
+      "file": "yin-net-light-8e57b174.webp",
+      "source": "https://digvps.com/logo-idc/yin-net.png",
+      "sourceSha256": "0a6f876313f630779c19a287a7b0e3726686c9b381df334fad22b708ec39f23c",
+      "sha256": "8e57b1746a156482a8b735bd191acb48b0c4706518c930532e92157cee17a890"
+    },
+    {
+      "file": "rfchost-light-86492b29.webp",
+      "source": "https://digvps.com/logo-idc/rfchost.webp",
+      "sourceSha256": "1e7612f9323b2da90ac644e3a6abc665d8477161bb485f91a25a95faf3f05df2",
+      "sha256": "86492b295460571e640fbe1b99d10033fc9cf78c6aad83f341ad8d3c9e8d4762"
+    },
+    {
+      "file": "sadidc-light-31056f5c.webp",
+      "source": "https://digvps.com/logo-idc/sadidc.png",
+      "sourceSha256": "e80f8f4519b6fff4ebcaca4885f1953f01c94334ef6cb34f025ff09fc16bc5b7",
+      "sha256": "31056f5c06fe4f84ca59211981953e0d6b934f27c707b7a83ab0748ea157347c"
+    },
+    {
+      "file": "novixlink-light-9f6fe331.webp",
+      "source": "https://digvps.com/logo-idc/novixlink.webp",
+      "sourceSha256": "45ac86e1fde92ded9ebaab10b9f35d0154717dfa7cb89ced6ad8aba05cce5b39",
+      "sha256": "9f6fe331155aa70cf05cc5bff2560219a7fdee2be96fe3a6652e8b918ad61285"
+    },
+    {
+      "file": "akile-light-32d941b4.webp",
+      "source": "https://digvps.com/logo-idc/akile.jpg",
+      "sourceSha256": "d18a4cf2c75a8e5f78eea893d93e6719e9715cd827b33612dbf117fdb49b6be2",
+      "sha256": "32d941b411b6327d1e80ef3bbe29bfd633c00b3b568dca611f0ded550b4ba706"
+    },
+    {
+      "file": "racknerd-light-a129314e.webp",
+      "source": "https://digvps.com/logo-idc/rn-dark.png",
+      "sourceSha256": "4acb5e8a7535ac40de42a56d44dd2f871d26557f207954d09928c26fb928f3be",
+      "sha256": "a129314ebd9cc722243325781a13acfab03c45a861fe0c15f50f92be2b8c0f85"
+    },
+    {
+      "file": "dotdotnetworks-light-2aef6c88.webp",
+      "source": "https://digvps.com/logo-idc/dotdotnetworks.webp",
+      "sourceSha256": "9ae7ab6b322b51c11b3acbe75adf9c2897c291298068bba18cf91a4b5c9da969",
+      "sha256": "2aef6c881841fcaca4f0a8f824b7725cad043d1d357804040cd8bded9e65bdbb"
+    },
+    {
+      "file": "sixtynet-light-985cac34.webp",
+      "source": "https://digvps.com/logo-idc/sixtynet.webp",
+      "sourceSha256": "cb7f2c98050f9147127bf7d31f0d1b64f36a40c0b21df5922268f4e540f0acc9",
+      "sha256": "985cac347639aedb938b48d99f3c38ea4aff9a7f4f0e98bf3a0b08f9ace34b7f"
+    },
+    {
+      "file": "isif-light-5776aae0.webp",
+      "source": "https://digvps.com/logo-idc/isif-light.webp",
+      "sourceSha256": "a8d29955214bca8c651d24f05bfd4b5ed700cb9152e5f859b8b3fa029eabf2dc",
+      "sha256": "5776aae0d6463d67ba2636fba309c2be94bf89249e5a616816470527225924a5"
+    },
+    {
+      "file": "isif-dark-d6d883eb.webp",
+      "source": "https://digvps.com/logo-idc/isif-dark.webp",
+      "sourceSha256": "c4a34713e14582812f7a64d1cf38a5dcab6284d39ba3d41b7b9cbed42e9b4622",
+      "sha256": "d6d883eb7fbb9033562cb1174d17f5cbaf9cd26d0c33c991025a3cb9c1bbaa18"
+    },
+    {
+      "file": "rcvps-light-93c6aa39.webp",
+      "source": "https://digvps.com/logo-idc/rcpvs.png",
+      "sourceSha256": "e771b4cc10928fedb0e334982b22317183b7fcc95d5835d18163dbe427e29ddc",
+      "sha256": "93c6aa3930adc12a4820fe17955c3cfa26c531510e3fc5e36f1daa7f931445dd"
+    },
+    {
+      "file": "akkocloud-light-9817d9e5.webp",
+      "source": "https://digvps.com/logo-idc/akko.png",
+      "sourceSha256": "17246c4512d25094e25ef1694f862130e4f7e18249dbcb7d39635c89b52bfc6e",
+      "sha256": "9817d9e5ed456ae54387328a58d932c6b97cf3f34c46a1e1cbafbff1bfadd40b"
+    },
+    {
+      "file": "greencloudvps-light-43849089.webp",
+      "source": "https://digvps.com/logo-idc/greencloudvps.webp",
+      "sourceSha256": "4877e2e452f95285ccf62264fb5be7dab7ed30533b106b01316f1de500e48707",
+      "sha256": "438490892074280e5e6315bc951002f09e2e4b5546034f920e40915fb06e4120"
+    },
+    {
+      "file": "saltyfish-light-f159d77a.webp",
+      "source": "https://digvps.com/logo-idc/saltyfish.png",
+      "sourceSha256": "78fc87da2ffdf1c00c3a9aecca09db4bcc1331392c668743538085cc5e3011c3",
+      "sha256": "f159d77aca02c0f0a8c70b0c83c9f8d2200536c9bd0914c224dfd36729da63e2"
+    },
+    {
+      "file": "skylineconnect-light-79f51a4d.webp",
+      "source": "https://digvps.com/logo-idc/skylineconnect.webp",
+      "sourceSha256": "ed3fbc5556b2827c4fabd1797658df1e38030a4b67116953e783b82a7edf9409",
+      "sha256": "79f51a4de9edfe41a0156697d271fdabb09c51f5c2483158fb1a9a141c3b18ee"
+    },
+    {
+      "file": "joysol-light-ab10f31e.webp",
+      "source": "https://digvps.com/logo-idc/joysol.webp",
+      "sourceSha256": "54e56270e09dbf8b9026bf31b4fb98c7e302a82d9fde29cd6e7cda5e8bc9dafb",
+      "sha256": "ab10f31e3b4b6cb9bfabd5e689d9ce14e49f3d1656dc5b89f13d5b2000f1f961"
+    },
+    {
+      "file": "aaitr-light-3aa383e8.webp",
+      "source": "https://digvps.com/logo-idc/aaitr.svg",
+      "sourceSha256": "7d92c9206af1d7c74841eb48f497715e58ec631b8da7fc8b238f3f198aba6c94",
+      "sha256": "3aa383e85a6a54c5057700e95e1ee438e35e53641c880d8fbbf29609e6395e28"
+    },
+    {
+      "file": "v-ps-light-6ab6b3b2.webp",
+      "source": "https://digvps.com/logo-idc/v.ps-light.png",
+      "sourceSha256": "85be82eed7b5a422044e1d53627dad2c143f2e6eb8659b43dff028c5b4fd9adb",
+      "sha256": "6ab6b3b2ea56b497cdf5491eeeeb94896b5e5c268ecb0688b27e0fee4fc6a9eb"
+    },
+    {
+      "file": "v-ps-dark-c4c0b39e.webp",
+      "source": "https://digvps.com/logo-idc/v.ps-dark.png",
+      "sourceSha256": "3390a1af501c1d40819f3ebd1ef843816901d7229f8a2861777d8ccd0a926a9a",
+      "sha256": "c4c0b39e46b448f9ac9ff9109914a356c3cc3d381a8bdd090bc70b2f9d0924a5"
+    },
+    {
+      "file": "vmiss-light-7d2d99f3.webp",
+      "source": "https://digvps.com/logo-idc/vmiss.jpg",
+      "sourceSha256": "404e2f218e15c151441b6ac5506b70645b9e65962321fd6f48b8aa7366f507f1",
+      "sha256": "7d2d99f3e1fde4b58511e28506f0e0678e92d42f6409637e5c3c5dacc9a8fa61"
+    },
+    {
+      "file": "bagevm-light-9cdbc067.webp",
+      "source": "https://digvps.com/logo-idc/bage-light.webp",
+      "sourceSha256": "22abd7f28f06f83eff6f60b1f3e250777e3990d606edd2ce7f50e811c88416bc",
+      "sha256": "9cdbc067e1c4c2ca5bb8d36b7f9d847a2401a5b4cbe5bb8dc2d67a1152244a89"
+    },
+    {
+      "file": "bagevm-dark-e0471819.webp",
+      "source": "https://digvps.com/logo-idc/bage-dark.webp",
+      "sourceSha256": "6b78f2348ac3b5c496eeab362b92eabb383f53c98a5421cb57221eebce015f05",
+      "sha256": "e0471819f036cb5a0bf77fed5f0ddb0ce5bf8692f9097abadb1008d6c6a82fd7"
+    },
+    {
+      "file": "panstar-light-ee1ba87f.webp",
+      "source": "https://digvps.com/logo-idc/panstar-light.svg",
+      "sourceSha256": "8c6e86638b4a86d7980a0840e640cd124bd0c82bf3ff9f06591716b39ab02e9e",
+      "sha256": "ee1ba87f0814ebd8d803a97fb2ff400452eeddcc593df2f33b6d9e35a147fb81"
+    },
+    {
+      "file": "panstar-dark-4ccccc1b.webp",
+      "source": "https://digvps.com/logo-idc/panstar-dark.svg",
+      "sourceSha256": "849d6103340c6440f0709f5efc36c9db47983528124ded5b4315ec2887d62cac",
+      "sha256": "4ccccc1b651909d30c79962a42f41b4684533df7abddc00a0e7141421867e4ff"
+    },
+    {
+      "file": "ppflight-light-038812bb.webp",
+      "source": "https://digvps.com/logo-idc/ppflight-light.svg",
+      "sourceSha256": "2a6ed786a5d78484e2afb3c72a9477a28bf2cc6e83ba8e231f2910cbb4f55be5",
+      "sha256": "038812bb097012f1f0887b8798c22c014bdfa7791ab2dd7acc14c03120287e49"
+    },
+    {
+      "file": "ppflight-dark-70d7e95d.webp",
+      "source": "https://digvps.com/logo-idc/ppflight-dark.svg",
+      "sourceSha256": "1d765c9ad2e2ede9ec981ef08132713787196e448f0a8d3f5759bc94ad1a1174",
+      "sha256": "70d7e95dcd4aaaecab04c757833f2b525d75b158bcdc2e40e26a8340ad3e9a31"
+    },
+    {
+      "file": "yt-light-5ea5bce3.webp",
+      "source": "https://digvps.com/logo-idc/yt.jpg",
+      "sourceSha256": "00e76c9657cc4f4bddcab02b81700303de686d1f6070f4d5fc90a6584a8f487f",
+      "sha256": "5ea5bce32f1bb7dd0a9290b6e30fe6f094ee383db3c4e53f371aeef977d3a848"
+    },
+    {
+      "file": "pqs-light-5fa3fa9b.webp",
+      "source": "https://digvps.com/logo-idc/pqs.png",
+      "sourceSha256": "e2fa8eaf30fcec9ac717583d3aca696e0a9b731409f5ba7ab4da8892c6fe8b0f",
+      "sha256": "5fa3fa9b9229207c2bb0e558cfb36bb9aff6822812449111d1f87dfeeaaa907d"
+    },
+    {
+      "file": "dogyun-light-bfefda86.webp",
+      "source": "https://digvps.com/logo-idc/dogyun.jpg",
+      "sourceSha256": "1b7e4915c96ade41b7134bb57f81d40488fb3eace0344a6713882a5bc3b389f5",
+      "sha256": "bfefda86c5a547240aa9026218c762c553d7bf801cb4b8d5444f4bbfd511c0e4"
+    },
+    {
+      "file": "digitalvirt-light-ff90c450.webp",
+      "source": "https://digvps.com/logo-idc/digitalvirt.jpg",
+      "sourceSha256": "54d92fab64ae2fb7a0b0afc409572a12b96f1e1290461c89205d90caa1573503",
+      "sha256": "ff90c4501c34bd2bcdf8522bc7a322e9c469c3763604d39eda9a422dd4b9afa5"
+    },
+    {
+      "file": "100tb-light-01db59eb.webp",
+      "source": "https://digvps.com/logo-idc/100tb.svg",
+      "sourceSha256": "cd27947a27f0ea2dc5c1829feb75786d6ad2d648c8ac87f6d68fda2d06433d5c",
+      "sha256": "01db59ebc4dd548e2206e94ad846ab6a87ab412c6c1eebe6b2b81095f8f5c330"
+    },
+    {
+      "file": "legendvps-light-3b763d63.webp",
+      "source": "https://digvps.com/logo-idc/legendvps.webp",
+      "sourceSha256": "af9a8bf4f49e35c36d58407f0e93fb2de4357629c7aac1c92e47fa841c6aa2f3",
+      "sha256": "3b763d63f1ae63288a4a547d703eff156ddbe31d99676afc4ea27c58cde4f990"
+    },
+    {
+      "file": "cubecloud-light-36ee9a6c.webp",
+      "source": "https://digvps.com/logo-idc/CubeCloud-Hei.png",
+      "sourceSha256": "811679f33d91f6b09b40416b5643b9cfcd433770a0c12f0ba85f2df1854ca85f",
+      "sha256": "36ee9a6cfc686983511716b885241f8cc1568b8325bd29808a1344e610a97159"
+    },
+    {
+      "file": "cubecloud-dark-25c5f3f1.webp",
+      "source": "https://digvps.com/logo-idc/CubeCloud-Bai.png",
+      "sourceSha256": "b9f4a1d625c2c4a9305407cee25cd3109f3503b04ce2e62783f19c55e8b0594c",
+      "sha256": "25c5f3f1fb48d8c6061eae01e169ea91ec2aee5bbf249130e3a78342778d5647"
+    },
+    {
+      "file": "tokyonline-light-f4271f4e.webp",
+      "source": "https://digvps.com/logo-idc/tokyonline.png",
+      "sourceSha256": "abcc7533bc7e859d3fee8baf571f5ea3517247d9ef3dc2b46c93bd4b90d893f4",
+      "sha256": "f4271f4e57eba532b0bda65f58595a9fde8839016e49a01ec8f9e14aea5b503e"
+    },
+    {
+      "file": "wap-ac-light-f062b8a8.webp",
+      "source": "https://digvps.com/logo-idc/wap.jpg",
+      "sourceSha256": "3b63fccfb44c572985ffd8802786b9ba025f1ed15c6097f677f51f8540e11ac6",
+      "sha256": "f062b8a8cb2416b9352b15a9a057fafd46c6054fbca992a86bcbc6ad30de98ae"
+    },
+    {
+      "file": "backwaves-light-4e3bb487.webp",
+      "source": "https://digvps.com/logo-idc/backwaves.png",
+      "sourceSha256": "fe5bb65fc934a9a41c7d27f0de747ae1f597eaeb9d2fc92a8daf91825d0021bf",
+      "sha256": "4e3bb487c5c41c687f5ff496eb24f19871be6236cd958a99c913ea9f9aa52137"
+    },
+    {
+      "file": "isvoro-light-a3c7a66a.webp",
+      "source": "https://digvps.com/logo-idc/isvoro-light.webp",
+      "sourceSha256": "fe5ba556b5cf197fcfa2d2bea6eab3c7d212ca2db05e3d3855b5b25a8aad2621",
+      "sha256": "a3c7a66a1e5b62c1832c8f13c766d5af0e0b2244983c331e7967e8252b9069fb"
+    },
+    {
+      "file": "isvoro-dark-1d430510.webp",
+      "source": "https://digvps.com/logo-idc/isvoro-dark.webp",
+      "sourceSha256": "7804bee63c611050b74489877e998562066c98127b1c2087f1fb1fdb621bd519",
+      "sha256": "1d430510724bef0201ab60097533c493feb8329ba3ac44cff50b58728b4cf5a8"
+    },
+    {
+      "file": "flawlessnode-light-58c6ac24.webp",
+      "source": "https://digvps.com/logo-idc/flawlessnode-light.svg",
+      "sourceSha256": "1b4012a2b9e13f91a468249ce3f53b3bf125d9567508294aaa1d2ab0331a0679",
+      "sha256": "58c6ac24f93de7b32c783d5c087f0b80e481a7b8b881c831fac3015fc080ca1b"
+    },
+    {
+      "file": "flawlessnode-dark-f0e34bc4.webp",
+      "source": "https://digvps.com/logo-idc/flawlessnode-dark.svg",
+      "sourceSha256": "03eb7c3c4419ba9d4794f2ea1f7ddec5ce049299e30ab76e03a16129838ab158",
+      "sha256": "f0e34bc439ec8c2be168342518fd86e96e874a6bebdb57c36cd028bcd2e91c6b"
+    },
+    {
+      "file": "lightlayer-light-a43116c2.webp",
+      "source": "https://digvps.com/logo-idc/lightlayer.png",
+      "sourceSha256": "7423defe27b25c2d425bc0c34400e8aff303919478c8ae1d7b2e251f5a8512cb",
+      "sha256": "a43116c238ac4da2ab7a21e637e2b04e14d182e7a2c439cbb5fee37414be774a"
+    },
+    {
+      "file": "cloudleadinno-light-9f409d75.webp",
+      "source": "https://digvps.com/logo-idc/cloudleadinno.webp",
+      "sourceSha256": "b290840796b5446918206c4fb1ff392c310bb1caf115f58a0e55245e200db328",
+      "sha256": "9f409d753df9ad15dd2eec7d7205880f5a3512d63feb1355a9a6e253bcb55634"
+    },
+    {
+      "file": "tothost-light-7d058fee.webp",
+      "source": "https://digvps.com/logo-idc/tothost.png",
+      "sourceSha256": "602333ab887f070e2d6750d74403327ac1356c8d4f1789ef18c05ce6957eb052",
+      "sha256": "7d058fee1b13a4b075e5c01a458b9db6ddc5ee55037ba4f207162ccce889ae55"
+    },
+    {
+      "file": "yecaoyun-light-8f5e8a95.webp",
+      "source": "https://digvps.com/logo-idc/yecaoyun.webp",
+      "sourceSha256": "dd90e8b385feefbe8516b1fb0669f3b477aab6aad7c39e44db3cd3cf3af21d80",
+      "sha256": "8f5e8a95bb966ece4d40a7e05cadaf1c85a188cfce5c04fd6684b0285d20dd19"
+    },
+    {
+      "file": "svyun-light-9b3b5812.webp",
+      "source": "https://digvps.com/logo-idc/svyun.webp",
+      "sourceSha256": "2887ccacebe37721e95eb7c913ad1346956ba0ec4f6b9f84efd98b30d0abaa63",
+      "sha256": "9b3b58123e959f3034961b737a07b683152d519376909ab425a3a5ccc294fd6b"
+    },
+    {
+      "file": "vmshell-light-201efd66.webp",
+      "source": "https://digvps.com/logo-idc/vmshell.webp",
+      "sourceSha256": "81c353920b8ca132f0804dbf67557a58f7f4c572de1ef58238e976a09531c18e",
+      "sha256": "201efd66a4a0251187b4db6915fb6e8f17d7b69c309d350fdda4ce8ae089b3c9"
+    },
+    {
+      "file": "lcayun-light-5d2bff22.webp",
+      "source": "https://digvps.com/logo-idc/lcayun.png",
+      "sourceSha256": "67d413a6217c240d5c9c3ea8f70a5c2492756d89035357ff6f52845b6e99aac8",
+      "sha256": "5d2bff225eefb8df619740005097bea19d7baea5fc985d61783856a2fd6e902f"
+    },
+    {
+      "file": "fiberstate-light-e28b47d9.webp",
+      "source": "https://digvps.com/logo-idc/fiberstate.webp",
+      "sourceSha256": "58f75b0790b00bf36496c075760a2594c550c26e864a69ca6fa5460a15138ef6",
+      "sha256": "e28b47d9216c5b7a3c4cebcc75c1befd85859e2d1c2d8e68b8db1953c1999732"
+    },
+    {
+      "file": "dataonline-light-d90dd2f4.webp",
+      "source": "https://digvps.com/logo-idc/dataonline.webp",
+      "sourceSha256": "5535f0bb5d0308d3e846cf7752dea6bc608c0d491602e4fafff82c49bd122a4c",
+      "sha256": "d90dd2f4dc8703f057bb3857ce9bb35e181bf8fce5f2476114af1a3205652c1d"
+    },
+    {
+      "file": "halocloud-light-629e6220.webp",
+      "source": "https://digvps.com/logo-idc/halo.png",
+      "sourceSha256": "c132d72d88cb588f446fdd1073c1737819f90174d29630813f5261af16189b70",
+      "sha256": "629e62201d65a137d33951287e5d6d522d8d70d8d52f7575617ce4411c100bce"
+    },
+    {
+      "file": "bestvm-light-19ca1380.webp",
+      "source": "https://digvps.com/logo-idc/bv-light.svg",
+      "sourceSha256": "eb5aa513617776fd21a80c187a5efe53e923bae91613dc2ac68af8c5101f75f6",
+      "sha256": "19ca13800f6269b87f356509f5a25477d68892eb6aa448cb5dd4bf5522f0e597"
+    },
+    {
+      "file": "bestvm-dark-7095e0ac.webp",
+      "source": "https://digvps.com/logo-idc/bv-dark.svg",
+      "sourceSha256": "0c7d21fd6627fa95d73925f3844bfc322ee8b94f72e38055075c93afe83ca33b",
+      "sha256": "7095e0ac2204969a24b8afc35df9d466be825741ae382b3c2953e1b68d8b75ff"
+    },
+    {
+      "file": "cloudcone-light-cff40cf4.webp",
+      "source": "https://digvps.com/logo-idc/cloudcone.png",
+      "sourceSha256": "a510ddb620410093584ce28c54a66f6d77ea6a1f7ee75f07065f832f1e0480dc",
+      "sha256": "cff40cf42e36c320481624f0f4254db6747d96bdeeecc3a6394624653ea28e76"
+    },
+    {
+      "file": "highendnetwork-light-43143c7e.webp",
+      "source": "https://digvps.com/logo-idc/highendnetwork.jpg",
+      "sourceSha256": "926c6252e9d8633ea0e0b4fec90a6ddfd2168d81a6dfff30d9f157c98cf79cd9",
+      "sha256": "43143c7e164e09456bab3d9e0a21978ba8ed48361ec2b6247e7a7f206352ca15"
+    },
+    {
+      "file": "vmrack-light-d47dfe43.webp",
+      "source": "https://digvps.com/logo-idc/vmrack-light.svg",
+      "sourceSha256": "cfa0733a331e8c8e224b3b4101d172a1d3a076489044f7a48dfea57243d326b9",
+      "sha256": "d47dfe4387478cba4ebbec25c67580fcfe2ccf3f45d7605bc28be98cae491825"
+    },
+    {
+      "file": "vmrack-dark-8dcf9d91.webp",
+      "source": "https://digvps.com/logo-idc/vmrack-dark.svg",
+      "sourceSha256": "a36a5bbe5a8cd2ca3f45d18a297022d4281c5fb159c2ae0c3fe1725100661928",
+      "sha256": "8dcf9d91015b25df3c1ba81eaa1a119eaabe102bef1adaf4f32eda026e3f4fa8"
+    },
+    {
+      "file": "goodlyclouds-light-a6e0583f.webp",
+      "source": "https://digvps.com/logo-idc/goodlyclouds.webp",
+      "sourceSha256": "59002662701afdb81402ead39b23eb1e8637e125d70a3aad1ffef82843a81990",
+      "sha256": "a6e0583fd6eede9b0c8475634aecb3d34f1c477fce3cdae0cce535f343b0986c"
+    },
+    {
+      "file": "ciallonetworks-light-d106b676.webp",
+      "source": "https://digvps.com/logo-idc/ciallonetworks-light.webp",
+      "sourceSha256": "8e1defe077f5a060bd622fc7011ffa2146da07b7e6223b08ae493219bb1a3a59",
+      "sha256": "d106b676bc0cea3a6edf1e0dcc8d1397bb9e46d6e51c9d7fcd76ab8aaebe32b9"
+    },
+    {
+      "file": "ciallonetworks-dark-fae7abd5.webp",
+      "source": "https://digvps.com/logo-idc/ciallonetworks-dark.webp",
+      "sourceSha256": "3f4f7f1eaf6b9b06d30b6e14aa18ac93f321469605a9fcc4fff428536d4dab79",
+      "sha256": "fae7abd5f1e15ee0f61bdd1a7f6bbabc4ca0c33590ddbf6ea33165b95e107eae"
+    },
+    {
+      "file": "gfvps-light-c887a626.webp",
+      "source": "https://digvps.com/logo-idc/gfvps.png",
+      "sourceSha256": "a989091c14757386e6c3f066ae0ed15a5fd8ec9460fd04ae7f8cdfb62c26c275",
+      "sha256": "c887a6263859317732d16b526e7a18fa44d4640fedafdc2934b6fe88406ddb84"
+    },
+    {
+      "file": "zovps-light-a42fc5e7.webp",
+      "source": "https://digvps.com/logo-idc/zovps.jpg",
+      "sourceSha256": "89f390021e1ac867197941cd4b6764676c498c12c73053caa4996e7b29c2d4f0",
+      "sha256": "a42fc5e7dee755de81ea2bd11bfb3385f94ce4a97b9d233c596d12a41d7e3782"
+    },
+    {
+      "file": "raksmart-light-52ac2ff5.webp",
+      "source": "https://digvps.com/logo-idc/raksmart.webp",
+      "sourceSha256": "b0068558d6fa17111ba9877893a87399aff5de1497b54df73dc82a49a09b1158",
+      "sha256": "52ac2ff568951e2fb99a14377e5adc1c8d77320fc781c420d464e2e2903a213a"
+    },
+    {
+      "file": "cstonecloud-light-79ee1b4d.webp",
+      "source": "https://digvps.com/logo-idc/cstonecloud.webp",
+      "sourceSha256": "394a21f897ced294a122178339db3608ff0fc88d59886a1a2c8cc27f63bbcd8d",
+      "sha256": "79ee1b4dc015fa347990aebac38c48a5394a36ef456c82be2922a157d73c3d0f"
+    },
+    {
+      "file": "hostdare-light-2265b2d3.webp",
+      "source": "https://digvps.com/logo-idc/hostdare.webp",
+      "sourceSha256": "d8e768e77439ec84894fbc946b03fa2c4f21bf9dede01e9c0cca09378e32979b",
+      "sha256": "2265b2d37afcdd0fcb65a42965b4b9c8988f03d2342c3d6183ff7bf4cae1d86d"
+    },
+    {
+      "file": "fast-line-light-194ba868.webp",
+      "source": "https://digvps.com/logo-idc/fastline.png",
+      "sourceSha256": "3f0252cf9e8c3c86eb769c714c0d6acecd6b990a7c5661cbac714a8e47164e08",
+      "sha256": "194ba8689dc5594de4f364c015674b4bf4786307b4cffb7e0a5ae56611e02678"
+    },
+    {
+      "file": "desivps-light-a69661b0.webp",
+      "source": "https://digvps.com/logo-idc/desivps.png",
+      "sourceSha256": "36931eeac4ed77857c494fcabac8d230baccba94159ae3dcf74a608815be27a7",
+      "sha256": "a69661b047eb9f59385409fa62423311512f879710c3e491961bdf29898576f7"
+    },
+    {
+      "file": "justg-light-d0b44f6e.webp",
+      "source": "https://digvps.com/logo-idc/justg.webp",
+      "sourceSha256": "3c65477b4cfc7a1cedb03f84e95f207a861a164d636904fa1ac6f5e9f9dc72a3",
+      "sha256": "d0b44f6ec204a19a4f10010510111db1c28a2f1b4be9489b82415ca06d210b19"
+    },
+    {
+      "file": "vipcloud-light-f5f88052.webp",
+      "source": "https://digvps.com/logo-idc/vipcloud.webp",
+      "sourceSha256": "7019cb4eb0caad1b317c6806b4d0104c8fb8adb815faa518743aec631f5cc88c",
+      "sha256": "f5f88052c560a85781ffcf6edfdc07f77a517c097b83b6011c0855639bcd1ad3"
+    },
+    {
+      "file": "neburst-light-7419895b.webp",
+      "source": "https://digvps.com/logo-idc/neburst.svg",
+      "sourceSha256": "35b7ad14bbb8ce3dddeb1ed2503e7f27d7169fb03e7dce46672be0d57b8b5610",
+      "sha256": "7419895b504e3d96b5a1dac9fdcb70f4ded2606ef70fb6ea68eb921a3d2bfed5"
+    },
+    {
+      "file": "terabix-light-d515144a.webp",
+      "source": "https://digvps.com/logo-idc/terabix.png",
+      "sourceSha256": "614221f4de03c8fb13376577b47485282810f667b09febf593531b22c820d67f",
+      "sha256": "d515144a0746a48f281fdc98b8ab8c33e3b1767a0f6e818d6a46fb5f230f5df1"
+    },
+    {
+      "file": "orangevps-light-45197118.webp",
+      "source": "https://digvps.com/logo-idc/orange.webp",
+      "sourceSha256": "aa76cf5808426e5b6ada8d976d393a58f5257fedd8d7d52f66f3873e46412a1a",
+      "sha256": "451971185e343cea2916cf334e28ba5870be904938fd6de9f152f4eb1e240449"
+    },
+    {
+      "file": "v5-light-d6f59d34.webp",
+      "source": "https://digvps.com/logo-idc/v5.jpg",
+      "sourceSha256": "5acf2b9ba7f368976205083e76b8e1b0151b6e1d96638abac5793463bee8291c",
+      "sha256": "d6f59d34344dcb9dea9d4a40e869f8b4f197af5a82bdb3a44333f32160b96a31"
+    },
+    {
+      "file": "kjvps-light-fa545d2d.webp",
+      "source": "https://digvps.com/logo-idc/kjvps.webp",
+      "sourceSha256": "a1552ca9ca96e33b19be7133a0f4a78fee81cfa23b148ffdc4f5e3c5f187ac82",
+      "sha256": "fa545d2dce92f9855fe967056d919a18412c0f6676c00b5f3ce895d3b6a57369"
+    },
+    {
+      "file": "rabisu-light-afe47f2d.webp",
+      "source": "https://digvps.com/logo-idc/rabisu-light.png",
+      "sourceSha256": "739f1e39de2884a78a8fcf8dfd18b08dbc04dba0db114fc01595b4532e81e330",
+      "sha256": "afe47f2d63aff57a82651355bee952ed11afbf53605f5d86c8a92dc489367689"
+    },
+    {
+      "file": "rabisu-dark-8cdbf28b.webp",
+      "source": "https://digvps.com/logo-idc/rabisu-dark.png",
+      "sourceSha256": "ce99eafd0ba0d3b82291b534eaf38e99a74c26e8f013df282e8f0ce75ddfea37",
+      "sha256": "8cdbf28b699f4d0a84b0b50ea270bb674f926d03d07aec95aff968fabc849a62"
+    },
+    {
+      "file": "skywolf-light-2a5e89c8.webp",
+      "source": "https://digvps.com/logo-idc/skywolf.png",
+      "sourceSha256": "373c2cacccc8e45193a1fd58c55b5182078e3cbb3c615dc9995e34a8d781c71f",
+      "sha256": "2a5e89c852d16479ec46542369a96e011f1b1ce3d50fdeebeddcd370b6b21218"
+    },
+    {
+      "file": "sakura-light-eec25e5e.webp",
+      "source": "https://digvps.com/logo-idc/sakura-light.png",
+      "sourceSha256": "9f447b4c0708c820b786a5b5252a13bfb740e61e9dc0edc7e5977c2ca4c2af5e",
+      "sha256": "eec25e5e477eedefeec97ade84b8eb8eeeacfa4b41fadc0a9a35b4db3c3d6a77"
+    },
+    {
+      "file": "ipraft-light-0e035cf3.webp",
+      "source": "https://digvps.com/logo-idc/ipraft.webp",
+      "sourceSha256": "5f50b956c2cf516daa85171a61d165a30d62e34d11466acaa478e9d61f699f80",
+      "sha256": "0e035cf32de476d7a030fed73947cb4723f47db86eca483b7cd3ce5e03f5dbb8"
+    },
+    {
+      "file": "starrydns-light-76910674.webp",
+      "source": "https://digvps.com/logo-idc/starrydns.webp",
+      "sourceSha256": "1b6b44a9bee0e7ea05724382c27197caa08875a4b60ba328209b08a97f2f9d4e",
+      "sha256": "769106748a80eb5a49b5830da54856eac5c6f18836d43759e1dd867886b9cf8e"
+    },
+    {
+      "file": "zhaomu-light-d69f4c80.webp",
+      "source": "https://digvps.com/logo-idc/zhaomu.webp",
+      "sourceSha256": "4eb5279511b9486f06edca1303ce6d484a4bc98a93f440bd3f4045bef4267648",
+      "sha256": "d69f4c8036d3ec3e5110d83bf80fcdfa641dcdb2409ca3239c35b78b203b17b3"
+    },
+    {
+      "file": "quicksrv-light-85805e13.webp",
+      "source": "https://digvps.com/logo-idc/quicksrv-light.svg",
+      "sourceSha256": "b46a6700e8f052908b28776355ba374e29732881541db01e536ea43bcd1b7617",
+      "sha256": "85805e13982885a0f1494318ac2f5c0e0c86418714e832a699b601c874b5db3f"
+    },
+    {
+      "file": "quicksrv-dark-27fb56f4.webp",
+      "source": "https://digvps.com/logo-idc/quicksrv-dark.svg",
+      "sourceSha256": "5316d96f6ef48cfbf1af00bd43d9f3884399c1bcb54b64a4708bcc277331cdd3",
+      "sha256": "27fb56f4798852673f623fdb4a03d4342534f4ffe455feeb9b657073de93b8e9"
+    },
+    {
+      "file": "moe-light-9ba26763.webp",
+      "source": "https://digvps.com/logo-idc/moe.webp",
+      "sourceSha256": "afc608f9ca2c7596265b0ee42a3f521f89b664c0ab83246c21804892197656d0",
+      "sha256": "9ba26763aa0e92597af1cf713e5ee691fd3b03bd16445dd73e2f9200cc24f955"
+    },
+    {
+      "file": "tarekcloud-light-e7d5780e.webp",
+      "source": "https://digvps.com/logo-idc/tarekcloud-light.webp",
+      "sourceSha256": "63702863c5acd845033f595dce5aa7203c42c198c9a8c8fdaa748dd056ab1441",
+      "sha256": "e7d5780ef0efb11a7d628dfac17da769bbe4731d55d61a89f5d3e52e61eab1bd"
+    },
+    {
+      "file": "tarekcloud-dark-0ae89ac7.webp",
+      "source": "https://digvps.com/logo-idc/tarekcloud-dark.webp",
+      "sourceSha256": "15c28b8b1ae472d57ac074f93179fab4a8682cbf767bf2413b2f241b0ae5bbe9",
+      "sha256": "0ae89ac7d1266b082dfbcef432fbf32776bd9faae5931c9a19f49193ae4fb95d"
+    },
+    {
+      "file": "speedonline-light-21819ca7.webp",
+      "source": "https://digvps.com/logo-idc/speedonline.webp",
+      "sourceSha256": "ebdaa278c6e011e7939d6db1460261d643b3bdb816fa4cf582c4535981f4f2e0",
+      "sha256": "21819ca7ff07d9bf9debc33d615f5c98ed8178f793337b1e0e0e96ea8abbf099"
+    },
+    {
+      "file": "qde-light-72edb311.webp",
+      "source": "https://digvps.com/logo-idc/qde.png",
+      "sourceSha256": "f3a0f78e67ec70507f49399cb434328c6e3c2a00ca8649f35e20d53bef9c214a",
+      "sha256": "72edb311a5c26a59ac02ab214bf99082839fb2e4df476eadc8d1ae02459b2081"
+    },
+    {
+      "file": "niihost-light-145b1ff3.webp",
+      "source": "https://digvps.com/logo-idc/niihost_green_logo.svg",
+      "sourceSha256": "547b017918699d800adeee1cfcfb493958ec49709cbe468ec09b8f5b77ff6a3a",
+      "sha256": "145b1ff38fddcb264fcab483c7493ed9957e81b4c3c23bccb551e0ed54b6dc61"
+    },
+    {
+      "file": "bug-light-44f804e1.webp",
+      "source": "https://digvps.com/logo-idc/bug.webp",
+      "sourceSha256": "894e221ba32ba3af54c0c088023417f8874e7bb770420c111e17778807084abe",
+      "sha256": "44f804e1e41cca000e35b130c5a5ea5629fed1975c79028eff9c5db6e2cb1f8e"
+    },
+    {
+      "file": "tnahosting-light-67de0b6b.webp",
+      "source": "https://digvps.com/logo-idc/tnahosting.webp",
+      "sourceSha256": "fb3a360ef3d389b5387fe3dbafd3523528fa1bae53e2d811f95fe1207f1e9e34",
+      "sha256": "67de0b6b624b7a45e6823497ec4e457ab3d2f385e95cdc648720f9b1b2494023"
+    },
+    {
+      "file": "colocrossing-light-9fe306b2.webp",
+      "source": "https://digvps.com/logo-idc/colocrossing.webp",
+      "sourceSha256": "d8493dc803d119470ab9f8e3bd046e3e28414a330bfca6ca7087828d7677eb41",
+      "sha256": "9fe306b2c5599171f61dde20e7527ba403229443c24601871b26b2914e20c885"
+    },
+    {
+      "file": "duocloud-light-6ff97ebe.webp",
+      "source": "https://digvps.com/logo-idc/moechuang.svg",
+      "sourceSha256": "764e744cdfc442de72644cda893351374c833d97e4ef2d7a2e750aa5d0bd0c2c",
+      "sha256": "6ff97ebe327a21e8d8e36b4fb84871b9417c18766a20faed27dfe3bd1516efd8"
+    },
+    {
+      "file": "md5host-light-cca24f15.webp",
+      "source": "https://digvps.com/logo-idc/md5host.png",
+      "sourceSha256": "1bed4145073bf25849c097024c0199b88be0670d202c47ef8d2cc8f0d82ee05f",
+      "sha256": "cca24f156bea36148634ae3bf48c7bdf40144d6d70f7590cd75f1fa3c501923d"
+    },
+    {
+      "file": "spartan-light-79543127.webp",
+      "source": "https://digvps.com/logo-idc/spartan.webp",
+      "sourceSha256": "03fdb9446a3eb70e2b8955a5d1745198558fccc41fb8eabad0e06d1a5be815bc",
+      "sha256": "79543127583a6385f5af65e9c2b7f86feef466d321f3330be79454f0de87906f"
+    },
+    {
+      "file": "ethernetservers-light-1275769b.webp",
+      "source": "https://digvps.com/logo-idc/ethernetservers.png",
+      "sourceSha256": "71194c0c34f39e31e0138448c120f0706116ae4b5042611bf73ef8861eb8e2e0",
+      "sha256": "1275769b94e37de838f437d860837df4aa0e920a534c1c1f0adbfee27124c727"
+    },
+    {
+      "file": "eugamehost-light-0d441fa1.webp",
+      "source": "https://digvps.com/logo-idc/eugamehost.webp",
+      "sourceSha256": "bae2717f2bbf6d2c39c87995dfa1c99685942e0dfa43f233e65e185019a6c14a",
+      "sha256": "0d441fa16562dc53d932b372c037263e9700d029ff1378d68468e80955581e8b"
+    },
+    {
+      "file": "moack-light-a7ef44b6.webp",
+      "source": "https://digvps.com/logo-idc/moack.webp",
+      "sourceSha256": "833b75184fb8019c8f7a46d0bed77b52eced005b5a0cae18091281b4ba7ddf3e",
+      "sha256": "a7ef44b6a5394903a78412c98bd6a66bb7d522379fd93cd820cf1a26c2e469d4"
+    },
+    {
+      "file": "079idc-light-076b12f0.webp",
+      "source": "https://digvps.com/logo-idc/079idc.webp",
+      "sourceSha256": "1e9606302960e3e68c2630625ce699bb9cb599f25079910f234185ef039f8118",
+      "sha256": "076b12f07f267cb35e2ea591d1ffb491507654fa3f514f642e38316dc217bd84"
+    },
+    {
+      "file": "jiluoyun-light-1744b3e2.webp",
+      "source": "https://digvps.com/logo-idc/jiluoyun.jpg",
+      "sourceSha256": "045e56b8ee3101789bef51542b0796441198f7ed415d24a25c3568b66f62fe3b",
+      "sha256": "1744b3e2cc05cbd86e77a53733a03f892872660b87057342c7a001db0c5a4ee8"
+    },
+    {
+      "file": "black-light-32080cf2.webp",
+      "source": "https://digvps.com/logo-idc/blackhost.svg",
+      "sourceSha256": "8abd1eb7d1622388a1bb8a0a3551621307505a91898bc63e1142f472fd073dab",
+      "sha256": "32080cf2a9a137972a435495e5fe66389c0cfabcc327529eab0811d77095540b"
+    },
+    {
+      "file": "kfcloud-light-783c41b8.webp",
+      "source": "https://digvps.com/logo-idc/kfcloud.svg",
+      "sourceSha256": "4d7d2350548abecfdff90b0841793f3bf7d8525c415a57c5116c96cc626ec6ab",
+      "sha256": "783c41b8e41cb94c0413e30c100fe0020257ff908ae9a9d28220c176b39dabed"
+    },
+    {
+      "file": "hncloud-light-c689ea4d.webp",
+      "source": "https://digvps.com/logo-idc/hncloud.png",
+      "sourceSha256": "bf74040fe65f1cdb719e6f3a366dac30f59eb6a5fccee7a1df2e3ae99130b507",
+      "sha256": "c689ea4d5ded7b196f5fd4983e695b7a6da72f3c4fc8c7ebd302158d8f14e07e"
+    },
+    {
+      "file": "zenlayer-light-539b213b.webp",
+      "source": "https://digvps.com/logo-idc/zenlayer.svg",
+      "sourceSha256": "0c0b91505bda7ebbaebd81b6e8034f07b695e8192862e8411cf9a73ae254bac1",
+      "sha256": "539b213b9e5c26ae96a4d822b4ff0925d19d48204658f9729937e53efc5e2fb4"
+    },
+    {
+      "file": "haruka-light-25134501.webp",
+      "source": "https://digvps.com/logo-idc/haruka.webp",
+      "sourceSha256": "a792b3c6cece926073f613b9b20132565b7198525767c2658e35237322e64397",
+      "sha256": "25134501fc80154af59ebb8cdb359bc233b95eadd084f8cb71af96d5325ea635"
+    },
+    {
+      "file": "churros-light-d910b336.webp",
+      "source": "https://digvps.com/logo-idc/churros.webp",
+      "sourceSha256": "6cddbbf4de36c80e91c3e3bddeca78e89458e5c28d43ac6bb14ca82809637aa4",
+      "sha256": "d910b336518a056c9ad46e73dfc128e967256e9a4315b4b0fab62bfb60134a12"
+    },
+    {
+      "file": "vollcloud-light-30165c9c.webp",
+      "source": "https://digvps.com/logo-idc/vollcloud.svg",
+      "sourceSha256": "b7694c1ec350a88d0f048f1dd6b18dc9e693ed6136d714c32333f222ca1312bf",
+      "sha256": "30165c9c312ee51c5ff29d14042c58d084577a61a692cd5bf425f256f4953a99"
+    },
+    {
+      "file": "reliablesite-light-3abf9548.webp",
+      "source": "https://digvps.com/logo-idc/reliablesite.webp",
+      "sourceSha256": "5d675e06fee459d8534ef11a0d5b569abb8087f79e0fdd0fef1e7330c8ad9d3a",
+      "sha256": "3abf9548d6ec70c8f5e0e89e35f546aaba8b6fe8295097e49a7258ffbaaa79cb"
+    },
+    {
+      "file": "kkidc-light-d5226670.webp",
+      "source": "https://digvps.com/logo-idc/kkidc.png",
+      "sourceSha256": "4d167f0e8fde6fc8fc57d3d1e9246eeddb489a30220abd0243f8f9472510feb4",
+      "sha256": "d5226670b42fcbb21806edc437ce0df15dcecb0e02f26b6a5664018a4aa84968"
+    },
+    {
+      "file": "tencent-light-6dd605da.webp",
+      "source": "https://digvps.com/logo-idc/tencent.webp",
+      "sourceSha256": "49cb7863f4c9f3ef2fc6ec96aec83b5600b6a188118d8eff4be529a45513f423",
+      "sha256": "6dd605da9719639d405302abb98de4995b11c35fc47642d424a8f82530fd859f"
+    },
+    {
+      "file": "yxvm-light-07fbb05d.webp",
+      "source": "https://digvps.com/logo-idc/yxvm.jpg",
+      "sourceSha256": "160043a92e7ea419224a43729ff832311eafea9e1cdf9f135437e4ad701095dc",
+      "sha256": "07fbb05dc840668e0201cda651f8db6e86adb0f73182b33f133d7bcff325d31f"
+    },
+    {
+      "file": "aliyun-light-096f1e3c.webp",
+      "source": "https://digvps.com/logo-idc/aliyun.webp",
+      "sourceSha256": "3e039988f29addaaac7b5d0870d52d88f8afda84ff054ce70e1c9043128d3afb",
+      "sha256": "096f1e3c6804c6cc265fd5a8711b0bd7f73e2987fbd8f1cc8199158368330039"
+    },
+    {
+      "file": "as211392-light-3ffe8d17.webp",
+      "source": "https://digvps.com/logo-idc/dreamcloud.png",
+      "sourceSha256": "da0ad9c6e074dbe5a3a98be4c6aebc0afbd646dd1713a5eed82afbf76e17a51e",
+      "sha256": "3ffe8d17896f7c7341de3e5d1926684a23aa8dfad43f53910dec2d436350c102"
+    },
+    {
+      "file": "langlangy-light-40e4ec46.webp",
+      "source": "https://digvps.com/logo-idc/langlangy.webp",
+      "sourceSha256": "192184a93b465be48d98f2ca5a9f4c6c5b1d96266b0f05d78a305ce527341800",
+      "sha256": "40e4ec4693cf3f5b983955f5d351d8481a6a46a434aa102e5bb7cf49e8c36129"
+    },
+    {
+      "file": "kfchost-light-8c89d1cf.webp",
+      "source": "https://digvps.com/logo-idc/kfchost.webp",
+      "sourceSha256": "e963e5cad59b0b3f526ec64e1b53ad16059ebfc4fc4db07c879860eb7bc882da",
+      "sha256": "8c89d1cf7d3721a5980527fb6c55d2c9c38b7aa0a5b5735389333fea119aec03"
+    },
+    {
+      "file": "lcyidc-light-ddc6d814.webp",
+      "source": "https://digvps.com/logo-idc/lcyidc.jpg",
+      "sourceSha256": "7ede0e421110e6008ff315afe876852a85c58e7f2299f34fababc7072137e614",
+      "sha256": "ddc6d814c6672c06abe547f061d57a4a0fd439ef0ce3eee64075ebd640e1e780"
+    },
+    {
+      "file": "lycheen-light-9573882d.webp",
+      "source": "https://digvps.com/logo-idc/lycheen.jpg",
+      "sourceSha256": "8dde91c629d2b7d803fb176334e4b06360133b3004ad6e22aad34e81e58367a3",
+      "sha256": "9573882d60118db8e345964f8c139662e61b08cc4fd7d19552f52504f5fb2ef9"
+    },
+    {
+      "file": "nube-light-372f8299.webp",
+      "source": "https://digvps.com/logo-idc/nube.svg",
+      "sourceSha256": "0449782c102fc57486f67d97f893ca780c00fd9709b09803eac6c5691ed126a2",
+      "sha256": "372f8299a03f751406498b8e4094b9800298848d48af720bbfbe6aea5fd3b8c2"
+    },
+    {
+      "file": "nbdnet-light-d2fac16a.webp",
+      "source": "https://digvps.com/logo-idc/nbdnet.webp",
+      "sourceSha256": "13002fb36ef5b5b06d1952830092fea6add186e22c818781a82ab72cd78d62e8",
+      "sha256": "d2fac16a61f7d0c29412dfa59cd8ee4d66bdc2b4dd3e69db7b4d6340ff88633f"
+    },
+    {
+      "file": "skystroll-light-f0afa378.webp",
+      "source": "https://digvps.com/logo-idc/skystroll.png",
+      "sourceSha256": "353c6080fe68dc5e714d10ba682ca7cccad8683cd8f4ec9f5b4f001bbbd3ce0c",
+      "sha256": "f0afa378ad25b72bd665c49cbf5daeb7b50ca931537913747b0e3816c0705b76"
+    },
+    {
+      "file": "huaruidc-light-913fc5b3.webp",
+      "source": "https://digvps.com/logo-idc/huaruidc.webp",
+      "sourceSha256": "ccd8d0fc6c19849131b314dd8c3ba3d9795bfa71efc3c591db2736d55c736e8e",
+      "sha256": "913fc5b30b48810c6f15dd1ce73979c5145ca5e4c0ba2aa76c4b1beb4206535c"
+    },
+    {
+      "file": "faconhost-light-ef88e439.webp",
+      "source": "https://digvps.com/logo-idc/faconhost.webp",
+      "sourceSha256": "7a8b4724d778ad6f06ad3e8def0b0edfbd05aa684455642ed2b0675e24bb5575",
+      "sha256": "ef88e439794170bd690f73d457b2489bcc0ef036dc042bce8be61a0c58a6ee43"
+    },
+    {
+      "file": "onidel-light-9404e928.webp",
+      "source": "https://digvps.com/logo-idc/onidel-light.webp",
+      "sourceSha256": "192369bb0573be7927d2d4f2850722ef27d3521bd36a3f4dfc3cb32d68178eab",
+      "sha256": "9404e928519a89749c116483f4adf85d2cadf1fe475f892fa4fa2714a7949957"
+    },
+    {
+      "file": "onidel-dark-e6855979.webp",
+      "source": "https://digvps.com/logo-idc/onidel-dark.webp",
+      "sourceSha256": "9515d7b3900f8d87b5f6cd146f629d17c4e50150045420eaa19d01c09b4b11c3",
+      "sha256": "e6855979105d8f009ff57cf63216f7cfefa9ae28dcfa5db7ec7bb8839c2c2ee6"
+    },
+    {
+      "file": "ishosting-light-9efa36e2.webp",
+      "source": "https://digvps.com/logo-idc/ishosting.webp",
+      "sourceSha256": "5a117a1f22ad8b70313db63c8ff2002c2966983568bcb0679a231170dbf9c97c",
+      "sha256": "9efa36e2708c71ca3de3c915e4c3c4352dc8329a241d05b657923dc40c40438a"
+    },
+    {
+      "file": "geelinx-light-f96d7e4b.webp",
+      "source": "https://digvps.com/logo-idc/geelinx.svg",
+      "sourceSha256": "1aa84bbfd963d52c8b865e088a15754a7e2ed8b1092125709419798e3dbfd2f4",
+      "sha256": "f96d7e4be565ba6c95cb359c2ffed01779d4a7ed557a42dd4a4e8df7ad54b1b7"
+    },
+    {
+      "file": "limee-light-d1dc191f.webp",
+      "source": "https://digvps.com/logo-idc/lime.jpg",
+      "sourceSha256": "5aa9d0a9104cadbfac250480d96b2465e1e7dfad08465e6d3db4174b6c5a902c",
+      "sha256": "d1dc191f657e412ed69b6ed137b6e689b9de2e619de72ed4b2d4a42e170afeef"
+    },
+    {
+      "file": "acck-light-bb14e570.webp",
+      "source": "https://digvps.com/logo-idc/acck.svg",
+      "sourceSha256": "916f333a613446a238cf44bc6bbc5af526d372f2928c7cea8b48a06c19d6246a",
+      "sha256": "bb14e5709af3d3483c526134d982777fcf8f305194aa4a7c8e7d033a0b884aad"
+    },
+    {
+      "file": "linkcli-light-355f0ea1.webp",
+      "source": "https://digvps.com/logo-idc/linkcli.png",
+      "sourceSha256": "1ba1c4bca92380fb8b1d28d9ff9d9f07d2bf66927052d9648d8ff05170ef3d07",
+      "sha256": "355f0ea171ec70454f80f07809cffc86078cba8b582ce84d53a82a7b3b131515"
+    },
+    {
+      "file": "modelflare-light-b58a9b2d.webp",
+      "source": "https://digvps.com/logo-idc/modelflare-light.svg",
+      "sourceSha256": "1bf1e20cdf8d71640033422ef67d5d91bc7108830773132c43224bba3a662573",
+      "sha256": "b58a9b2d27d0f0028da6a0f2e09cf63ffc7039669c6429454e6693e5fc660ad6"
+    },
+    {
+      "file": "modelflare-dark-91dc3abf.webp",
+      "source": "https://digvps.com/logo-idc/modelflare-dark.svg",
+      "sourceSha256": "233c5c2475350123f0df5b829564fa27f04411befa9c504931f59495c29f5a9b",
+      "sha256": "91dc3abf6800b7d99afe9c6e010b3a9f6fc47dbacd186814c5827bb333b745f8"
+    },
+    {
+      "file": "taphip-light-2f875704.webp",
+      "source": "https://digvps.com/logo-idc/taphip.webp",
+      "sourceSha256": "6d96160a22ffc09a3fc6d6fa707b92ff77c82b4dc831a7a966450f874c0f190c",
+      "sha256": "2f875704192eb135c1f1ff0c7f668041eda1160a2b57b3707bc6eb0ae37bc343"
+    },
+    {
+      "file": "vkvm-light-1a273e32.webp",
+      "source": "https://digvps.com/logo-idc/vkvm.jpg",
+      "sourceSha256": "f853fd09b9664fe2e07680f363b7e39692709ca07204115f00606cc8a54c45d1",
+      "sha256": "1a273e32b155379ac0df4947697e708b61b7b344b46b414ce980bef134eac1a2"
+    },
+    {
+      "file": "easy-light-b90b6cd1.webp",
+      "source": "https://digvps.com/logo-idc/easyvm.webp",
+      "sourceSha256": "99bc396764b300d0ffca633361a702210ceb0de6bff43540146c7d946bf22b78",
+      "sha256": "b90b6cd1a47a952bf91901f8b4f054b98c2c44c996fb3d0011fe4c479901cba5"
+    },
+    {
+      "file": "wawo-light-6fe27b4b.webp",
+      "source": "https://digvps.com/logo-idc/wawo.jpg",
+      "sourceSha256": "f7303b73bba7c4a234a9b4c371877d5581223acef26bb25267f2ecf0a57b28ad",
+      "sha256": "6fe27b4bd69c8c2617a03dfe5cd012ca49c0c0430994b0a4aed70fed84bc529f"
+    },
+    {
+      "file": "techno-light-7b61a80f.webp",
+      "source": "https://digvps.com/logo-idc/technovm.webp",
+      "sourceSha256": "6431e0f5312b19c74a062abd9a68b44d9e8d06c729b6b7228b2e3b48276d326b",
+      "sha256": "7b61a80ff1984f0ac5788da692d5c067b71268eb60e97dbcf99ef86b6e4c2d00"
+    },
+    {
+      "file": "claw-light-d95d8147.webp",
+      "source": "https://digvps.com/logo-idc/claw.webp",
+      "sourceSha256": "4ff13de8ac8aa7b3ab90086e032302d34b04a9d5c5ae9f6599ea1fb007408607",
+      "sha256": "d95d81479dbd35b9ca03ea003452a328090c49beeb82f5b5d600a98cebf471b6"
+    },
+    {
+      "file": "claw-dark-bc5a62f3.webp",
+      "source": "https://digvps.com/logo-idc/claw-dark.webp",
+      "sourceSha256": "a754a0065427c39720df7d66c33d868d80e7558b23f5bd648c709c6db3d00d79",
+      "sha256": "bc5a62f3148911f43ad09e96b4d71cb2f48017e59691289a11c3beed78a8e57f"
+    },
+    {
+      "file": "omao-light-b87b361f.webp",
+      "source": "https://digvps.com/logo-idc/omao.png",
+      "sourceSha256": "92da09ef0fd5b649527dc71f68833700bc6acfe2d228492d5f1bddd929e89c83",
+      "sha256": "b87b361f13bd653af783c222973c5200d0c5f604997672294e6eeae83c5f4e99"
+    },
+    {
+      "file": "vircs-light-13f78fc8.webp",
+      "source": "https://digvps.com/logo-idc/vircs.svg",
+      "sourceSha256": "5f74b0ff57ad1fad8bbfce5bdc8eefe525c7416e6fe57767254e6038639147a7",
+      "sha256": "13f78fc8f7e430922ae339db430429fbde2bb14a6e22f2f3f73edb718a32c511"
+    },
+    {
+      "file": "hostblazer-light-ce70c67e.webp",
+      "source": "https://digvps.com/logo-idc/hostblazer.png",
+      "sourceSha256": "901e2a50c44f1408a0fa43cb269bccc14b78741421b3ab1068765c47eb334abe",
+      "sha256": "ce70c67ee6a4174dd3a4ac0103bf47f22ab686496a4cc50d76e7a6b233fb77b0"
+    },
+    {
+      "file": "voyracloud-light-7c1563b7.webp",
+      "source": "https://digvps.com/logo-idc/voyracloud-light.webp",
+      "sourceSha256": "31c7da7d11293fedf3a0a4c378eeb9372949c25a69180cab5d3808763e47c361",
+      "sha256": "7c1563b7945908f7a408ceb795405fbddc81fcd23f929fb750c6cee3c62971cc"
+    },
+    {
+      "file": "voyracloud-dark-76122183.webp",
+      "source": "https://digvps.com/logo-idc/voyracloud-dark.webp",
+      "sourceSha256": "8e7d7c9f7f1305bc4c605391d93ba9e305cbec509bac7f40d27cf70d5b9254dd",
+      "sha256": "76122183035567d382f8844296e238be635798f94f129394af89f43c943d37d9"
+    },
+    {
+      "file": "po0.webp",
+      "source": "https://console.po0.io/templates/lagom2/assets/img/favicons/favicon-160.png",
+      "sha256": "f11a78885a0de8f4ce41508dd7c37d8a29b9a99302892e54aa7651192d30b5ff"
+    }
+  ]
+}
