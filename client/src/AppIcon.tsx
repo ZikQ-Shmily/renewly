@@ -15,7 +15,9 @@ interface AppIconProps {
 
 export function AppIcon({ name, website, value = "auto", size = 36, fallbackInitial = false }: AppIconProps) {
   const catalog = useMerchantCatalog();
-  const { preset, src } = resolveAppIcon(name, website, value, catalog);
+  const category = fallbackInitial ? "cloud" : "app";
+  const scopedCatalog = catalog.filter(p => !p.categories || p.categories.includes(category) || p.key === value);
+  const { preset, src } = resolveAppIcon(name, website, value, scopedCatalog);
   const [failedSource, setFailedSource] = useState<string | null>(null);
   const brand = preset?.image;
   const maskPreset = preset && appIconPresets.some(item => item.key === preset.key);
@@ -93,12 +95,14 @@ export function AppIconPicker({ name, website, value, onChange, disabled = false
   }, []);
   const uploaded = isUploadedAppIcon(value);
   const catalog = useMerchantCatalog();
-  const preset = matchedAppIcon(name, website, catalog);
+  const category = fallbackInitial ? "cloud" : "app";
+  const scopedCatalog = catalog.filter(p => !p.categories || p.categories.includes(category) || p.key === value);
+  const preset = matchedAppIcon(name, website, scopedCatalog);
   const selectedValue = uploaded ? "uploaded" : value || "auto";
   const options = [
     { value: "auto", label: "自动匹配" },
     { value: "generic", label: fallbackInitial ? "商家首字母" : "通用订阅图标" },
-    ...catalog.filter(p => p.enabled !== false || p.key === value).map(p => ({ value: p.key, label: `${p.label}${p.enabled === false ? "（已停用）" : ""}` })),
+    ...scopedCatalog.filter(p => p.enabled !== false || p.key === value).map(p => ({ value: p.key, label: `${p.label}${p.enabled === false ? "（已停用）" : ""}` })),
     ...(uploaded ? [{ value: "uploaded", label: "已上传的图标" }] : []),
   ];
   async function upload(event: ChangeEvent<HTMLInputElement>) {
