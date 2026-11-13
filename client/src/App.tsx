@@ -82,6 +82,8 @@ export default function App() {
   const [types, setTypes] = useState<SubscriptionType[]>([]);
   const [categoryOrder, setCategoryOrder] = useState<string[]>([]);
   const [draggingCategory, setDraggingCategory] = useState<string | null>(null);
+  const [categoryDrag, setCategoryDrag] = useState<{ key: string; dx: number; dy: number } | null>(null);
+  const categoryDragOrigin = useRef<{ x: number; y: number } | null>(null);
   const [notifications, setNotifications] =
     useState<NotificationSettings | null>(null);
   const [loading, setLoading] = useState(false);
@@ -345,9 +347,8 @@ export default function App() {
             <small>{nonArchived.length}</small>
           </button>
           {orderedTypes.map((type, index) => (
-            <div key={type.key} className={`category-nav-row ${draggingCategory === type.key ? "dragging" : ""}`} data-category-key={type.key}
-              onDragOver={(event) => { if (draggingCategory) { event.preventDefault(); if (draggingCategory !== type.key) moveCategory(draggingCategory, type.key); } }}
-              onDrop={(event) => { event.preventDefault(); if (draggingCategory) moveCategory(draggingCategory, type.key); setDraggingCategory(null); }}>
+            <div key={type.key} className={`category-nav-row ${draggingCategory === type.key ? "dragging" : ""} ${categoryDrag?.key === type.key ? "pointer-dragging" : ""}`} data-category-key={type.key}
+              style={categoryDrag?.key === type.key ? { transform: `translate(${categoryDrag.dx}px, ${categoryDrag.dy}px)`, pointerEvents: "none" } : undefined}>
             <button
               className={`nav-item ${["manage", "editor", "renew"].includes(page) && category === type.key ? "selected" : ""}`}
               aria-current={
@@ -368,37 +369,34 @@ export default function App() {
             <button
               type="button"
               className="category-drag-handle"
-              draggable
               aria-label={`调整${type.name}顺序`}
               title="拖动调整顺序；也可以使用方向键"
-              onDragStart={(event) => {
-                event.dataTransfer.effectAllowed = "move";
-                event.dataTransfer.setData("text/plain", type.key);
-                setDraggingCategory(type.key);
-              }}
-              onDragEnd={() => setDraggingCategory(null)}
               onPointerDown={(event) => {
-                if (event.pointerType !== "touch") return;
+                if (event.button !== 0 || !event.isPrimary) return;
                 event.preventDefault();
                 event.currentTarget.focus();
                 event.currentTarget.setPointerCapture(event.pointerId);
+                categoryDragOrigin.current = { x: event.clientX, y: event.clientY };
+                setCategoryDrag({ key: type.key, dx: 0, dy: 0 });
                 setDraggingCategory(type.key);
               }}
+              onPointerMove={(event) => {
+                const origin = categoryDragOrigin.current;
+                if (!origin || !event.currentTarget.hasPointerCapture(event.pointerId)) return;
+                setCategoryDrag({ key: type.key, dx: event.clientX - origin.x, dy: event.clientY - origin.y });
+              }}
               onPointerUp={(event) => {
-                if (event.pointerType !== "touch") return;
+                if (!categoryDragOrigin.current) return;
                 const target = document.elementFromPoint(event.clientX, event.clientY)?.closest<HTMLElement>("[data-category-key]");
                 const targetKey = target?.dataset.categoryKey;
                 if (targetKey) moveCategory(type.key, targetKey);
                 if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+                categoryDragOrigin.current = null;
+                setCategoryDrag(null);
                 setDraggingCategory(null);
               }}
-              onPointerMove={(event) => {
-                if (event.pointerType !== "touch" || !event.currentTarget.hasPointerCapture(event.pointerId)) return;
-                const targetKey = document.elementFromPoint(event.clientX, event.clientY)?.closest<HTMLElement>("[data-category-key]")?.dataset.categoryKey;
-                if (targetKey && targetKey !== type.key) moveCategory(type.key, targetKey);
-              }}
-              onPointerCancel={() => setDraggingCategory(null)}
-              onLostPointerCapture={() => setDraggingCategory(null)}
+              onPointerCancel={() => { categoryDragOrigin.current = null; setCategoryDrag(null); setDraggingCategory(null); }}
+              onLostPointerCapture={() => { categoryDragOrigin.current = null; setCategoryDrag(null); setDraggingCategory(null); }}
               onKeyDown={(event) => {
                 const direction = ["ArrowUp", "ArrowLeft"].includes(event.key) ? -1 : ["ArrowDown", "ArrowRight"].includes(event.key) ? 1 : 0;
                 const target = orderedTypes[index + direction];
