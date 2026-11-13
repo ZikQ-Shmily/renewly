@@ -1,4 +1,5 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import { merchantWebsiteForName, useMerchantCatalog } from "./merchant-catalog";
 import { ArrowLeft, CalendarCheck2, Plus, Save, X } from "lucide-react";
 import { api, errorMessage, json } from "./api";
 import { Banner, Button, Field } from "./components";
@@ -164,14 +165,25 @@ export function SubscriptionEditor({
   );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const catalog = useMerchantCatalog();
+  const autoWebsite = useRef<string | null>(null);
+  const websiteEdited = useRef(false);
   useEffect(() => {
     setDraft(initialDraft(item, category, timeZone, defaultDays));
+    autoWebsite.current = null;
+    websiteEdited.current = false;
     setEndEdited(false);
     setDifferentRenewal(item != null && item.renewalPrice !== item.paidAmount);
     setError("");
   }, [draftKey]);
   const isApp = draft.type === "app";
   const categoryName = isApp ? "App 订阅" : "云服务器";
+  function changeVendor(value: string) {
+    const website = merchantWebsiteForName(value, catalog, isApp ? "app" : "cloud");
+    const mayFill = !websiteEdited.current && (!draft.website.trim() || draft.website === autoWebsite.current);
+    if (mayFill) autoWebsite.current = website || null;
+    setDraft(previous => ({ ...previous, vendor: value, ...(mayFill ? { website } : {}) }));
+  }
   function field<K extends keyof Draft>(key: K, value: Draft[K]) {
     setDraft((previous) => {
       const next = { ...previous, [key]: value };
@@ -355,7 +367,8 @@ export function SubscriptionEditor({
           <Field label={isApp ? "服务商" : "商家 / 服务商 *"}>
             <input
               value={draft.vendor}
-              onChange={(e) => field("vendor", e.target.value)}
+              onChange={(e) => changeVendor(e.target.value)}
+              onBlur={(e) => changeVendor(e.target.value)}
               placeholder={isApp ? "例如：Apple、Notion" : "例如：腾讯云"}
               required={!isApp}
               maxLength={100}
@@ -364,7 +377,7 @@ export function SubscriptionEditor({
           <Field label={isApp ? "官网 / 管理地址" : "商家网站 *"}>
             <input
               value={draft.website}
-              onChange={(e) => field("website", e.target.value)}
+              onChange={(e) => { websiteEdited.current = true; autoWebsite.current = null; field("website", e.target.value); }}
               placeholder="https://"
               type="url"
               required={!isApp}
