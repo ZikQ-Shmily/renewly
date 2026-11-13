@@ -386,6 +386,32 @@ code {
 .nav-item.selected svg {
   color: var(--color-selected-icon, #a1b7e4);
 }
+.category-nav-row {
+  position: relative;
+  min-width: 0;
+}
+.category-nav-row .nav-item { padding-right: 35px; }
+.category-nav-row.dragging { opacity: 0.65; }
+.category-drag-handle {
+  position: absolute;
+  right: 7px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 25px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  color: var(--color-text-muted, #8394b2);
+  background: transparent;
+  opacity: 0.55;
+  cursor: grab;
+  touch-action: none;
+}
+.category-drag-handle:hover, .category-drag-handle:focus-visible { opacity: 1; background: var(--surface-nav-hover, #182238); }
+.category-drag-handle:active { cursor: grabbing; }
 .nav-divider {
   height: 1px;
   background: var(--line);
