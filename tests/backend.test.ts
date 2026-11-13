@@ -337,7 +337,7 @@ test("v1 migration preserves existing subscription and user data and is repeatab
     assert.equal(subscription.serverIcon, "auto");
     assert.deepEqual(subscription.ipAddresses, []);
     assert.equal((db.prepare("SELECT due_date FROM reminder_deliveries").get() as any).due_date, "2027-01-01T00:00");
-    assert.deepEqual(db.prepare("SELECT version FROM schema_migrations ORDER BY version").all(), [{ version: 1 }, { version: 2 }, { version: 3 }, { version: 4 }, { version: 5 }, { version: 6 }, { version: 7 }, { version: 8 }, { version: 9 }, { version: 10 }]);
+    assert.deepEqual(db.prepare("SELECT version FROM schema_migrations ORDER BY version").all(), [{ version: 1 }, { version: 2 }, { version: 3 }, { version: 4 }, { version: 5 }, { version: 6 }, { version: 7 }, { version: 8 }, { version: 9 }, { version: 10 }, { version: 11 }]);
   } finally { db.close(); }
 });
 
@@ -838,7 +838,7 @@ test("v8 migration preserves populated v7 Apps and related data, rolls back fail
     migrate(db);
     assert.deepEqual(snapshot(), before);
     assert.deepEqual(db.prepare("SELECT * FROM schema_migrations WHERE version<8 ORDER BY version").all(), oldMigrations);
-    assert.equal((db.prepare("SELECT MAX(version) version FROM schema_migrations").get() as any).version, 10);
+    assert.equal((db.prepare("SELECT MAX(version) version FROM schema_migrations").get() as any).version, 11);
     assert.equal((db.prepare("SELECT COUNT(*) n FROM schema_migrations WHERE version=8").get() as any).n, 1);
     assert.deepEqual(db.prepare("PRAGMA foreign_key_list(app_details)").all(), foreignKeys);
     assert.deepEqual(db.prepare("PRAGMA foreign_key_check").all(), []);
