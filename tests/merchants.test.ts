@@ -148,7 +148,7 @@ test("v10 merchant migration preserves populated v9 data, rolls back a failed ma
       INSERT INTO notification_settings(user_id,recipient_email) VALUES('u','saved-recipient@example.com');
       UPDATE mail_settings SET sender_email='saved-sender@example.com',secrets_cipher='saved-encrypted-secret';
       DROP TABLE merchant_overrides;
-      DELETE FROM schema_migrations WHERE version=10;
+      DELETE FROM schema_migrations WHERE version>=10;
     `);
     const before = allRows(db), markers = db.prepare("SELECT * FROM schema_migrations ORDER BY version").all();
     db.exec("CREATE TRIGGER fail_v10 BEFORE INSERT ON schema_migrations WHEN NEW.version=10 BEGIN SELECT RAISE(ABORT,'simulated v10 failure'); END");
@@ -160,7 +160,7 @@ test("v10 merchant migration preserves populated v9 data, rolls back a failed ma
     migrate(db);
     assert.deepEqual(allRows(db), before);
     assert.deepEqual(db.prepare("SELECT * FROM merchant_overrides").all(), []);
-    assert.equal((db.prepare("SELECT max(version) n FROM schema_migrations").get() as { n: number }).n, 10);
+    assert.equal((db.prepare("SELECT max(version) n FROM schema_migrations").get() as { n: number }).n, 11);
     const saved = createMerchant(db, { label: "升级后商家", icon: png });
     const markerAfter = db.prepare("SELECT * FROM schema_migrations ORDER BY version").all();
     migrate(db);
@@ -169,5 +169,31 @@ test("v10 merchant migration preserves populated v9 data, rolls back a failed ma
     assert.deepEqual(db.prepare("SELECT * FROM schema_migrations ORDER BY version").all(), markerAfter);
     assert.equal(db.pragma("quick_check", { simple: true }), "ok");
     assert.deepEqual(db.pragma("foreign_key_check"), []);
+  } finally { db.close(); }
+});
+
+
+test("v11 preserves v10 overrides and rolls back migration failures", () => {
+  const db = fixture();
+  try {
+    updateMerchant(db, "merchant-dmit", { label: "自定义 DMIT", enabled: false });
+    const custom = createMerchant(db, { label: "以前创建的商家" });
+    db.exec("ALTER TABLE merchant_overrides DROP COLUMN categories_json; DELETE FROM schema_migrations WHERE version=11");
+    const before = db.prepare("SELECT * FROM merchant_overrides ORDER BY key").all();
+    db.exec("CREATE TRIGGER fail_v11 BEFORE INSERT ON schema_migrations WHEN NEW.version=11 BEGIN SELECT RAISE(ABORT,'simulated v11 failure'); END");
+    assert.throws(() => migrate(db), /simulated v11 failure/);
+    assert.deepEqual(db.prepare("SELECT * FROM merchant_overrides ORDER BY key").all(), before);
+    db.exec("DROP TRIGGER fail_v11");
+    migrate(db);
+    assert.deepEqual(db.prepare("SELECT key,label,website,domains_json,aliases_json,icon,enabled,is_custom,created_at,updated_at FROM merchant_overrides ORDER BY key").all(), before);
+    let entries = listMerchants(db);
+    assert.deepEqual(entries.find(entry => entry.key === "merchant-dmit")?.categories, ["cloud"]);
+    assert.deepEqual(entries.find(entry => entry.key === custom.key)?.categories, ["cloud", "app"]);
+    assert.deepEqual(entries.find(entry => entry.key === "notion")?.categories, ["app"]);
+    assert.deepEqual(updateMerchant(db, custom.key, { categories: ["app"] }).categories, ["app"]);
+    assert.throws(() => updateMerchant(db, custom.key, { categories: [] }));
+    migrate(db);
+    entries = listMerchants(db);
+    assert.deepEqual(entries.find(entry => entry.key === custom.key)?.categories, ["app"]);
   } finally { db.close(); }
 });
