@@ -1,0 +1,572 @@
+{
+  "merchant-gomami": {
+    "review": "https://digvps.com/review/gomami",
+    "purchase_redirect": "https://product.digvps.com/39U4E",
+    "redirect_origin": "https://gomami.io/"
+  },
+  "merchant-bandwagon": {
+    "review": "https://digvps.com/review/bandwagon",
+    "purchase_redirect": "https://product.digvps.com/RKDlE",
+    "redirect_origin": "https://bwh81.net/"
+  },
+  "merchant-dmit": {
+    "review": "https://digvps.com/review/dmit",
+    "purchase_redirect": "https://product.digvps.com/PR9hQ",
+    "redirect_origin": "https://www.dmit.io/"
+  },
+  "merchant-zgovps": {
+    "review": "https://digvps.com/review/zgovps",
+    "purchase_redirect": "https://product.digvps.com/28VnS",
+    "redirect_origin": "https://clients.zgovps.com/"
+  },
+  "merchant-bytevirt": {
+    "review": "https://digvps.com/review/bytevirt",
+    "purchase_redirect": "https://product.digvps.com/12vnU",
+    "redirect_origin": "https://bytevirt.com/"
+  },
+  "merchant-evoxt": {
+    "review": "https://digvps.com/review/evoxt",
+    "purchase_redirect": "https://product.digvps.com/okupC",
+    "redirect_origin": "https://console.evoxt.com/"
+  },
+  "merchant-lisahost": {
+    "review": "https://digvps.com/review/lisahost",
+    "purchase_redirect": "https://product.digvps.com/xjSq9",
+    "redirect_origin": "https://lisahost.com/"
+  },
+  "merchant-wepc": {
+    "review": "https://digvps.com/review/wepc",
+    "purchase_redirect": "https://product.digvps.com/leLyK",
+    "redirect_origin": "https://wepc.au/"
+  },
+  "merchant-yunyoo": {
+    "review": "https://digvps.com/review/yunyoo",
+    "purchase_redirect": "https://product.digvps.com/VRwtP",
+    "redirect_origin": "https://yunyoo.cc/"
+  },
+  "merchant-666clouds": {
+    "review": "https://digvps.com/review/666clouds",
+    "purchase_redirect": "https://product.digvps.com/2wMFM",
+    "redirect_origin": "https://www.666clouds.com/"
+  },
+  "merchant-qqg": {
+    "review": "https://digvps.com/review/qqg",
+    "purchase_redirect": "https://product.digvps.com/5gzqR",
+    "redirect_origin": "https://www.qqg.net/"
+  },
+  "merchant-usvps24": {
+    "review": "https://digvps.com/review/usvps24",
+    "purchase_redirect": "https://product.digvps.com/Wlamn",
+    "redirect_origin": "https://usvps24.com/"
+  },
+  "merchant-zorocloud": {
+    "review": "https://digvps.com/review/zorocloud",
+    "purchase_redirect": "https://product.digvps.com/Od3fc",
+    "redirect_origin": "https://my.zorocloud.com/"
+  },
+  "merchant-yin-net": {
+    "review": "https://digvps.com/review/yin-net",
+    "purchase_redirect": "https://product.digvps.com/1r0IM",
+    "redirect_origin": "https://www.yin-net.com/"
+  },
+  "merchant-rfchost": {
+    "review": "https://digvps.com/review/rfchost",
+    "purchase_redirect": "https://product.digvps.com/UqS9H",
+    "redirect_origin": "https://my.rfchost.com/"
+  },
+  "merchant-sadidc": {
+    "review": "https://digvps.com/review/sadidc",
+    "purchase_redirect": "https://product.digvps.com/qaYph",
+    "redirect_origin": "https://sadidc.com/"
+  },
+  "merchant-novixlink": {
+    "review": "https://digvps.com/review/novixlink",
+    "purchase_redirect": "https://product.digvps.com/Ay1cg",
+    "redirect_origin": "https://novixlink.com/"
+  },
+  "merchant-akile": {
+    "review": "https://digvps.com/review/akile",
+    "purchase_redirect": "https://product.digvps.com/9PmiG",
+    "redirect_origin": "https://akile.ai/"
+  },
+  "merchant-racknerd": {
+    "review": "https://digvps.com/review/racknerd",
+    "purchase_redirect": "https://product.digvps.com/N07Wx",
+    "redirect_origin": "https://my.racknerd.com/"
+  },
+  "merchant-dotdotnetworks": {
+    "review": "https://digvps.com/review/dotdotnetworks",
+    "purchase_redirect": "https://product.digvps.com/cIV96",
+    "redirect_origin": "https://www.dotdotnetworks.com/"
+  },
+  "merchant-sixtynet": {
+    "review": "https://digvps.com/review/sixtynet",
+    "purchase_redirect": "https://product.digvps.com/5DRAF",
+    "redirect_origin": "https://sixtynet.net/"
+  },
+  "merchant-isif": {
+    "review": "https://digvps.com/review/isif",
+    "purchase_redirect": "https://product.digvps.com/qj71V",
+    "redirect_origin": "https://cloud.isif.net/"
+  },
+  "merchant-rcvps": {
+    "review": "https://digvps.com/review/rcvps",
+    "purchase_redirect": "https://product.digvps.com/EEkLR",
+    "redirect_origin": "https://rcvps.cn/"
+  },
+  "merchant-akkocloud": {
+    "review": "https://digvps.com/review/akkocloud",
+    "purchase_redirect": "https://product.digvps.com/u7y9w",
+    "redirect_origin": "https://www.akkocloud.com/"
+  },
+  "merchant-greencloudvps": {
+    "review": "https://digvps.com/review/greencloudvps",
+    "purchase_redirect": "https://product.digvps.com/ZHNXd",
+    "redirect_origin": "https://greencloudvps.com/"
+  },
+  "merchant-saltyfish": {
+    "review": "https://digvps.com/review/saltyfish",
+    "purchase_redirect": "https://product.digvps.com/IygsX",
+    "redirect_origin": "https://portal.saltyfish.io/"
+  },
+  "merchant-skylineconnect": {
+    "review": "https://digvps.com/review/skylineconnect",
+    "purchase_redirect": "https://product.digvps.com/PLMYb",
+    "redirect_origin": "https://www.skylineconnect.io/"
+  },
+  "merchant-joysol": {
+    "review": "https://digvps.com/review/joysol",
+    "purchase_redirect": "https://product.digvps.com/eaJvb",
+    "redirect_origin": "https://www.joysol.net/"
+  },
+  "merchant-aaitr": {
+    "review": "https://digvps.com/review/aaitr",
+    "purchase_redirect": "https://product.digvps.com/OuNpM",
+    "redirect_origin": "https://www.aaitr.com/"
+  },
+  "merchant-v-ps": {
+    "review": "https://digvps.com/review/v.ps",
+    "purchase_redirect": "https://product.digvps.com/N6W4k",
+    "redirect_origin": "https://vps.hosting/"
+  },
+  "merchant-vmiss": {
+    "review": "https://digvps.com/review/vmiss",
+    "purchase_redirect": "https://product.digvps.com/98Cix",
+    "redirect_origin": "https://app.vmiss.com/"
+  },
+  "merchant-bagevm": {
+    "review": "https://digvps.com/review/bagevm",
+    "purchase_redirect": "https://product.digvps.com/5yExS",
+    "redirect_origin": "https://www.bagevm.com/"
+  },
+  "merchant-panstar": {
+    "review": "https://digvps.com/review/panstar",
+    "purchase_redirect": "https://product.digvps.com/WAd7q",
+    "redirect_origin": "https://panstar.ai/"
+  },
+  "merchant-ppflight": {
+    "review": "https://digvps.com/review/ppflight",
+    "purchase_redirect": "https://product.digvps.com/BkNji",
+    "redirect_origin": "https://www.ppflight.com/"
+  },
+  "merchant-yt": {
+    "review": "https://digvps.com/review/yt",
+    "purchase_redirect": "https://product.digvps.com/PbFs9",
+    "redirect_origin": "https://cloud.yt.net/"
+  },
+  "merchant-pqs": {
+    "review": "https://digvps.com/review/pqs",
+    "purchase_redirect": "https://product.digvps.com/VikcI",
+    "redirect_origin": "https://www.pqs.pw/"
+  },
+  "merchant-dogyun": {
+    "review": "https://digvps.com/review/dogyun",
+    "purchase_redirect": "https://product.digvps.com/HMO6w",
+    "redirect_origin": "https://www.dogyun.com/"
+  },
+  "merchant-digitalvirt": {
+    "review": "https://digvps.com/review/digitalvirt",
+    "purchase_redirect": "https://product.digvps.com/jqfJw",
+    "redirect_origin": "https://digitalvirt.com/"
+  },
+  "merchant-100tb": {
+    "review": "https://digvps.com/review/100tb",
+    "purchase_redirect": "https://product.digvps.com/tTkEf",
+    "redirect_origin": "https://100tb.io/"
+  },
+  "merchant-legendvps": {
+    "review": "https://digvps.com/review/legendvps",
+    "purchase_redirect": "https://product.digvps.com/h9gL3",
+    "redirect_origin": "https://legendvps.com/"
+  },
+  "merchant-cubecloud": {
+    "review": "https://digvps.com/review/cubecloud",
+    "purchase_redirect": "https://product.digvps.com/pqUxn",
+    "redirect_origin": "https://www.cubecloud.net/"
+  },
+  "merchant-tokyonline": {
+    "review": "https://digvps.com/review/tokyonline",
+    "purchase_redirect": "https://product.digvps.com/KKqXe",
+    "redirect_origin": "https://www.tokyonline.com/"
+  },
+  "merchant-wap-ac": {
+    "review": "https://digvps.com/review/wap.ac",
+    "purchase_redirect": "https://product.digvps.com/WqJaO",
+    "redirect_origin": "https://wap.ac/"
+  },
+  "merchant-backwaves": {
+    "review": "https://digvps.com/review/backwaves",
+    "purchase_redirect": "https://product.digvps.com/YbmF3",
+    "redirect_origin": "https://backwaves.net/"
+  },
+  "merchant-isvoro": {
+    "review": "https://digvps.com/review/isvoro",
+    "purchase_redirect": "https://product.digvps.com/993xa",
+    "redirect_origin": "https://isvoro.com/"
+  },
+  "merchant-flawlessnode": {
+    "review": "https://digvps.com/review/flawlessnode",
+    "purchase_redirect": "https://product.digvps.com/URPgU",
+    "redirect_origin": "https://panel.flawlessnode.com/"
+  },
+  "merchant-lightlayer": {
+    "review": "https://digvps.com/review/lightlayer",
+    "purchase_redirect": "https://product.digvps.com/fvVy1",
+    "redirect_origin": "https://account.lightlayer.net/"
+  },
+  "merchant-cloudleadinno": {
+    "review": "https://digvps.com/review/cloudleadinno",
+    "purchase_redirect": "https://product.digvps.com/MJv7W",
+    "redirect_origin": "https://www.cloudleadinno.com/"
+  },
+  "merchant-tothost": {
+    "review": "https://digvps.com/review/tothost",
+    "purchase_redirect": "https://product.digvps.com/Iaibl",
+    "redirect_origin": "https://billing.tothost.vn/"
+  },
+  "merchant-yecaoyun": {
+    "review": "https://digvps.com/review/yecaoyun",
+    "purchase_redirect": "https://product.digvps.com/xmZpF",
+    "redirect_origin": "https://my.yecaoyun.com/"
+  },
+  "merchant-svyun": {
+    "review": "https://digvps.com/review/svyun",
+    "purchase_redirect": "https://product.digvps.com/hwkX3",
+    "redirect_origin": "https://www.svyun.com/"
+  },
+  "merchant-vmshell": {
+    "review": "https://digvps.com/review/vmshell",
+    "purchase_redirect": "https://product.digvps.com/ZQXV8",
+    "redirect_origin": "https://vmshell.com/"
+  },
+  "merchant-lcayun": {
+    "review": "https://digvps.com/review/lcayun",
+    "purchase_redirect": "https://product.digvps.com/P9Rx2",
+    "redirect_origin": "https://www.lcayun.com/"
+  },
+  "merchant-fiberstate": {
+    "review": "https://digvps.com/review/fiberstate",
+    "purchase_redirect": "https://product.digvps.com/8jidR",
+    "redirect_origin": "https://billing.fiberstate.com/"
+  },
+  "merchant-halocloud": {
+    "review": "https://digvps.com/review/halocloud",
+    "purchase_redirect": "https://product.digvps.com/Pr7rt",
+    "redirect_origin": "https://my.halocloud.net/"
+  },
+  "merchant-bestvm": {
+    "review": "https://digvps.com/review/bestvm",
+    "purchase_redirect": "https://product.digvps.com/KwVQB",
+    "redirect_origin": "https://bestvm.cloud/"
+  },
+  "merchant-cloudcone": {
+    "review": "https://digvps.com/review/cloudcone",
+    "purchase_redirect": "https://product.digvps.com/iEJeH",
+    "redirect_origin": "https://app.cloudcone.com/"
+  },
+  "merchant-highendnetwork": {
+    "review": "https://digvps.com/review/highendnetwork",
+    "purchase_redirect": "https://product.digvps.com/zOo2z",
+    "redirect_origin": "https://billing.highendnetwork.com/"
+  },
+  "merchant-vmrack": {
+    "review": "https://digvps.com/review/vmrack",
+    "purchase_redirect": "https://product.digvps.com/Di9BP",
+    "redirect_origin": "https://www.vmrack.net/"
+  },
+  "merchant-goodlyclouds": {
+    "review": "https://digvps.com/review/goodlyclouds",
+    "purchase_redirect": "https://product.digvps.com/k4Ktq",
+    "redirect_origin": "https://goodlyclouds.com/"
+  },
+  "merchant-ciallonetworks": {
+    "review": "https://digvps.com/review/ciallonetworks",
+    "purchase_redirect": "https://product.digvps.com/LS6JB",
+    "redirect_origin": "https://ciallonet.works/"
+  },
+  "merchant-gfvps": {
+    "review": "https://digvps.com/review/gfvps",
+    "purchase_redirect": "https://product.digvps.com/DNEUZ",
+    "redirect_origin": "https://www.gfvps.cn/"
+  },
+  "merchant-zovps": {
+    "review": "https://digvps.com/review/zovps",
+    "purchase_redirect": "https://product.digvps.com/dpx9K",
+    "redirect_origin": "https://www.ciyundata.com/"
+  },
+  "merchant-raksmart": {
+    "review": "https://digvps.com/review/raksmart",
+    "purchase_redirect": "https://product.digvps.com/JRynD",
+    "redirect_origin": "https://billing.raksmart.com/"
+  },
+  "merchant-cstonecloud": {
+    "review": "https://digvps.com/review/cstonecloud",
+    "purchase_redirect": "https://product.digvps.com/VVbCE",
+    "redirect_origin": "https://www.cstonecloud.com/"
+  },
+  "merchant-hostdare": {
+    "review": "https://digvps.com/review/hostdare",
+    "purchase_redirect": "https://product.digvps.com/PH46g",
+    "redirect_origin": "https://bill.hostdare.com/"
+  },
+  "merchant-fast-line": {
+    "review": "https://digvps.com/review/fast-line",
+    "purchase_redirect": "https://product.digvps.com/tJG3U",
+    "redirect_origin": "https://portal.fast-line.tw/"
+  },
+  "merchant-desivps": {
+    "review": "https://digvps.com/review/desivps",
+    "purchase_redirect": "https://product.digvps.com/ongRk",
+    "redirect_origin": "https://clients.desivps.com/"
+  },
+  "merchant-justg": {
+    "review": "https://digvps.com/review/justg",
+    "purchase_redirect": "https://product.digvps.com/zJPHS",
+    "redirect_origin": "https://www.justg.com/"
+  },
+  "merchant-vipcloud": {
+    "review": "https://digvps.com/review/vipcloud",
+    "purchase_redirect": "https://product.digvps.com/QdcZ6",
+    "redirect_origin": "https://www.vipserver.cloud/"
+  },
+  "merchant-neburst": {
+    "review": "https://digvps.com/review/neburst",
+    "purchase_redirect": "https://product.digvps.com/IT1c4",
+    "redirect_origin": "https://neburst.com/"
+  },
+  "merchant-terabix": {
+    "review": "https://digvps.com/review/terabix",
+    "purchase_redirect": "https://product.digvps.com/OuO1o",
+    "redirect_origin": "https://clients.terabix.net/"
+  },
+  "merchant-orangevps": {
+    "review": "https://digvps.com/review/orangevps",
+    "purchase_redirect": "https://product.digvps.com/bXMDZ",
+    "redirect_origin": "https://portal.orangevps.com/"
+  },
+  "merchant-v5": {
+    "review": "https://digvps.com/review/v5",
+    "purchase_redirect": "https://product.digvps.com/GEYBC",
+    "redirect_origin": "https://account.v5.net/"
+  },
+  "merchant-kjvps": {
+    "review": "https://digvps.com/review/kjvps",
+    "purchase_redirect": "https://product.digvps.com/kHkq8",
+    "redirect_origin": "https://www.kjvps.com/"
+  },
+  "merchant-rabisu": {
+    "review": "https://digvps.com/review/rabisu",
+    "purchase_redirect": "https://product.digvps.com/0k5by",
+    "redirect_origin": "https://www.rabisu.com/"
+  },
+  "merchant-skywolf": {
+    "review": "https://digvps.com/review/skywolf",
+    "purchase_redirect": "https://product.digvps.com/YYmnF",
+    "redirect_origin": "https://hk.skywolf.cloud/"
+  },
+  "merchant-sakura": {
+    "review": "https://digvps.com/review/sakura",
+    "purchase_redirect": "https://product.digvps.com/pOj9v",
+    "redirect_origin": "https://portal.sakuraclouds.com/"
+  },
+  "merchant-ipraft": {
+    "review": "https://digvps.com/review/ipraft",
+    "purchase_redirect": "https://product.digvps.com/onFUq",
+    "redirect_origin": "https://ipraft.com/"
+  },
+  "merchant-starrydns": {
+    "review": "https://digvps.com/review/starrydns",
+    "purchase_redirect": "https://product.digvps.com/nvXjH",
+    "redirect_origin": "https://my.starrydns.com/"
+  },
+  "merchant-zhaomu": {
+    "review": "https://digvps.com/review/zhaomu",
+    "purchase_redirect": "https://product.digvps.com/H5FYv",
+    "redirect_origin": "https://www.zhaomu.com/"
+  },
+  "merchant-quicksrv": {
+    "review": "https://digvps.com/review/quicksrv",
+    "purchase_redirect": "https://product.digvps.com/BVOQ4",
+    "redirect_origin": "https://panel.quicksrv.io/"
+  },
+  "merchant-moe": {
+    "review": "https://digvps.com/review/moe",
+    "purchase_redirect": "https://product.digvps.com/9ASvu",
+    "redirect_origin": "https://lite.moe/"
+  },
+  "merchant-tarekcloud": {
+    "review": "https://digvps.com/review/tarekcloud",
+    "purchase_redirect": "https://product.digvps.com/ZgLXk",
+    "redirect_origin": "https://www.tarekcloud.com/"
+  },
+  "merchant-speedonline": {
+    "review": "https://digvps.com/review/speedonline",
+    "purchase_redirect": "https://product.digvps.com/WcQkd",
+    "redirect_origin": "https://idc.speedonline.cloud/"
+  },
+  "merchant-qde": {
+    "review": "https://digvps.com/review/qde",
+    "purchase_redirect": "https://product.digvps.com/Ok0e7",
+    "redirect_origin": "https://portal.qde.com/"
+  },
+  "merchant-bug": {
+    "review": "https://digvps.com/review/bug",
+    "purchase_redirect": "https://product.digvps.com/mELpW",
+    "redirect_origin": "https://bug.pw/"
+  },
+  "merchant-tnahosting": {
+    "review": "https://digvps.com/review/tnahosting",
+    "purchase_redirect": "https://product.digvps.com/FkCfa",
+    "redirect_origin": "https://tnahosting.net/"
+  },
+  "merchant-colocrossing": {
+    "review": "https://digvps.com/review/colocrossing",
+    "purchase_redirect": "https://product.digvps.com/Co4S6",
+    "redirect_origin": "https://cloud.colocrossing.com/"
+  },
+  "merchant-md5host": {
+    "review": "https://digvps.com/review/md5host",
+    "purchase_redirect": "https://product.digvps.com/rAJSW",
+    "redirect_origin": "https://www.md5host.com/"
+  },
+  "merchant-spartan": {
+    "review": "https://digvps.com/review/spartan",
+    "purchase_redirect": "https://product.digvps.com/8gJc0",
+    "redirect_origin": "https://billing.spartanhost.net/"
+  },
+  "merchant-ethernetservers": {
+    "review": "https://digvps.com/review/ethernetservers",
+    "purchase_redirect": "https://product.digvps.com/S5BCO",
+    "redirect_origin": "https://www.ethernetservers.com/"
+  },
+  "merchant-eugamehost": {
+    "review": "https://digvps.com/review/eugamehost",
+    "purchase_redirect": "https://product.digvps.com/kVW6E",
+    "redirect_origin": "https://www.eugamehost.com/"
+  },
+  "merchant-moack": {
+    "review": "https://digvps.com/review/moack",
+    "purchase_redirect": "https://product.digvps.com/627ws",
+    "redirect_origin": "https://www.moack.co.kr/"
+  },
+  "merchant-079idc": {
+    "review": "https://digvps.com/review/079idc",
+    "purchase_redirect": "https://product.digvps.com/oQKfW",
+    "redirect_origin": "https://079idc.net/"
+  },
+  "merchant-jiluoyun": {
+    "review": "https://digvps.com/review/jiluoyun",
+    "purchase_redirect": "https://product.digvps.com/fnifH",
+    "redirect_origin": "https://www.jiluoyun.com/"
+  },
+  "merchant-black": {
+    "review": "https://digvps.com/review/black",
+    "purchase_redirect": "https://product.digvps.com/lk4cL",
+    "redirect_origin": "https://black.host/"
+  },
+  "merchant-kfcloud": {
+    "review": "https://digvps.com/review/kfcloud",
+    "purchase_redirect": "https://product.digvps.com/grkfa",
+    "redirect_origin": "https://kfcloud.net/"
+  },
+  "merchant-hncloud": {
+    "review": "https://digvps.com/review/hncloud",
+    "purchase_redirect": "https://product.digvps.com/Py0hB",
+    "redirect_origin": "https://u.hncloud.com/"
+  },
+  "merchant-zenlayer": {
+    "review": "https://digvps.com/review/zenlayer",
+    "purchase_redirect": "https://product.digvps.com/iabA8",
+    "redirect_origin": "https://cloud.zenlayer.com/"
+  },
+  "merchant-haruka": {
+    "review": "https://digvps.com/review/haruka",
+    "purchase_redirect": "https://product.digvps.com/rvGND",
+    "redirect_origin": "https://billing.haruka.cloud/"
+  },
+  "merchant-churros": {
+    "review": "https://digvps.com/review/churros",
+    "purchase_redirect": "https://product.digvps.com/bcV5X",
+    "redirect_origin": "https://churros.cloud/"
+  },
+  "merchant-vollcloud": {
+    "review": "https://digvps.com/review/vollcloud",
+    "purchase_redirect": "https://product.digvps.com/TXuIV",
+    "redirect_origin": "https://vollcloud.com/"
+  },
+  "merchant-kkidc": {
+    "review": "https://digvps.com/review/kkidc",
+    "purchase_redirect": "https://product.digvps.com/DulNM",
+    "redirect_origin": "https://www.kkidc.cc/"
+  },
+  "merchant-tencent": {
+    "review": "https://digvps.com/review/tencent",
+    "purchase_redirect": "https://product.digvps.com/xUx3g",
+    "redirect_origin": "https://cloud.tencent.com/"
+  },
+  "merchant-langlangy": {
+    "review": "https://digvps.com/review/langlangy",
+    "purchase_redirect": "https://product.digvps.com/jOc4J",
+    "redirect_origin": "https://langlangy.cn/"
+  },
+  "merchant-kfchost": {
+    "review": "https://digvps.com/review/kfchost",
+    "purchase_redirect": "https://product.digvps.com/jsEYQ",
+    "redirect_origin": "https://kfchost.com/"
+  },
+  "merchant-lcyidc": {
+    "review": "https://digvps.com/review/lcyidc",
+    "purchase_redirect": "https://product.digvps.com/PAKjz",
+    "redirect_origin": "https://www.lcyidc.com/"
+  },
+  "merchant-skystroll": {
+    "review": "https://digvps.com/review/skystroll",
+    "purchase_redirect": "https://product.digvps.com/vYNJ0",
+    "redirect_origin": "https://skystroll.net/"
+  },
+  "merchant-huaruidc": {
+    "review": "https://digvps.com/review/huaruidc",
+    "purchase_redirect": "https://product.digvps.com/MYX58",
+    "redirect_origin": "https://huaruidc.com/"
+  },
+  "merchant-faconhost": {
+    "review": "https://digvps.com/review/faconhost",
+    "purchase_redirect": "https://product.digvps.com/7C01O",
+    "redirect_origin": "https://client.faconhost.com/"
+  },
+  "merchant-onidel": {
+    "review": "https://digvps.com/review/onidel",
+    "purchase_redirect": "https://product.digvps.com/H6fcK",
+    "redirect_origin": "https://onidel.com/"
+  },
+  "merchant-ishosting": {
+    "review": "https://digvps.com/review/ishosting",
+    "purchase_redirect": "https://product.digvps.com/heP1Q",
+    "redirect_origin": "https://ishosting.com/"
+  },
+  "merchant-geelinx": {
+    "review": "https://digvps.com/review/geelinx",
+    "purchase_redirect": "https://product.digvps.com/ippDC",
+    "redirect_origin": "https://www.geelinx.com/"
+  }
+}
