@@ -362,7 +362,7 @@ export async function createApp(options: AppOptions = {}) {
     });
   });
   app.get("/api/v1/types", (c) =>
-    c.json({ types: [{ key: "cloud", name: "云服务器", icon: "server" }, { key: "app", name: "App 订阅", icon: "app-window" }] }),
+    c.json({ types: [{ key: "app", name: "App 订阅", icon: "app-window" }, { key: "cloud", name: "云服务器", icon: "server" }] }),
   );
   app.get("/api/v1/subscriptions", (c) =>
     c.json({ subscriptions: listSubscriptions(db, userId(c), c.get("user").time_zone, clock()) }),
