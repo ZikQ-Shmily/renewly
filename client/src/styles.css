@@ -392,6 +392,13 @@ code {
 }
 .category-nav-row .nav-item { padding-right: 35px; }
 .category-nav-row.dragging { opacity: 0.65; }
+.category-nav-row.pointer-dragging {
+  z-index: 10;
+  opacity: 0.95;
+  border-radius: 8px;
+  background: var(--surface-selected, #202b46);
+  box-shadow: 0 8px 20px rgb(0 0 0 / 20%);
+}
 .category-drag-handle {
   position: absolute;
   right: 7px;
