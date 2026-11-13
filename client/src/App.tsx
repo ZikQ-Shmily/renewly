@@ -3,6 +3,7 @@ import {
   AlarmClock,
   AppWindow,
   Bell,
+  GripVertical,
   Layers,
   LoaderCircle,
   LogOut,
@@ -79,6 +80,8 @@ export default function App() {
   const [loadedCategory, setLoadedCategory] = useState("");
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [types, setTypes] = useState<SubscriptionType[]>([]);
+  const [categoryOrder, setCategoryOrder] = useState<string[]>([]);
+  const [draggingCategory, setDraggingCategory] = useState<string | null>(null);
   const [notifications, setNotifications] =
     useState<NotificationSettings | null>(null);
   const [loading, setLoading] = useState(false);
@@ -89,6 +92,15 @@ export default function App() {
   const [renewalItem, setRenewalItem] = useState<Subscription | null>(null);
   const requestVersion = useRef(0);
   const catalogRequestVersion = useRef(0);
+  useEffect(() => {
+    if (!user) { setCategoryOrder([]); return; }
+    try {
+      const saved: unknown = JSON.parse(localStorage.getItem(`renewly:category-order:${user.id}`) || "[]");
+      setCategoryOrder(Array.isArray(saved) ? [...new Set(saved.filter((item): item is string => typeof item === "string"))] : []);
+    } catch {
+      setCategoryOrder([]);
+    }
+  }, [user?.id]);
   function clearData() {
     requestVersion.current++;
     catalogRequestVersion.current++;
@@ -280,6 +292,22 @@ export default function App() {
       />
     );
   const categoryName = types.find((type) => type.key === category)?.name || "云服务器";
+  const orderedTypes = [...types].sort((a, b) => {
+    const position = (key: string) => {
+      const index = categoryOrder.indexOf(key);
+      return index < 0 ? Number.MAX_SAFE_INTEGER : index;
+    };
+    return position(a.key) - position(b.key);
+  });
+  function moveCategory(from: string, to: string) {
+    const keys = orderedTypes.map((type) => type.key);
+    const fromIndex = keys.indexOf(from);
+    const toIndex = keys.indexOf(to);
+    if (fromIndex < 0 || toIndex < 0 || fromIndex === toIndex) return;
+    keys.splice(toIndex, 0, ...keys.splice(fromIndex, 1));
+    setCategoryOrder(keys);
+    try { localStorage.setItem(`renewly:category-order:${user!.id}`, JSON.stringify(keys)); } catch { /* Keep the order for this session. */ }
+  }
   const breadcrumb = ["manage", "editor", "renew"].includes(page)
     ? page === "manage" ? categoryName : `${categoryName} / ${pageTitles[page]}`
     : pageTitles[page];
@@ -316,9 +344,9 @@ export default function App() {
             <span>全部订阅</span>
             <small>{nonArchived.length}</small>
           </button>
-          {types.map((type) => (
+          {orderedTypes.map((type, index) => (
+            <div key={type.key} className={`category-nav-row ${draggingCategory === type.key ? "dragging" : ""}`} data-category-key={type.key}>
             <button
-              key={type.key}
               className={`nav-item ${["manage", "editor", "renew"].includes(page) && category === type.key ? "selected" : ""}`}
               aria-current={
                 ["manage", "editor", "renew"].includes(page) && category === type.key
@@ -335,6 +363,33 @@ export default function App() {
                 {nonArchived.filter((s) => s.type === type.key).length}
               </small>
             </button>
+            <button
+              type="button"
+              className="category-drag-handle"
+              aria-label={`调整${type.name}顺序`}
+              title="拖动调整顺序；也可以使用方向键"
+              onPointerDown={(event) => {
+                event.preventDefault();
+                event.currentTarget.focus();
+                event.currentTarget.setPointerCapture(event.pointerId);
+                setDraggingCategory(type.key);
+              }}
+              onPointerUp={(event) => {
+                const target = document.elementFromPoint(event.clientX, event.clientY)?.closest<HTMLElement>("[data-category-key]");
+                const targetKey = target?.dataset.categoryKey;
+                if (targetKey) moveCategory(type.key, targetKey);
+                if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+                setDraggingCategory(null);
+              }}
+              onPointerCancel={() => setDraggingCategory(null)}
+              onLostPointerCapture={() => setDraggingCategory(null)}
+              onKeyDown={(event) => {
+                const direction = ["ArrowUp", "ArrowLeft"].includes(event.key) ? -1 : ["ArrowDown", "ArrowRight"].includes(event.key) ? 1 : 0;
+                const target = orderedTypes[index + direction];
+                if (direction && target) { event.preventDefault(); moveCategory(type.key, target.key); }
+              }}
+            ><GripVertical size={15} /></button>
+            </div>
           ))}
         </nav>
         <div className="nav-divider" />
