@@ -34,6 +34,9 @@ export interface IconPreset {
   names: RegExp;
   color: string;
   enabled?: boolean;
+  website?: string;
+  aliases?: readonly string[];
+  categories?: readonly ("cloud" | "app")[];
   image?: { light: string; dark: string };
 }
 
