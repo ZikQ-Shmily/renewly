@@ -141,3 +141,18 @@ test("per-subscription uploaded and generic icons keep precedence over the live 
   assert.deepEqual(resolveAppIcon("CustomAlias", "https://merchant.example.com/", customImage, catalog), { preset: undefined, src: customImage });
   assert.equal(resolveAppIcon("Unrelated", "https://unrelated.example.com/", edited.key, catalog).preset, edited);
 });
+
+test("website autofill requires one enabled exact merchant name or alias", async () => {
+  const { merchantPreset, merchantWebsiteForName } = await import("../client/src/merchant-catalog.js");
+  const entry = {key:"merchant-tencent",label:"腾讯云（Tencent）",aliases:["腾讯云", "Tencent Cloud"],domains:["cloud.tencent.com"],website:"https://cloud.tencent.com/",icon:"",color:"currentColor",enabled:true,builtin:true,customized:false,categories:["cloud"] as ("cloud" | "app")[]};
+  const catalog = [merchantPreset(entry)];
+  assert.equal(merchantWebsiteForName("腾讯云", catalog), "https://cloud.tencent.com/");
+  assert.equal(merchantWebsiteForName("腾讯云", catalog, "cloud"), "https://cloud.tencent.com/");
+  assert.equal(merchantWebsiteForName("腾讯云", catalog, "app"), "");
+  assert.equal(merchantWebsiteForName(" TENcENT  Cloud ", catalog), "https://cloud.tencent.com/");
+  assert.equal(merchantWebsiteForName("腾讯", catalog), "");
+  assert.equal(merchantWebsiteForName("腾讯云服务器", catalog), "");
+  assert.equal(merchantWebsiteForName("腾讯云", [merchantPreset({...entry,enabled:false})]), "");
+  assert.equal(merchantWebsiteForName("腾讯云", [merchantPreset(entry),merchantPreset({...entry,key:"other"})]), "");
+  assert.equal(merchantWebsiteForName("腾讯云", [merchantPreset({...entry,website:""})]), "");
+});
