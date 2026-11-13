@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { appIconInitial, appIconPresets, merchantIconPresets, matchedAppIcon, appFaviconUrl, isUploadedAppIcon, resolveAppIcon } from "../client/src/app-icons.js";
+import { appIconInitial, appIconPresets, merchantIconPresets, matchedAppIcon, appFaviconUrl, isUploadedAppIcon, resolveAppIcon, type IconPreset } from "../client/src/app-icons.js";
 
 test("merchant initials preserve complete Unicode graphemes and use a cloud for empty names", () => {
   assert.equal(appIconInitial("腾讯云"), "腾");
@@ -92,4 +92,52 @@ test("bundled merchant logos match the catalog names, aliases and verified websi
   assert.equal(manual.preset?.key, "merchant-dmit");
   assert.equal(manual.src, null);
   assert.equal(resolveAppIcon("DMIT", "https://dmit.io", "generic").preset, undefined);
+});
+
+const customImage = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9WlU3WsAAAAASUVORK5CYII=";
+
+function editedMerchant(enabled = true): IconPreset {
+  const builtin = merchantIconPresets.find(preset => preset.key === "merchant-dmit")!;
+  return {
+    ...builtin,
+    label: "管理员自定义商家",
+    names: /^customalias$/i,
+    domains: ["merchant.example.com"],
+    image: { light: customImage, dark: customImage },
+    enabled,
+  };
+}
+
+test("a live merchant catalog replaces bundled names, domains and image without rebuilding", () => {
+  const edited = editedMerchant();
+  const catalog = [edited];
+  assert.equal(matchedAppIcon("Custom Alias", "", catalog), edited);
+  assert.equal(matchedAppIcon("ＣｕｓｔｏｍＡｌｉａｓ", "", catalog), edited);
+  assert.equal(matchedAppIcon("用户填写的服务器", "https://billing.merchant.example.com/private?account=x", catalog), edited);
+  const automatic = resolveAppIcon("CustomAlias", "", "auto", catalog);
+  assert.equal(automatic.preset, edited);
+  assert.deepEqual(automatic.preset?.image, { light: customImage, dark: customImage });
+  assert.equal(automatic.src, null);
+  assert.equal(matchedAppIcon("DMIT", "https://www.dmit.io/", catalog), undefined);
+  assert.equal(matchedAppIcon("Unknown", "https://merchant.example.com.evil.example/", catalog), undefined);
+  assert.equal(matchedAppIcon("Unknown", "https://evil-merchant.example.com/", catalog), undefined);
+});
+
+test("disabled or removed merchant entries do not reappear through bundled automatic matching", () => {
+  const disabled = editedMerchant(false);
+  assert.equal(matchedAppIcon("CustomAlias", "", [disabled]), undefined);
+  assert.equal(matchedAppIcon("Unknown", "https://merchant.example.com/", [disabled]), undefined);
+  assert.equal(resolveAppIcon("CustomAlias", "https://merchant.example.com/", "auto", [disabled]).preset, undefined);
+  // Existing subscriptions keep an explicitly selected icon after it is disabled.
+  assert.equal(resolveAppIcon("CustomAlias", "", disabled.key, [disabled]).preset, disabled);
+  assert.equal(matchedAppIcon("DMIT", "https://www.dmit.io/", []), undefined);
+  assert.equal(resolveAppIcon("DMIT", "https://www.dmit.io/", "auto", []).preset, undefined);
+});
+
+test("per-subscription uploaded and generic icons keep precedence over the live merchant catalog", () => {
+  const edited = editedMerchant();
+  const catalog = [edited];
+  assert.deepEqual(resolveAppIcon("CustomAlias", "https://merchant.example.com/", "generic", catalog), { preset: undefined, src: null });
+  assert.deepEqual(resolveAppIcon("CustomAlias", "https://merchant.example.com/", customImage, catalog), { preset: undefined, src: customImage });
+  assert.equal(resolveAppIcon("Unrelated", "https://unrelated.example.com/", edited.key, catalog).preset, edited);
 });

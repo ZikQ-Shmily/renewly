@@ -337,7 +337,7 @@ test("v1 migration preserves existing subscription and user data and is repeatab
     assert.equal(subscription.serverIcon, "auto");
     assert.deepEqual(subscription.ipAddresses, []);
     assert.equal((db.prepare("SELECT due_date FROM reminder_deliveries").get() as any).due_date, "2027-01-01T00:00");
-    assert.deepEqual(db.prepare("SELECT version FROM schema_migrations ORDER BY version").all(), [{ version: 1 }, { version: 2 }, { version: 3 }, { version: 4 }, { version: 5 }, { version: 6 }, { version: 7 }, { version: 8 }, { version: 9 }]);
+    assert.deepEqual(db.prepare("SELECT version FROM schema_migrations ORDER BY version").all(), [{ version: 1 }, { version: 2 }, { version: 3 }, { version: 4 }, { version: 5 }, { version: 6 }, { version: 7 }, { version: 8 }, { version: 9 }, { version: 10 }]);
   } finally { db.close(); }
 });
 
@@ -461,7 +461,7 @@ test("v5 migration marks existing traffic direction unknown and preserves v4 sub
     assert.equal(created.status, 201);
     const before = (await created.json() as any).subscription;
     // Recreate a v4 schema so the production upgrade path is exercised directly.
-    f.runtime.db.exec("ALTER TABLE server_details DROP COLUMN icon; ALTER TABLE server_details DROP COLUMN traffic_direction; DROP TABLE registration_codes; DROP TABLE registration_code_requests; DELETE FROM schema_migrations WHERE version>=5;");
+    f.runtime.db.exec("ALTER TABLE server_details DROP COLUMN icon; ALTER TABLE server_details DROP COLUMN traffic_direction; DROP TABLE registration_codes; DROP TABLE registration_code_requests; DROP TABLE merchant_overrides; DELETE FROM schema_migrations WHERE version>=5;");
     migrate(f.runtime.db);
     migrate(f.runtime.db);
     const after = await f.request("/subscriptions", "GET", undefined, cookie).then(response => response.json()) as any;
@@ -813,7 +813,7 @@ test("v8 migration preserves populated v7 Apps and related data, rolls back fail
         DROP TABLE app_details;
         ALTER TABLE app_details_v7 RENAME TO app_details;
         ALTER TABLE server_details DROP COLUMN icon;
-        DELETE FROM schema_migrations WHERE version>=8;
+        DROP TABLE merchant_overrides; DELETE FROM schema_migrations WHERE version>=8;
       `);
     })();
     assert.throws(() => db.prepare("UPDATE app_details SET purchase_channel='应用内购' WHERE subscription_id=?").run(appIds[0]), /CHECK constraint failed/);
@@ -838,7 +838,7 @@ test("v8 migration preserves populated v7 Apps and related data, rolls back fail
     migrate(db);
     assert.deepEqual(snapshot(), before);
     assert.deepEqual(db.prepare("SELECT * FROM schema_migrations WHERE version<8 ORDER BY version").all(), oldMigrations);
-    assert.equal((db.prepare("SELECT MAX(version) version FROM schema_migrations").get() as any).version, 9);
+    assert.equal((db.prepare("SELECT MAX(version) version FROM schema_migrations").get() as any).version, 10);
     assert.equal((db.prepare("SELECT COUNT(*) n FROM schema_migrations WHERE version=8").get() as any).n, 1);
     assert.deepEqual(db.prepare("PRAGMA foreign_key_list(app_details)").all(), foreignKeys);
     assert.deepEqual(db.prepare("PRAGMA foreign_key_check").all(), []);
@@ -888,7 +888,7 @@ test("v9 migration defaults populated v8 cloud icons and preserves data with rol
       "v9-preserved-reminder", user.id, cloudItem.id, cloudItem.name, cloudItem.nextRenewal, 3, "sent", 1, testNow.toISOString(), testNow.toISOString(), testNow.toISOString(),
     );
     // Restore the deployed v8 schema with populated cloud, App, billing and account tables.
-    db.exec("ALTER TABLE server_details DROP COLUMN icon; DELETE FROM schema_migrations WHERE version=9");
+    db.exec("ALTER TABLE server_details DROP COLUMN icon; DROP TABLE merchant_overrides; DELETE FROM schema_migrations WHERE version>=9");
     const tables = (db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name!='schema_migrations' ORDER BY name").all() as { name: string }[]).map(row => row.name);
     const snapshot = () => Object.fromEntries(tables.map(table => [table, db.prepare(`SELECT * FROM ${table} ORDER BY rowid`).all()]));
     const before = snapshot();
@@ -940,7 +940,7 @@ test("v7 upgrade preserves foreign-currency cloud records, paid history and mail
     const periods = f.runtime.db.prepare("SELECT * FROM billing_periods").all();
     const mail = f.runtime.db.prepare("SELECT * FROM mail_settings").all();
     f.runtime.db.prepare("UPDATE users SET currency='GBP' WHERE id=?").run(user.id);
-    f.runtime.db.exec("DROP TABLE app_details; ALTER TABLE server_details DROP COLUMN icon; DELETE FROM schema_migrations WHERE version>=7;");
+    f.runtime.db.exec("DROP TABLE app_details; ALTER TABLE server_details DROP COLUMN icon; DROP TABLE merchant_overrides; DELETE FROM schema_migrations WHERE version>=7;");
     migrate(f.runtime.db); migrate(f.runtime.db);
     assert.equal((f.runtime.db.prepare("SELECT currency FROM users WHERE id=?").get(user.id) as any).currency, "CNY");
     assert.deepEqual((await f.request("/subscriptions", "GET", undefined, cookie).then(r => r.json()) as any).subscriptions[0], before);
@@ -1379,7 +1379,7 @@ test("minute reminders wait for the matching local time and preserve midnight de
     // Recreate the old date-only database representation and its sent delivery.
     for (const column of ["cpu_cores", "memory_value", "memory_unit", "disk_value", "disk_unit", "ip_addresses", "traffic_direction", "icon"])
       f.runtime.db.exec(`ALTER TABLE server_details DROP COLUMN ${column}`);
-    f.runtime.db.exec("UPDATE subscriptions SET next_renewal=substr(next_renewal,1,10); UPDATE billing_periods SET starts_at=substr(starts_at,1,10),ends_at=substr(ends_at,1,10); UPDATE reminder_deliveries SET due_date=substr(due_date,1,10); DROP TABLE registration_codes; DROP TABLE registration_code_requests; DELETE FROM schema_migrations WHERE version>=3;");
+    f.runtime.db.exec("UPDATE subscriptions SET next_renewal=substr(next_renewal,1,10); UPDATE billing_periods SET starts_at=substr(starts_at,1,10),ends_at=substr(ends_at,1,10); UPDATE reminder_deliveries SET due_date=substr(due_date,1,10); DROP TABLE registration_codes; DROP TABLE registration_code_requests; DROP TABLE merchant_overrides; DELETE FROM schema_migrations WHERE version>=3;");
     migrate(f.runtime.db);
     migrate(f.runtime.db);
     assert.equal((f.runtime.db.prepare("SELECT due_date FROM reminder_deliveries WHERE kind='reminder'").get() as any).due_date, "2026-11-14T00:00");
