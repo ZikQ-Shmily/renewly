@@ -418,6 +418,7 @@ code {
   touch-action: none;
 }
 .category-drag-handle:hover, .category-drag-handle:focus-visible { opacity: 1; background: var(--surface-nav-hover, #182238); }
+html[data-input-mode="pointer"] .category-drag-handle:focus-visible { outline: none; }
 .category-drag-handle:active { cursor: grabbing; }
 .nav-divider {
   height: 1px;
