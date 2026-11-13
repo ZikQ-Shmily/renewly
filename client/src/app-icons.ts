@@ -33,10 +33,11 @@ export interface IconPreset {
   domains: readonly string[];
   names: RegExp;
   color: string;
+  enabled?: boolean;
   image?: { light: string; dark: string };
 }
 
-function merchantName(value: string) {
+export function merchantName(value: string) {
   return value.normalize("NFKC").toLowerCase().replace(/\s+/g, "");
 }
 
@@ -56,6 +57,7 @@ export const merchantIconPresets: IconPreset[] = merchantCatalog.map(merchant =>
 }));
 
 const allIconPresets: readonly IconPreset[] = [...appIconPresets, ...merchantIconPresets];
+export const builtinIconPresets = allIconPresets;
 
 function websiteUrl(website: string) {
   try {
@@ -66,11 +68,11 @@ function websiteUrl(website: string) {
   }
 }
 
-export function matchedAppIcon(name: string, website: string): IconPreset | undefined {
+export function matchedAppIcon(name: string, website: string, catalog: readonly IconPreset[] = allIconPresets): IconPreset | undefined {
   const host = websiteUrl(website)?.hostname.toLowerCase().replace(/\.$/, "");
-  const byDomain = host && allIconPresets.find(preset => preset.domains.some(domain => host === domain || host.endsWith(`.${domain}`)));
-  return byDomain || appIconPresets.find(preset => preset.names.test(name.normalize("NFKC")))
-    || merchantIconPresets.find(preset => preset.names.test(merchantName(name)));
+  const active = catalog.filter(preset => preset.enabled !== false);
+  const byDomain = host && active.find(preset => preset.domains.some(domain => host === domain || host.endsWith(`.${domain}`)));
+  return byDomain || active.find(preset => preset.names.test(name.normalize("NFKC")) || preset.names.test(merchantName(name)));
 }
 
 /** Only attempt merchant favicons in the browser; never proxy arbitrary URLs. */
@@ -93,10 +95,10 @@ export function isUploadedAppIcon(value: string) {
   return payload.length / 4 * 3 - padding <= maxUploadBytes;
 }
 
-export function resolveAppIcon(name: string, website: string, value = "auto") {
-  const manual = allIconPresets.find(preset => preset.key === value);
+export function resolveAppIcon(name: string, website: string, value = "auto", catalog: readonly IconPreset[] = allIconPresets) {
+  const manual = catalog.find(preset => preset.key === value);
   const automatic = value === "auto" || value === "";
-  const preset = manual || (automatic ? matchedAppIcon(name, website) : undefined);
+  const preset = manual || (automatic ? matchedAppIcon(name, website, catalog) : undefined);
   const src = isUploadedAppIcon(value) ? value : automatic && !preset ? appFaviconUrl(website) : null;
   return { preset, src };
 }

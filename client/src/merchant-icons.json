@@ -1585,5 +1585,36 @@
     ],
     "light": "/app-icons/merchants/po0.webp",
     "dark": "/app-icons/merchants/po0.webp"
+  },
+  {
+    "key": "merchant-infuse",
+    "label": "Infuse",
+    "aliases": [
+      "Infuse",
+      "Infuse Pro",
+      "Firecore"
+    ],
+    "domains": [
+      "firecore.com",
+      "firecore.cn"
+    ],
+    "light": "/app-icons/merchants/infuse.webp",
+    "dark": "/app-icons/merchants/infuse.webp"
+  },
+  {
+    "key": "merchant-netease-cloud-music",
+    "label": "网易云音乐",
+    "aliases": [
+      "网易云音乐",
+      "网易云",
+      "NetEase Cloud Music",
+      "NeteaseMusic"
+    ],
+    "domains": [
+      "music.163.com",
+      "music.126.net"
+    ],
+    "light": "/app-icons/merchants/netease-cloud-music.webp",
+    "dark": "/app-icons/merchants/netease-cloud-music.webp"
   }
 ]

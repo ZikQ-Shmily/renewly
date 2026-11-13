@@ -11,6 +11,7 @@ import {
   Search,
   Server,
   Settings2,
+  Store,
   Users,
 } from "lucide-react";
 import { ApiError, api, errorMessage, json } from "./api";
@@ -24,6 +25,8 @@ import { TermProgress } from "./SubscriptionSummary";
 import { DashboardMetrics, RatesFooter } from "./DashboardMetrics";
 import { ThemeSwitch } from "./ThemeSwitch";
 import { AppIcon } from "./AppIcon";
+import { MerchantManager } from "./MerchantManager";
+import { clearMerchantCatalog, setMerchantCatalog, type MerchantCatalogEntry } from "./merchant-catalog";
 import type {
   AuthConfig,
   Dashboard,
@@ -42,7 +45,7 @@ import {
   configurationLabel,
 } from "./utils";
 
-type Page = "overview" | "manage" | "editor" | "renew" | "reminders" | "admin" | "users";
+type Page = "overview" | "manage" | "editor" | "renew" | "reminders" | "admin" | "users" | "merchants";
 const pageTitles: Record<Page, string> = {
   overview: "全部订阅",
   manage: "云服务器",
@@ -51,6 +54,7 @@ const pageTitles: Record<Page, string> = {
   reminders: "我的提醒",
   admin: "系统邮件",
   users: "用户管理",
+  merchants: "商家管理",
 };
 function hashRoute(): { page: Page; category: string } {
   const value = window.location.hash.slice(1);
@@ -58,7 +62,7 @@ function hashRoute(): { page: Page; category: string } {
   if (category) return { page: "manage", category: ["cloud", "app"].includes(category) ? category : "cloud" };
   if (value === "manage") return { page: "manage", category: "cloud" };
   return {
-    page: ["overview", "reminders", "admin", "users"].includes(value) ? value as Page : "overview",
+    page: ["overview", "reminders", "admin", "users", "merchants"].includes(value) ? value as Page : "overview",
     category: "cloud",
   };
 }
@@ -84,8 +88,11 @@ export default function App() {
   const [draftKey, setDraftKey] = useState(0);
   const [renewalItem, setRenewalItem] = useState<Subscription | null>(null);
   const requestVersion = useRef(0);
+  const catalogRequestVersion = useRef(0);
   function clearData() {
     requestVersion.current++;
+    catalogRequestVersion.current++;
+    clearMerchantCatalog();
     setDashboard(null);
     setCategoryDashboard(null);
     setSubscriptions([]);
@@ -96,6 +103,8 @@ export default function App() {
   }
   const signOutLocally = useCallback(() => {
     requestVersion.current++;
+    catalogRequestVersion.current++;
+    clearMerchantCatalog();
     setUser(null);
     setDashboard(null);
     setCategoryDashboard(null);
@@ -137,7 +146,7 @@ export default function App() {
     };
   }, []);
   useEffect(() => {
-    if (user && ["admin", "users"].includes(page) && user.role !== "admin") navigate("overview");
+    if (user && ["admin", "users", "merchants"].includes(page) && user.role !== "admin") navigate("overview");
   }, [user, page]);
   function navigate(next: Page, nextCategory = category) {
     if (nextCategory !== category) {
@@ -157,21 +166,24 @@ export default function App() {
   const loadData = useCallback(async () => {
     if (!user) return;
     const version = ++requestVersion.current;
+    const catalogVersion = ++catalogRequestVersion.current;
     setLoading(true);
     setError("");
     try {
-      const [summary, list, categoryData, notificationData] = await Promise.all(
+      const [summary, list, categoryData, notificationData, merchantData] = await Promise.all(
         [
           api<Dashboard>("/dashboard"),
           api<{ subscriptions: Subscription[] }>("/subscriptions"),
           api<{ types: SubscriptionType[] }>("/types"),
           api<NotificationSettings>("/me/notification-settings"),
+          api<{ merchants: MerchantCatalogEntry[] }>("/merchants"),
         ],
       );
       const scoped = categoryData.types.some((type) => type.key === category)
         ? await api<Dashboard>(`/dashboard?type=${encodeURIComponent(category)}`)
         : null;
       if (version !== requestVersion.current) return;
+      if (catalogVersion === catalogRequestVersion.current) setMerchantCatalog(merchantData.merchants);
       setCategoryDashboard(scoped);
       setLoadedCategory(category);
       setDashboard(summary);
@@ -197,6 +209,12 @@ export default function App() {
       if (version === requestVersion.current) setLoading(false);
     }
   }, [user?.id, user?.currency, user?.timeZone, category]);
+  const refreshMerchantCatalog = useCallback(async () => {
+    if (!user) return;
+    const version = ++catalogRequestVersion.current;
+    const data = await api<{ merchants: MerchantCatalogEntry[] }>("/merchants");
+    if (version === catalogRequestVersion.current) setMerchantCatalog(data.merchants);
+  }, [user?.id]);
   useEffect(() => {
     if (user) void loadData();
   }, [loadData]);
@@ -339,7 +357,7 @@ export default function App() {
             </button>
           )}
         </nav>
-        {user.role === "admin" && <><div className="nav-divider" /><p className="nav-caption">管理</p><nav className="nav-group admin-nav" aria-label="管理"><button className={`nav-item ${page === "users" ? "selected" : ""}`} aria-current={page === "users" ? "page" : undefined} onClick={() => navigate("users")}><Users size={17} /><span>用户管理</span></button></nav></>}
+        {user.role === "admin" && <><div className="nav-divider" /><p className="nav-caption">管理</p><nav className="nav-group admin-nav" aria-label="管理"><button className={`nav-item ${page === "users" ? "selected" : ""}`} aria-current={page === "users" ? "page" : undefined} onClick={() => navigate("users")}><Users size={17} /><span>用户管理</span></button><button className={`nav-item ${page === "merchants" ? "selected" : ""}`} aria-current={page === "merchants" ? "page" : undefined} onClick={() => navigate("merchants")}><Store size={17} /><span>商家管理</span></button></nav></>}
         <div className="account">
           <span className="avatar">
             {(user.name || user.email).slice(0, 2).toUpperCase()}
@@ -494,6 +512,7 @@ export default function App() {
             </div>
           )}
           {user.role === "admin" && page === "users" && <UserManagement currentUser={user} onSelfUpdated={setUser} />}
+          {user.role === "admin" && page === "merchants" && <MerchantManager onCatalogChange={refreshMerchantCatalog} />}
           <footer className="app-footer">
             <span className="gradient">续记 Renewly</span>
             <span>每一笔订阅，都心中有数。</span>
