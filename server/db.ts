@@ -150,4 +150,8 @@ export function migrate(db: DB) {
     `);
     db.prepare("INSERT INTO schema_migrations VALUES(10,?)").run(new Date().toISOString());
   })();
+  if ((version.version || 0) < 11) db.transaction(() => {
+    db.exec("ALTER TABLE merchant_overrides ADD COLUMN categories_json TEXT DEFAULT NULL");
+    db.prepare("INSERT INTO schema_migrations VALUES(11,?)").run(new Date().toISOString());
+  })();
 }
