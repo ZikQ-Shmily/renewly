@@ -4,8 +4,11 @@ import { domainToASCII } from "node:url";
 import { z } from "zod";
 import type { DB } from "./db.js";
 import merchantCatalog from "../client/src/merchant-icons.json" with { type: "json" };
+import merchantWebsites from "../client/src/merchant-websites.json" with { type: "json" };
 
+export type MerchantCategory = "cloud" | "app";
 export interface MerchantCatalogEntry {
+  categories: MerchantCategory[];
   key: string;
   label: string;
   website: string;
@@ -110,6 +113,7 @@ const fields = {
   aliases: z.array(labelSchema).max(30).transform(values => [...new Map(values.map(value => [value.normalize("NFKC").toLowerCase().replace(/\s+/g, ""), value])).values()]),
   icon: z.string().max(90_000).refine(isMerchantIcon, "图标须为不超过 64 KB、尺寸不超过 2048 像素的 PNG、JPEG 或 WebP 图片。"),
   enabled: z.boolean(),
+  categories: z.array(z.enum(["cloud", "app"])).min(1).max(2).refine(values => new Set(values).size === values.length, "分类不能重复。"),
 };
 export const merchantCreateSchema = z.object({
   label: fields.label,
@@ -118,6 +122,7 @@ export const merchantCreateSchema = z.object({
   aliases: fields.aliases.default([]),
   icon: fields.icon.default(""),
   enabled: fields.enabled.default(true),
+  categories: fields.categories.default(["cloud", "app"]),
 }).strict();
 export const merchantUpdateSchema = z.object(fields).partial().strict().refine(value => Object.keys(value).length > 0, "请填写需要修改的信息。");
 type MerchantInput = z.infer<typeof merchantCreateSchema>;
@@ -146,13 +151,14 @@ function complete(entry: MerchantCatalogEntry): MerchantCatalogEntry {
   return { ...entry, domains: unique([...entry.domains, ...websiteDomains(entry.website)]), aliases: unique([entry.label, ...entry.aliases]) };
 }
 const builtinCatalog: MerchantCatalogEntry[] = [
-  ...appCatalog.map(entry => complete({ ...entry, website: `https://${entry.domains[0]}/`, icon: "", enabled: true, builtin: true, customized: false })),
-  ...merchantCatalog.map(entry => complete({ key: entry.key, label: entry.label, domains: [...entry.domains], aliases: [...entry.aliases], website: entry.domains.length ? `https://${entry.domains[0]}/` : "", color: "currentColor", image: { light: entry.light, dark: entry.dark }, icon: "", enabled: true, builtin: true, customized: false })),
+  ...appCatalog.map(entry => complete({ ...entry, categories: ["app"], website: `https://${entry.domains[0]}/`, icon: "", enabled: true, builtin: true, customized: false })),
+  ...merchantCatalog.map(entry => complete({ key: entry.key, label: entry.label, categories: ["merchant-infuse", "merchant-netease-cloud-music"].includes(entry.key) ? ["app"] : ["cloud"], domains: [...entry.domains], aliases: [...entry.aliases], website: entry.domains.length ? `https://${entry.domains[0]}/` : (merchantWebsites as Record<string, string>)[entry.key] || "", color: "currentColor", image: { light: entry.light, dark: entry.dark }, icon: "", enabled: true, builtin: true, customized: false })),
 ];
 const builtinByKey = new Map(builtinCatalog.map(entry => [entry.key, entry]));
-interface MerchantRow { key: string; label: string; website: string; domains_json: string; aliases_json: string; icon: string; enabled: number; is_custom: number }
+interface MerchantRow { key: string; label: string; website: string; domains_json: string; aliases_json: string; icon: string; enabled: number; is_custom: number; categories_json: string | null }
 function merged(base: MerchantCatalogEntry | undefined, row: MerchantRow): MerchantCatalogEntry {
   return complete({
+    categories: row.categories_json ? JSON.parse(row.categories_json) : [...(base?.categories || ["cloud", "app"])],
     key: row.key, label: row.label, website: row.website, domains: JSON.parse(row.domains_json), aliases: JSON.parse(row.aliases_json),
     color: base?.color || "currentColor", icon: row.icon,
     ...(!row.icon && base?.image ? { image: { ...base.image } } : {}),
@@ -173,14 +179,14 @@ export function listMerchants(db: DB): MerchantCatalogEntry[] {
 function inputFor(entry: MerchantCatalogEntry): MerchantInput {
   const implicitDomains = websiteDomains(entry.website);
   const name = entry.label.normalize("NFKC").toLowerCase().replace(/\s+/g, "");
-  return { label: entry.label, website: entry.website, domains: entry.domains.filter(domain => !implicitDomains.includes(domain)), aliases: entry.aliases.filter(alias => alias.normalize("NFKC").toLowerCase().replace(/\s+/g, "") !== name), icon: entry.icon, enabled: entry.enabled };
+  return { label: entry.label, website: entry.website, domains: entry.domains.filter(domain => !implicitDomains.includes(domain)), aliases: entry.aliases.filter(alias => alias.normalize("NFKC").toLowerCase().replace(/\s+/g, "") !== name), icon: entry.icon, enabled: entry.enabled, categories: [...entry.categories] };
 }
 function write(db: DB, key: string, input: MerchantInput, custom: boolean) {
   const now = new Date().toISOString();
-  db.prepare(`INSERT INTO merchant_overrides(key,label,website,domains_json,aliases_json,icon,enabled,is_custom,created_at,updated_at)
-    VALUES(@key,@label,@website,@domains,@aliases,@icon,@enabled,@custom,@now,@now)
-    ON CONFLICT(key) DO UPDATE SET label=excluded.label,website=excluded.website,domains_json=excluded.domains_json,aliases_json=excluded.aliases_json,icon=excluded.icon,enabled=excluded.enabled,updated_at=excluded.updated_at`)
-    .run({ key, label: input.label, website: input.website, domains: JSON.stringify(input.domains), aliases: JSON.stringify(input.aliases), icon: input.icon, enabled: input.enabled ? 1 : 0, custom: custom ? 1 : 0, now });
+  db.prepare(`INSERT INTO merchant_overrides(key,label,website,domains_json,aliases_json,icon,enabled,is_custom,created_at,updated_at,categories_json)
+    VALUES(@key,@label,@website,@domains,@aliases,@icon,@enabled,@custom,@now,@now,@categories)
+    ON CONFLICT(key) DO UPDATE SET label=excluded.label,website=excluded.website,domains_json=excluded.domains_json,aliases_json=excluded.aliases_json,icon=excluded.icon,enabled=excluded.enabled,updated_at=excluded.updated_at,categories_json=excluded.categories_json`)
+    .run({ key, label: input.label, website: input.website, domains: JSON.stringify(input.domains), aliases: JSON.stringify(input.aliases), icon: input.icon, enabled: input.enabled ? 1 : 0, custom: custom ? 1 : 0, now, categories: JSON.stringify(input.categories) });
 }
 
 function assertNoConflicts(db: DB, key: string, input: MerchantInput) {
