@@ -943,6 +943,18 @@
       "file": "po0.webp",
       "source": "https://console.po0.io/templates/lagom2/assets/img/favicons/favicon-160.png",
       "sha256": "f11a78885a0de8f4ce41508dd7c37d8a29b9a99302892e54aa7651192d30b5ff"
+    },
+    {
+      "file": "infuse.webp",
+      "source": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/a1/7f/51/a17f51d9-0071-ca29-9b94-d4c82637c34f/AppIcon-0-0-1x_U007epad-0-11-0-0-0-0-85-220.png/512x512bb.jpg",
+      "sourceSha256": "b04431c97b9a88fb3bdd8a026cc39a4e8bf271768b350d776f174b14d8c66c8d",
+      "sha256": "e6a1a3239a008813eb345a7a48db1e87dc55ce0b84b7edcf0fcd7def8f7b0f52"
+    },
+    {
+      "file": "netease-cloud-music.webp",
+      "source": "https://s1.music.126.net/style/favicon.ico?v20180823",
+      "sourceSha256": "90d4c1e2dcc6f2728a2627a6a625879e8305821bf1bb297a1041e6ccca0d13b1",
+      "sha256": "29d652cfca03c099d0864577677adaa273045d5a13baaf6bf081a2c8c0bc8f1d"
     }
   ]
 }

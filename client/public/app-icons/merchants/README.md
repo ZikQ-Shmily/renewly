@@ -5,3 +5,5 @@
 These are third-party brand marks used to identify the service provider. They remain the property of their respective owners; they are not covered by the CC0 license of the separate Simple Icons app presets. No affiliation or endorsement is implied. Original URLs and checksums are recorded in sources.json.
 
 Assets were decoded, resized within 160 × 160, and re-encoded as inert WebP images. SVG originals are not shipped. Colors and proportions are preserved. Theme variants follow the source catalog. Runtime images are served locally, so displaying these presets sends no requests to DigVPS or merchant websites.
+
+Infuse uses the official App Store artwork from Apple’s public lookup for app 1136220934; 网易云音乐 uses the favicon declared by https://music.163.com/. Both single-image additions retain their original colors and are re-encoded as WebP.
