@@ -133,4 +133,21 @@ export function migrate(db: DB) {
     db.exec("ALTER TABLE server_details ADD COLUMN icon TEXT NOT NULL DEFAULT 'auto'");
     db.prepare("INSERT INTO schema_migrations VALUES(9,?)").run(new Date().toISOString());
   })();
+  if ((version.version || 0) < 10) db.transaction(() => {
+    db.exec(`
+      CREATE TABLE merchant_overrides(
+        key TEXT PRIMARY KEY,
+        label TEXT NOT NULL,
+        website TEXT NOT NULL DEFAULT '',
+        domains_json TEXT NOT NULL DEFAULT '[]',
+        aliases_json TEXT NOT NULL DEFAULT '[]',
+        icon TEXT NOT NULL DEFAULT '',
+        enabled INTEGER NOT NULL DEFAULT 1 CHECK(enabled IN (0,1)),
+        is_custom INTEGER NOT NULL DEFAULT 0 CHECK(is_custom IN (0,1)),
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+    `);
+    db.prepare("INSERT INTO schema_migrations VALUES(10,?)").run(new Date().toISOString());
+  })();
 }

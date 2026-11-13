@@ -37,6 +37,7 @@ import { createMail, type SendMail } from "./mail.js";
 import { createReminders } from "./reminders.js";
 import { createRegistration, RegistrationError } from "./registration.js";
 import { dateTimeInstant } from "../shared/datetime.js";
+import { listMerchants, createMerchant, updateMerchant, resetMerchant, MerchantError } from "./merchants.js";
 
 class ApiError extends Error {
   constructor(
@@ -188,6 +189,8 @@ export async function createApp(options: AppOptions = {}) {
     await next();
   });
   app.onError((error, c) => {
+    if (error instanceof MerchantError)
+      return c.json({ error: { code: error.code, message: error.message } }, error.status);
     if (error instanceof RegistrationError) {
       if (error.retryAfter) c.header("Retry-After", String(error.retryAfter));
       return c.json({ error: { code: error.code, message: error.message, ...(error.retryAfter ? { retryAfter: error.retryAfter } : {}) } }, error.status);
@@ -736,6 +739,19 @@ export async function createApp(options: AppOptions = {}) {
     emailVerified: !!row.email_verified,
     subscriptionCount: row.subscription_count,
     createdAt: row.created_at,
+  });
+  app.get("/api/v1/merchants", (c) => c.json({ merchants: listMerchants(db) }));
+  app.post("/api/v1/admin/merchants", async (c) => {
+    admin(c);
+    return c.json({ merchant: createMerchant(db, await c.req.json()) }, 201);
+  });
+  app.patch("/api/v1/admin/merchants/:key", async (c) => {
+    admin(c);
+    return c.json({ merchant: updateMerchant(db, c.req.param("key"), await c.req.json()) });
+  });
+  app.delete("/api/v1/admin/merchants/:key", (c) => {
+    admin(c);
+    return c.json({ merchant: resetMerchant(db, c.req.param("key")) });
   });
   app.get("/api/v1/admin/users", (c) => {
     admin(c);
