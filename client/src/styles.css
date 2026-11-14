@@ -104,17 +104,24 @@
 /* Only surfaces become translucent; text, controls and data stay fully opaque. */
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   :root[data-theme="light"] {
-    --panel: rgb(232 239 253 / 48%);
+    --panel: rgb(246 249 255 / 54%);
     --panel-raised: rgb(237 242 250 / 76%);
     --input: rgb(248 250 255 / 80%);
     --surface-sidebar: rgb(244 248 255 / 68%);
     --surface-topbar: rgb(248 250 255 / 70%);
     --surface-auth: rgb(255 255 255 / 68%);
     --surface-inset: rgb(242 246 252 / 76%);
-    --surface-search: rgb(248 250 255 / 78%);
+    --surface-search: rgb(238 244 255 / 52%);
     --surface-table-heading: rgb(237 242 250 / 78%);
   }
   :root[data-theme="light"] .panel {
+    -webkit-backdrop-filter: blur(16px) saturate(110%);
+    backdrop-filter: blur(16px) saturate(110%);
+  }
+  :root[data-theme="light"] .management-toolbar > .select-trigger {
+    background: var(--surface-search);
+  }
+  :root[data-theme="light"] :is(.search-field, .management-toolbar > .select-trigger) {
     -webkit-backdrop-filter: blur(16px) saturate(110%);
     backdrop-filter: blur(16px) saturate(110%);
   }
@@ -124,7 +131,7 @@
   }
   @media (max-width: 700px) {
     :root[data-theme="light"] {
-      --panel: rgb(232 239 253 / 62%);
+      --panel: rgb(246 249 255 / 68%);
       --surface-sidebar: rgb(244 248 255 / 80%);
       --surface-topbar: rgb(248 250 255 / 82%);
       --surface-auth: rgb(250 252 255 / 78%);
@@ -148,7 +155,7 @@
     --surface-search: #f3f6fc;
     --surface-table-heading: #edf2fa;
   }
-  :root[data-theme="light"] :is(.panel, .sidebar, .topbar) {
+  :root[data-theme="light"] :is(.panel, .sidebar, .topbar, .search-field, .management-toolbar > .select-trigger) {
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
   }
