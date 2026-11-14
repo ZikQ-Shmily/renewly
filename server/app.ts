@@ -362,7 +362,7 @@ export async function createApp(options: AppOptions = {}) {
     });
   });
   app.get("/api/v1/types", (c) =>
-    c.json({ types: [{ key: "app", name: "App 订阅", icon: "app-window" }, { key: "cloud", name: "云服务器", icon: "server" }] }),
+    c.json({ types: [{ key: "app", name: "App 订阅", icon: "app-window" }, { key: "cloud", name: "云服务器", icon: "server" }, { key: "domain", name: "域名", icon: "globe" }] }),
   );
   app.get("/api/v1/subscriptions", (c) =>
     c.json({ subscriptions: listSubscriptions(db, userId(c), c.get("user").time_zone, clock()) }),
@@ -420,7 +420,7 @@ export async function createApp(options: AppOptions = {}) {
         v.trafficDirection,
         v.serverIcon,
       );
-      else db.prepare("INSERT INTO app_details(subscription_id,plan,purchase_channel,account,icon) VALUES(?,?,?,?,?)").run(id,v.appPlan,v.appChannel,v.appAccount,v.appIcon);
+      else if (v.type === "app") db.prepare("INSERT INTO app_details(subscription_id,plan,purchase_channel,account,icon) VALUES(?,?,?,?,?)").run(id,v.appPlan,v.appChannel,v.appAccount,v.appIcon);
       db.prepare(
         "INSERT INTO billing_periods(subscription_id,user_id,starts_at,ends_at,paid_minor,currency,created_at) VALUES(?,?,?,?,?,?,?)",
       ).run(
@@ -517,7 +517,7 @@ export async function createApp(options: AppOptions = {}) {
         v.serverIcon,
         old.id,
       );
-      else db.prepare("INSERT INTO app_details(subscription_id,plan,purchase_channel,account,icon) VALUES(?,?,?,?,?) ON CONFLICT(subscription_id) DO UPDATE SET plan=excluded.plan,purchase_channel=excluded.purchase_channel,account=excluded.account,icon=excluded.icon").run(old.id,v.appPlan,v.appChannel,v.appAccount,v.appIcon);
+      else if (v.type === "app") db.prepare("INSERT INTO app_details(subscription_id,plan,purchase_channel,account,icon) VALUES(?,?,?,?,?) ON CONFLICT(subscription_id) DO UPDATE SET plan=excluded.plan,purchase_channel=excluded.purchase_channel,account=excluded.account,icon=excluded.icon").run(old.id,v.appPlan,v.appChannel,v.appAccount,v.appIcon);
       db.prepare(
         "UPDATE billing_periods SET starts_at=?,ends_at=?,paid_minor=?,currency=? WHERE id=? AND user_id=?",
       ).run(
@@ -593,7 +593,7 @@ export async function createApp(options: AppOptions = {}) {
   });
   app.get("/api/v1/exchange-rates", async (c) => c.json(await fx.get()));
   app.get("/api/v1/dashboard", async (c) => {
-    const typeKey = z.enum(["cloud", "app"]).optional().parse(c.req.query("type"));
+    const typeKey = z.enum(["cloud", "app", "domain"]).optional().parse(c.req.query("type"));
     const target = "CNY",
       rates = await fx.get();
     return c.json({
