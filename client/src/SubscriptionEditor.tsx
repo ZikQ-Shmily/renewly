@@ -26,7 +26,7 @@ import {
 interface EditorProps {
   item: Subscription | null;
   draftKey: number;
-  category: "cloud" | "app";
+  category: "cloud" | "app" | "domain";
   types: SubscriptionType[];
   timeZone: string;
   defaultDays: number[];
@@ -75,7 +75,7 @@ type Draft = Omit<
 };
 function initialDraft(
   item: Subscription | null,
-  category: "cloud" | "app",
+  category: "cloud" | "app" | "domain",
   timeZone: string,
   defaultDays: number[],
 ): Draft {
@@ -177,9 +177,10 @@ export function SubscriptionEditor({
     setError("");
   }, [draftKey]);
   const isApp = draft.type === "app";
-  const categoryName = isApp ? "App 订阅" : "云服务器";
+  const isDomain = draft.type === "domain";
+  const categoryName = isApp ? "App 订阅" : isDomain ? "域名" : "云服务器";
   function changeVendor(value: string) {
-    const website = merchantWebsiteForName(value, catalog, isApp ? "app" : "cloud");
+    const website = isDomain ? "" : merchantWebsiteForName(value, catalog, isApp ? "app" : "cloud");
     const mayFill = !websiteEdited.current && (!draft.website.trim() || draft.website === autoWebsite.current);
     if (mayFill) autoWebsite.current = website || null;
     setDraft(previous => ({ ...previous, vendor: value, ...(mayFill ? { website } : {}) }));
@@ -241,7 +242,7 @@ export function SubscriptionEditor({
         dateTimeInstant(periodStart, timeZone)
       )
         throw new Error("续费时间需要晚于本期开始时间。");
-      if (!isApp || draft.website.trim()) {
+      if ((!isApp && !isDomain) || draft.website.trim()) {
         const website = new URL(draft.website.trim());
         if (!["http:", "https:"].includes(website.protocol) || website.username || website.password)
           throw new Error("网站只支持不含账户或密码的 HTTP 或 HTTPS 地址。");
@@ -328,7 +329,7 @@ export function SubscriptionEditor({
     <section aria-label={`${item ? "编辑" : "新增"}${categoryName}`}>
       <div className="page-heading">
         <div>
-          <span className="eyebrow gradient">{isApp ? "APP SUBSCRIPTION" : "SERVER DETAILS"}</span>
+          <span className="eyebrow gradient">{isApp ? "APP SUBSCRIPTION" : isDomain ? "DOMAIN DETAILS" : "SERVER DETAILS"}</span>
           <h1>{item ? "编辑" : "新增"}{categoryName}</h1>
           <p>录入一次费用，安排下一次续费。</p>
         </div>
@@ -347,11 +348,11 @@ export function SubscriptionEditor({
               {types.find((type) => type.key === draft.type)?.name || categoryName}
             </span>
           </Field>
-          <Field label={isApp ? "App 名称 *" : "订阅名称 *"}>
+          <Field label={isApp ? "App 名称 *" : isDomain ? "域名 *" : "订阅名称 *"}>
             <input
               value={draft.name}
               onChange={(e) => field("name", e.target.value)}
-              placeholder={isApp ? "例如：Notion、iCloud+" : "例如：香港 · 主站"}
+              placeholder={isApp ? "例如：Notion、iCloud+" : isDomain ? "例如：example.com" : "例如：香港 · 主站"}
               required
               maxLength={100}
             />
@@ -364,23 +365,23 @@ export function SubscriptionEditor({
               maxLength={100}
             />
           </Field>}
-          <Field label={isApp ? "服务商" : "商家 / 服务商 *"}>
+          <Field label={isApp ? "服务商" : isDomain ? "注册商 *" : "商家 / 服务商 *"}>
             <input
               value={draft.vendor}
               onChange={(e) => changeVendor(e.target.value)}
               onBlur={(e) => changeVendor(e.target.value)}
-              placeholder={isApp ? "例如：Apple、Notion" : "例如：腾讯云"}
+              placeholder={isApp ? "例如：Apple、Notion" : isDomain ? "例如：Cloudflare、阿里云" : "例如：腾讯云"}
               required={!isApp}
               maxLength={100}
             />
           </Field>
-          <Field label={isApp ? "官网 / 管理地址" : "商家网站 *"}>
+          <Field label={isApp ? "官网 / 管理地址" : isDomain ? "注册商网站" : "商家网站 *"}>
             <input
               value={draft.website}
               onChange={(e) => { websiteEdited.current = true; autoWebsite.current = null; field("website", e.target.value); }}
               placeholder="https://"
               type="url"
-              required={!isApp}
+              required={!isApp && !isDomain}
               maxLength={1000}
             />
           </Field>
@@ -416,7 +417,7 @@ export function SubscriptionEditor({
               />
             </div>
           </>}
-          {!isApp && <>
+          {!isApp && !isDomain && <>
           <div className="wide">
             <AppIconPicker
               label="商家图标"
