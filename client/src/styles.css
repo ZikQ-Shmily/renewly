@@ -2539,3 +2539,45 @@ html[data-input-mode="keyboard"] .switch-control input:focus + .switch-track { o
   .cloud-management-subscription { white-space: normal; overflow-wrap: anywhere; }
   .cloud-management-header > .badge { grid-column: 3; grid-row: 1; }
 }
+
+/* Keep navigation and the sign-in form within easy reach on phones. */
+@media (max-width: 520px) {
+  .sidebar { padding: 12px 14px 10px; }
+  .sidebar .brand { font-size: 19px; }
+  .brand-sub { margin: 3px 0 10px; font-size: 9px; }
+  .sidebar .nav-group { gap: 4px; }
+  .sidebar .nav-item { min-height: 38px; padding: 8px; font-size: 12px; }
+  .sidebar .category-nav-row .nav-item { padding-right: 34px; }
+  .sidebar .nav-divider { margin: 7px 5px; }
+  .sidebar .utility-nav, .sidebar .admin-nav { display: flex; gap: 4px; }
+  .sidebar .utility-nav > .nav-item, .sidebar .admin-nav > .nav-item {
+    flex: 1; width: auto; justify-content: center; white-space: nowrap;
+    min-width: 0; padding: 7px 4px; font-size: 11px;
+  }
+  .topbar { gap: 6px 10px; padding: 9px 15px; }
+  .topbar .breadcrumb { flex: 1 1 auto; }
+  .topbar-actions { width: auto; margin-left: auto; gap: 5px; }
+  .summary-currency { font-size: 10px; }
+  .content { padding-top: 18px; }
+  .page-heading { margin-bottom: 16px; }
+  .page-heading h1 { font-size: 23px; }
+  .metric-value { font-size: clamp(19px, 6vw, 26px); }
+  .auth-layout { padding: 65px 18px 24px; gap: 20px; }
+  .auth-theme-control { top: 14px; right: 18px; }
+  .auth-theme-control .theme-switch-label {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+  }
+  .auth-intro > .brand { font-size: 20px; margin-bottom: 14px; }
+  .auth-intro > .eyebrow { margin-bottom: 6px; font-size: 9px; }
+  .auth-intro > h1 { font-size: clamp(25px, 7vw, 31px); line-height: 1.3; }
+  .auth-intro > p { margin-top: 9px; font-size: 11px; }
+  .auth-features { margin-top: 12px; gap: 7px 12px; font-size: 10px; }
+  .auth-panel { padding: 20px; }
+  .auth-panel-title { margin-bottom: 16px; }
+  .auth-lock { width: 34px; height: 34px; margin-bottom: 10px; }
+  .auth-panel-title h2 { font-size: 20px; }
+  .auth-panel fieldset { gap: 14px; }
+  .auth-switch { margin-top: 16px; }
+  .auth-privacy { margin-top: 15px; }
+}
