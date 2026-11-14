@@ -29,7 +29,7 @@ export interface ServerIpAddress {
   address: string;
 }
 export interface SubscriptionInput {
-  type: "cloud" | "app";
+  type: "cloud" | "app" | "domain";
   appPlan?: string;
   appChannel?: string;
   appAccount?: string;

@@ -4,6 +4,7 @@ import {
   AppWindow,
   Bell,
   GripVertical,
+  Globe2,
   Layers,
   LoaderCircle,
   LogOut,
@@ -60,7 +61,7 @@ const pageTitles: Record<Page, string> = {
 function hashRoute(): { page: Page; category: string } {
   const value = window.location.hash.slice(1);
   const category = /^category\/([a-z][a-z0-9_-]*)$/.exec(value)?.[1];
-  if (category) return { page: "manage", category: ["cloud", "app"].includes(category) ? category : "cloud" };
+  if (category) return { page: "manage", category: ["cloud", "app", "domain"].includes(category) ? category : "cloud" };
   if (value === "manage") return { page: "manage", category: "cloud" };
   return {
     page: ["overview", "reminders", "admin", "users", "merchants"].includes(value) ? value as Page : "overview",
@@ -360,7 +361,7 @@ export default function App() {
                 navigate("manage", type.key);
               }}
             >
-              {type.key === "app" ? <AppWindow size={17} /> : <Server size={17} />}
+              {type.key === "app" ? <AppWindow size={17} /> : type.key === "domain" ? <Globe2 size={17} /> : <Server size={17} />}
               <span>{type.name}</span>
               <small>
                 {nonArchived.filter((s) => s.type === type.key).length}
@@ -523,7 +524,7 @@ export default function App() {
               subscriptions={subscriptions.filter((item) => item.type === category)}
               user={user}
               title={categoryName}
-              category={category === "app" ? "app" : "cloud"}
+              category={category === "app" ? "app" : category === "domain" ? "domain" : "cloud"}
               dashboard={loadedCategory === category ? categoryDashboard : null}
               onAdd={() => edit(null)}
               onEdit={edit}
@@ -546,7 +547,7 @@ export default function App() {
               item={editorItem}
               draftKey={draftKey}
               types={types}
-              category={category === "app" ? "app" : "cloud"}
+              category={category === "app" ? "app" : category === "domain" ? "domain" : "cloud"}
               timeZone={user.timeZone}
               defaultDays={notifications?.reminderDays || [7, 3, 1]}
               onSaved={() => saved("订阅已保存。")}
@@ -606,7 +607,7 @@ function Management({
   subscriptions: Subscription[];
   user: User;
   title: string;
-  category: "cloud" | "app";
+  category: "cloud" | "app" | "domain";
   dashboard: Dashboard | null;
   onAdd: () => void;
   onEdit: (item: Subscription) => void;
@@ -619,6 +620,8 @@ function Management({
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState("");
   const isApp = category === "app";
+  const isDomain = category === "domain";
+  const isCloud = category === "cloud";
   const list = subscriptions
     .filter(
       (item) =>
@@ -648,13 +651,13 @@ function Management({
     <section>
       <div className="page-heading">
         <div>
-          <span className="eyebrow gradient">{isApp ? "APP SUBSCRIPTIONS" : "CLOUD SERVERS"}</span>
-          <h1>{title}<small className="category-count">{subscriptions.filter((item) => item.status !== "archived").length} {isApp ? "项" : "台"}</small></h1>
-          <p>{isApp ? "从效率工具到影音服务，让每一次续费都有提醒。" : "记录配置、IP 与价格，安排每一次续费。"}</p>
+          <span className="eyebrow gradient">{isApp ? "APP SUBSCRIPTIONS" : isDomain ? "DOMAIN SUBSCRIPTIONS" : "CLOUD SERVERS"}</span>
+          <h1>{title}<small className="category-count">{subscriptions.filter((item) => item.status !== "archived").length} {isCloud ? "台" : "项"}</small></h1>
+          <p>{isApp ? "从效率工具到影音服务，让每一次续费都有提醒。" : isDomain ? "管理域名、注册商与到期续费。" : "记录配置、IP 与价格，安排每一次续费。"}</p>
         </div>
         <Button variant="primary" onClick={onAdd}>
           <Plus size={16} />
-          {isApp ? "新增订阅" : "新增服务器"}
+          {isApp ? "新增订阅" : isDomain ? "新增域名" : "新增服务器"}
         </Button>
       </div>
       <DashboardMetrics dashboard={dashboard} currency="CNY" scope={`仅${title}`} />
@@ -665,8 +668,8 @@ function Management({
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder={isApp ? "搜索 App、套餐或账户" : "搜索名称、商家、地区或 IP"}
-            aria-label={isApp ? "搜索 App 订阅" : "搜索服务器"}
+            placeholder={isApp ? "搜索 App、套餐或账户" : isDomain ? "搜索域名或注册商" : "搜索名称、商家、地区或 IP"}
+            aria-label={isApp ? "搜索 App 订阅" : isDomain ? "搜索域名" : "搜索服务器"}
           />
         </label>
         <Select
@@ -686,9 +689,9 @@ function Management({
         {list.length ? (
           list.map((item) => (
             <article className="management-row" key={item.id}>
-              <div className={`management-header ${isApp ? "" : "cloud-management-header"}`}>
-                {isApp ? <div className="management-name">
-                  <AppIcon name={item.name} website={item.website} value={item.appIcon} />
+              <div className={`management-header ${isCloud ? "cloud-management-header" : ""}`}>
+                {isApp || isDomain ? <div className="management-name">
+                  <AppIcon name={isDomain ? item.vendor : item.name} website={item.website} value={item.appIcon} fallbackInitial={isDomain} />
                   <div className="management-title">
                     <strong>{item.name}</strong>
                     {item.autoRenew && <span className="auto-renew-tag">自动续费</span>}
@@ -706,8 +709,11 @@ function Management({
               </div>
               <div className="management-body">
                 <div className="management-details">
-                  <dl className={`management-meta ${isApp ? "app-subscription-meta" : ""}`}>
-                    {isApp ? <>
+                  <dl className={`management-meta ${!isCloud ? "app-subscription-meta" : ""}`}>
+                    {isDomain ? <>
+                      <div><dt>注册商</dt><dd>{item.vendor || "未填写"}</dd></div>
+                      <div><dt>购买价格</dt><dd>{money(item.purchasePrice, item.currency)}</dd></div>
+                    </> : isApp ? <>
                       <div><dt>套餐 / 版本</dt><dd>{item.appPlan || "未填写"}</dd></div>
                       <div><dt>购买渠道</dt><dd>{item.appChannel || "官网"}</dd></div>
                     </> : <>
@@ -732,7 +738,7 @@ function Management({
                       <dt>下次续费</dt>
                       <dd><time dateTime={item.nextRenewal}>{formatDateTime(item.nextRenewal)}</time></dd>
                     </div>
-                    {!isApp && <><div>
+                    {isCloud && <><div>
                       <dt>套餐流量</dt>
                       <dd>{trafficLabel(item)}</dd>
                     </div>
@@ -743,9 +749,9 @@ function Management({
                     </>}
                   </dl>
                   {isApp && <p className="app-subscription-account">账户：{item.appAccount || "未填写"}</p>}
-                  {!isApp && item.model && (item.cpuCores != null || item.memoryValue != null || item.diskValue != null) &&
+                  {isCloud && item.model && (item.cpuCores != null || item.memoryValue != null || item.diskValue != null) &&
                     <p className="item-notes">原配置：{item.model}</p>}
-                  {!isApp && !!item.ipAddresses?.length && <div className="server-ip-list">{item.ipAddresses.map((ip, index) => (
+                  {isCloud && !!item.ipAddresses?.length && <div className="server-ip-list">{item.ipAddresses.map((ip, index) => (
                     <span className="server-ip" key={index}><span>{ip.type === "dynamic" ? "动态 IP" : "静态 IP"}</span><code>{ip.address || "当前地址未填写"}</code></span>
                   ))}</div>}
                   {item.notes && <p className="item-notes">{item.notes}</p>}
@@ -804,13 +810,13 @@ function Management({
             detail={
               query || status !== "current"
                 ? "可以调整搜索词或筛选条件。"
-                : isApp ? "填写 App、套餐、费用和续费时间，安排下一次提醒。" : "填写商家、配置、价格和续费日期，其他交给续记。"
+                : isApp ? "填写 App、套餐、费用和续费时间，安排下一次提醒。" : isDomain ? "填写域名、注册商、费用和续费时间，安排下一次提醒。" : "填写商家、配置、价格和续费日期，其他交给续记。"
             }
             action={
               query || status !== "current" ? undefined : (
                 <Button onClick={onAdd} variant="primary">
                   <Plus size={15} />
-                  {isApp ? "新增订阅" : "新增服务器"}
+                  {isApp ? "新增订阅" : isDomain ? "新增域名" : "新增服务器"}
                 </Button>
               )
             }

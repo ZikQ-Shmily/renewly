@@ -51,7 +51,7 @@ const appIconSchema = z.string().max(90_000).default("auto").refine(value => {
 }, "图标须为内置图标，或不超过 64 KB 的 PNG、JPEG、WebP 图片。");
 export const subscriptionSchema = z
   .object({
-    type: z.enum(["cloud", "app"]),
+    type: z.enum(["cloud", "app", "domain"]),
     name: z.string().trim().min(1).max(100),
     vendor: z.string().trim().max(100).default(""),
     website: z.union([z.literal(""), z
@@ -104,6 +104,8 @@ export const subscriptionSchema = z
       if (!v.vendor) c.addIssue({ code: "custom", message: "请填写商家 / 服务商", path: ["vendor"] });
       if (!v.website) c.addIssue({ code: "custom", message: "请填写商家网站", path: ["website"] });
     }
+    if (v.type === "domain" && !v.vendor)
+      c.addIssue({ code: "custom", message: "请填写域名注册商", path: ["vendor"] });
     if (v.nextRenewal <= v.periodStart)
       c.addIssue({
         code: "custom",
