@@ -742,6 +742,38 @@ test("App subscriptions round trip, stay owner scoped, renew and aggregate separ
   } finally { f.cleanup(); }
 });
 
+test("domain subscriptions preserve isolation, renewal and category totals", async () => {
+  const f = await fixture();
+  try {
+    const { cookie } = await f.seedAccount("domain-owner@example.com");
+    const { cookie: other } = await f.seedAccount("domain-other@example.com");
+    const domain = { type: "domain", name: "example.com", vendor: "Registrar", website: "", currency: "CNY", purchasePrice: 60, renewalPrice: 80, paidAmount: 60, billingMonths: 12, periodStart: "2026-01-14", nextRenewal: "2026-11-14", reminderDays: [7,3,1], autoRenew: true };
+    const invalid = await f.request("/subscriptions", "POST", { ...domain, vendor: "" }, cookie);
+    assert.equal(invalid.status, 400);
+    const created = await f.request("/subscriptions", "POST", domain, cookie);
+    assert.equal(created.status, 201, await created.clone().text());
+    const item = (await created.json() as any).subscription;
+    assert.equal(item.type, "domain");
+    assert.equal(item.website, "");
+    assert.equal(item.autoRenew, true);
+    assert.equal(f.runtime.db.prepare("SELECT * FROM app_details WHERE subscription_id=?").get(item.id), undefined);
+    assert.equal(f.runtime.db.prepare("SELECT * FROM server_details WHERE subscription_id=?").get(item.id), undefined);
+    const updated = await f.request(`/subscriptions/${item.id}`, "PUT", { ...domain, vendor: "New Registrar" }, cookie);
+    assert.equal(updated.status, 200, await updated.clone().text());
+    assert.equal((await updated.json() as any).subscription.vendor, "New Registrar");
+    assert.equal((await f.request(`/subscriptions/${item.id}`, "PUT", domain, other)).status, 404);
+    const overview = await f.request("/dashboard?type=domain", "GET", undefined, cookie);
+    assert.equal(overview.status, 200);
+    assert.equal((await overview.json() as any).annualTotal, 80);
+    assert.equal((await f.request("/dashboard?type=domain", "GET", undefined, other).then(r => r.json()) as any).activeCount, 0);
+    assert.equal((await f.request(`/subscriptions/${item.id}/renew`, "POST", { paidAmount: 80, periodStart: "2026-11-14", nextRenewal: "2027-11-14" }, cookie)).status, 200);
+    assert.equal((f.runtime.db.prepare("SELECT COUNT(*) AS n FROM billing_periods WHERE subscription_id=?").get(item.id) as any).n, 2);
+    assert.equal((await f.request(`/subscriptions/${item.id}`, "DELETE", undefined, other)).status, 404);
+    assert.equal((await f.request(`/subscriptions/${item.id}`, "DELETE", undefined, cookie)).status, 200);
+    assert.equal((await f.request("/dashboard?type=domain", "GET", undefined, cookie).then(r => r.json()) as any).activeCount, 0);
+  } finally { f.cleanup(); }
+});
+
 test("App purchase channels create, edit and round trip with in-app purchases while rejecting unknown values", async () => {
   const f = await fixture();
   try {
