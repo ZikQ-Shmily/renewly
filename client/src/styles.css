@@ -301,9 +301,8 @@ code {
   }
 }
 .workspace {
-  max-width: 1600px;
+  width: 100%;
   min-height: 100dvh;
-  margin: 0 auto;
   display: grid;
   grid-template-columns: 205px minmax(0, 1fr);
   background:
@@ -321,6 +320,13 @@ code {
   background: var(--surface-sidebar, #101727);
   border-right: 1px solid var(--line);
   padding: 30px 17px 20px;
+}
+@media (min-width: 521px) {
+  .sidebar {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .sidebar > * { flex-shrink: 0; }
 }
 .brand-button {
   border: 0;
