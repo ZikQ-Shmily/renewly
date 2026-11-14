@@ -2675,3 +2675,31 @@ html[data-input-mode="keyboard"] .switch-control input:focus + .switch-track { o
   .auth-intro > .brand { gap: 6px; font-size: 16px; }
   .auth-intro > .brand img { width: 22px; height: 22px; }
 }
+
+/* Keep the three financial summaries visible together without taking over the phone screen. */
+@media (max-width: 520px) {
+  .metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 7px;
+    margin-bottom: 16px;
+    align-items: stretch;
+  }
+  .metric {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    min-width: 0;
+    padding: 10px 8px;
+    border-radius: 10px;
+  }
+  .metric-label { font-size: 11px; line-height: 1.35; }
+  .metric-value {
+    margin: 7px 0 4px;
+    align-self: auto;
+    font-size: clamp(12px, 3.6vw, 17px);
+    line-height: 1.25;
+    letter-spacing: -0.3px;
+    overflow-wrap: anywhere;
+  }
+  .metric p { font-size: 10px; line-height: 1.4; overflow-wrap: anywhere; }
+}
