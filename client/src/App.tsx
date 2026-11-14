@@ -8,6 +8,7 @@ import {
   Layers,
   LoaderCircle,
   LogOut,
+  Menu,
   Plus,
   RefreshCw,
   Search,
@@ -15,6 +16,7 @@ import {
   Settings2,
   Store,
   Users,
+  X,
 } from "lucide-react";
 import { ApiError, api, errorMessage, json } from "./api";
 import { Auth } from "./Auth";
@@ -84,6 +86,11 @@ export default function App() {
   const [categoryOrder, setCategoryOrder] = useState<string[]>([]);
   const [draggingCategory, setDraggingCategory] = useState<string | null>(null);
   const [categoryDrag, setCategoryDrag] = useState<{ key: string; dx: number; dy: number } | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileViewport, setMobileViewport] = useState(() => window.matchMedia("(max-width: 520px)").matches);
+  const menuToggleRef = useRef<HTMLButtonElement>(null);
+  const menuCloseRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLElement>(null);
   const categoryDragOrigin = useRef<{ x: number; y: number } | null>(null);
   const [notifications, setNotifications] =
     useState<NotificationSettings | null>(null);
@@ -95,6 +102,34 @@ export default function App() {
   const [renewalItem, setRenewalItem] = useState<Subscription | null>(null);
   const requestVersion = useRef(0);
   const catalogRequestVersion = useRef(0);
+  useEffect(() => {
+    const query = window.matchMedia("(max-width: 520px)");
+    const update = () => { setMobileViewport(query.matches); if (!query.matches) setMobileMenuOpen(false); };
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
+  useEffect(() => {
+    if (!mobileMenuOpen || !mobileViewport) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    menuCloseRef.current?.focus();
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") { event.preventDefault(); setMobileMenuOpen(false); return; }
+      if (event.key !== "Tab") return;
+      const focusable = [...(menuRef.current?.querySelectorAll<HTMLElement>("button:not(:disabled), a[href], [tabindex]:not([tabindex='-1'])") || [])]
+        .filter(element => element.getClientRects().length > 0);
+      if (!focusable.length) { event.preventDefault(); return; }
+      const first = focusable[0]!, last = focusable[focusable.length - 1]!;
+      if (event.shiftKey && (document.activeElement === first || !menuRef.current?.contains(document.activeElement))) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && (document.activeElement === last || !menuRef.current?.contains(document.activeElement))) { event.preventDefault(); first.focus(); }
+    };
+    document.addEventListener("keydown", handleKey);
+    return () => {
+      document.removeEventListener("keydown", handleKey);
+      document.body.style.overflow = previousOverflow;
+      if (window.matchMedia("(max-width: 520px)").matches) menuToggleRef.current?.focus();
+    };
+  }, [mobileMenuOpen, mobileViewport]);
   useEffect(() => {
     if (!user) { setCategoryOrder([]); return; }
     try {
@@ -153,6 +188,7 @@ export default function App() {
       const route = hashRoute();
       setPage(route.page);
       setCategory(route.category);
+      setMobileMenuOpen(false);
     };
     window.addEventListener("hashchange", navigate);
     return () => {
@@ -164,6 +200,7 @@ export default function App() {
     if (user && ["admin", "users", "merchants"].includes(page) && user.role !== "admin") navigate("overview");
   }, [user, page]);
   function navigate(next: Page, nextCategory = category) {
+    setMobileMenuOpen(false);
     if (nextCategory !== category) {
       setCategoryDashboard(null);
       setCategory(nextCategory);
@@ -247,6 +284,7 @@ export default function App() {
     navigate("overview");
   }
   async function logout() {
+    setMobileMenuOpen(false);
     try {
       await api("/auth/logout", json("POST"));
       clearData();
@@ -318,8 +356,14 @@ export default function App() {
     (item) => item.status === "active" && daysUntil(item.nextRenewal, user.timeZone) >= 0,
   );
   return (
-    <div className="workspace">
-      <aside className="sidebar">
+    <div className={`workspace${mobileMenuOpen ? " menu-open" : ""}`}>
+      <button type="button" className="mobile-menu-backdrop" aria-label="关闭导航菜单" tabIndex={-1} onClick={() => setMobileMenuOpen(false)} />
+      <aside id="mobile-navigation" className="sidebar" ref={menuRef}
+        role={mobileViewport && mobileMenuOpen ? "dialog" : undefined}
+        aria-modal={mobileViewport && mobileMenuOpen ? true : undefined}
+        aria-label={mobileViewport && mobileMenuOpen ? "导航菜单" : undefined}
+        inert={mobileViewport && !mobileMenuOpen ? true : undefined}>
+        <button type="button" className="mobile-menu-close" ref={menuCloseRef} onClick={() => setMobileMenuOpen(false)} aria-label="关闭导航菜单"><X size={19} /></button>
         <button
           className="brand-button"
           onClick={() => {
@@ -447,6 +491,7 @@ export default function App() {
       </aside>
       <div className="stage">
         <header className="topbar">
+          <button type="button" className="mobile-menu-toggle" ref={menuToggleRef} onClick={() => setMobileMenuOpen(true)} aria-label="打开导航菜单" aria-controls="mobile-navigation" aria-expanded={mobileMenuOpen}><Menu size={20} /></button>
           <div className="breadcrumb">
             我的空间<span>/</span>
             <strong>{breadcrumb}</strong>
