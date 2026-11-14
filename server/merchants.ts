@@ -138,6 +138,16 @@ const appCatalog = [
   { key: "adobe", label: "Adobe", domains: ["adobe.com"], aliases: ["Adobe"], color: "#e7353d" },
   { key: "chatgpt", label: "ChatGPT", domains: ["chatgpt.com", "openai.com"], aliases: ["ChatGPT", "OpenAI"], color: "currentColor" },
   { key: "github", label: "GitHub", domains: ["github.com"], aliases: ["GitHub"], color: "currentColor" },
+  { key: "iqiyi", label: "爱奇艺", domains: ["www.iqiyi.com", "iqiyi.com"], aliases: ["爱奇艺", "iQIYI"], color: "#00be5a" },
+  { key: "youku", label: "优酷", domains: ["www.youku.com", "youku.com"], aliases: ["优酷", "Youku"], color: "#1677ff" },
+  { key: "tencent-video", label: "腾讯视频", domains: ["v.qq.com"], aliases: ["腾讯视频", "Tencent Video"], color: "#ee8637" },
+  { key: "bilibili", label: "哔哩哔哩", domains: ["www.bilibili.com", "bilibili.com"], aliases: ["哔哩哔哩", "Bilibili", "B站"], color: "#fb7299" },
+  { key: "mangotv", label: "芒果 TV", domains: ["www.mgtv.com", "mgtv.com"], aliases: ["芒果TV", "芒果 TV", "芒果视频"], color: "#f58924" },
+  { key: "qq-music", label: "QQ音乐", domains: ["y.qq.com"], aliases: ["QQ音乐", "QQ Music"], color: "#2caf62" },
+  { key: "kugou", label: "酷狗音乐", domains: ["www.kugou.com", "kugou.com"], aliases: ["酷狗音乐", "酷狗", "KuGou"], color: "#1686e8" },
+  { key: "kuwo", label: "酷我音乐", domains: ["www.kuwo.cn", "kuwo.cn"], aliases: ["酷我音乐", "酷我", "Kuwo"], color: "#f3a924" },
+  { key: "baidu-pan", label: "百度网盘", domains: ["pan.baidu.com"], aliases: ["百度网盘", "百度云盘"], color: "#2674ee" },
+  { key: "quark-pan", label: "夸克网盘", domains: ["pan.quark.cn"], aliases: ["夸克网盘"], color: "#4176f7" },
 ];
 
 function websiteDomains(website: string) {
