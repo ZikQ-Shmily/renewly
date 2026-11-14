@@ -104,7 +104,7 @@
 /* Only surfaces become translucent; text, controls and data stay fully opaque. */
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   :root[data-theme="light"] {
-    --panel: rgb(255 255 255 / 62%);
+    --panel: rgb(232 239 253 / 48%);
     --panel-raised: rgb(237 242 250 / 76%);
     --input: rgb(248 250 255 / 80%);
     --surface-sidebar: rgb(244 248 255 / 68%);
@@ -124,7 +124,7 @@
   }
   @media (max-width: 700px) {
     :root[data-theme="light"] {
-      --panel: rgb(250 252 255 / 76%);
+      --panel: rgb(232 239 253 / 62%);
       --surface-sidebar: rgb(244 248 255 / 80%);
       --surface-topbar: rgb(248 250 255 / 82%);
       --surface-auth: rgb(250 252 255 / 78%);
