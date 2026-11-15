@@ -36,7 +36,7 @@ export interface IconPreset {
   enabled?: boolean;
   website?: string;
   aliases?: readonly string[];
-  categories?: readonly ("cloud" | "app")[];
+  categories?: readonly ("cloud" | "app" | "domain")[];
   image?: { light: string; dark: string };
 }
 

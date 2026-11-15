@@ -35,6 +35,7 @@ export interface SubscriptionInput {
   appAccount?: string;
   appIcon?: string;
   serverIcon?: string;
+  domainIcon?: string;
   name: string;
   vendor: string;
   website: string;

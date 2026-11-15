@@ -7,7 +7,7 @@ export interface MerchantCatalogEntry {
   website: string;
   domains: string[];
   aliases: string[];
-  categories: ("cloud" | "app")[];
+  categories: ("cloud" | "app" | "domain")[];
   icon: string;
   image?: { light: string; dark: string };
   color: string;
@@ -30,7 +30,7 @@ export function merchantPreset(entry: MerchantCatalogEntry): IconPreset {
 }
 
 /** Only unambiguous exact names or aliases may fill a form field. */
-export function merchantWebsiteForName(name: string, entries: readonly IconPreset[], category?: "cloud" | "app"): string {
+export function merchantWebsiteForName(name: string, entries: readonly IconPreset[], category?: "cloud" | "app" | "domain"): string {
   const normalized = merchantName(name);
   if (!normalized) return "";
   const matches = entries.filter(entry => entry.enabled !== false && entry.website && (!category || !entry.categories || entry.categories.includes(category)) &&
