@@ -154,4 +154,8 @@ export function migrate(db: DB) {
     db.exec("ALTER TABLE merchant_overrides ADD COLUMN categories_json TEXT DEFAULT NULL");
     db.prepare("INSERT INTO schema_migrations VALUES(11,?)").run(new Date().toISOString());
   })();
+  if ((version.version || 0) < 12) db.transaction(() => {
+    db.exec("CREATE TABLE IF NOT EXISTS domain_details(subscription_id TEXT PRIMARY KEY REFERENCES subscriptions(id) ON DELETE CASCADE, icon TEXT NOT NULL DEFAULT 'auto')");
+    db.prepare("INSERT INTO schema_migrations VALUES(12,?)").run(new Date().toISOString());
+  })();
 }
