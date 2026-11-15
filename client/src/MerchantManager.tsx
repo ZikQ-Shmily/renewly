@@ -19,7 +19,7 @@ interface MerchantDraft {
   aliases: string;
   icon: string;
   enabled: boolean;
-  categories: ("cloud" | "app")[];
+  categories: ("cloud" | "app" | "domain")[];
 }
 
 const emptyDraft = (): MerchantDraft => ({ label: "", website: "", domains: "", aliases: "", icon: "", enabled: true, categories: ["cloud", "app"] });
@@ -116,7 +116,7 @@ export function MerchantManager({ onCatalogChange }: MerchantManagerProps) {
   const filtered = useMemo(() => {
     const search = query.trim().toLocaleLowerCase();
     return merchants.filter(merchant => (filter === "all" || merchant.enabled === (filter === "enabled"))
-      && (categoryFilter === "all" || merchant.categories?.includes(categoryFilter as "cloud" | "app"))
+      && (categoryFilter === "all" || merchant.categories?.includes(categoryFilter as "cloud" | "app" | "domain"))
       && `${merchant.label} ${merchant.website} ${merchant.domains.join(" ")} ${merchant.aliases.join(" ")}`.toLocaleLowerCase().includes(search));
   }, [merchants, query, filter, categoryFilter]);
   const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
@@ -252,7 +252,7 @@ export function MerchantManager({ onCatalogChange }: MerchantManagerProps) {
         <div className="merchant-catalog">
           <div className="panel merchant-toolbar">
             <label className="merchant-search"><Search size={16} aria-hidden="true" /><input type="search" value={query} onChange={event => setQuery(event.target.value)} placeholder="搜索商家、别名或域名" aria-label="搜索商家、别名或域名" /></label>
-            <Select value={categoryFilter} onValueChange={setCategoryFilter} options={[{ value: "all", label: "全部分类" }, { value: "cloud", label: "云服务器" }, { value: "app", label: "App" }]} aria-label="按商家分类筛选" disabled={disabled} />
+            <Select value={categoryFilter} onValueChange={setCategoryFilter} options={[{ value: "all", label: "全部分类" }, { value: "cloud", label: "云服务器" }, { value: "app", label: "App" }, { value: "domain", label: "域名" }]} aria-label="按商家分类筛选" disabled={disabled} />
             <Select value={filter} onValueChange={setFilter} options={[{ value: "all", label: "全部商家" }, { value: "enabled", label: "已启用" }, { value: "disabled", label: "已停用" }]} aria-label="按商家状态筛选" disabled={disabled} />
             <Button type="button" disabled={disabled} onClick={() => void refresh()} aria-label="刷新商家列表"><RefreshCw size={15} aria-hidden="true" />刷新</Button>
           </div>
@@ -262,7 +262,7 @@ export function MerchantManager({ onCatalogChange }: MerchantManagerProps) {
             : !visible.length ? <div className="panel merchant-empty"><Store size={28} aria-hidden="true" /><h2>{merchants.length ? "没有找到匹配的商家" : "暂无商家"}</h2><p>{merchants.length ? "试试其他名称，或新增需要的商家。" : "点击新增商家，填写信息并上传图标。"}</p></div>
               : <div className="merchant-grid">{visible.map(merchant => <article className={`panel merchant-card${!merchant.enabled ? " is-disabled" : ""}${editing?.key === merchant.key && editorOpen ? " is-selected" : ""}`} key={merchant.key}>
                 <div className="merchant-card-identity"><AppIcon name={merchant.label} website={merchant.website} value={merchant.key} size={40} fallbackInitial /><div><h2 title={merchant.label}>{merchant.label}</h2><p title={merchant.website}>{websiteLabel(merchant.website)}</p></div><span className={`merchant-state-dot${merchant.enabled ? " is-enabled" : ""}`} role="img" title={merchant.enabled ? "已启用" : "已停用"} aria-label={merchant.enabled ? "已启用" : "已停用"} /></div>
-                <div className="merchant-card-tags"><span>{merchant.builtin ? merchant.customized ? "内置 · 已修改" : "内置商家" : "自定义商家"}</span>{merchant.categories?.map(category => <span key={category}>{category === "cloud" ? "云服务器" : "App"}</span>)}{!merchant.enabled && <span>已停用</span>}</div>
+                <div className="merchant-card-tags"><span>{merchant.builtin ? merchant.customized ? "内置 · 已修改" : "内置商家" : "自定义商家"}</span>{merchant.categories?.map(category => <span key={category}>{category === "cloud" ? "云服务器" : category === "domain" ? "域名" : "App"}</span>)}{!merchant.enabled && <span>已停用</span>}</div>
                 <p className="merchant-match-summary" title={[...merchant.domains, ...merchant.aliases].join(" · ")}>{merchant.domains.length ? merchant.domains.slice(0, 2).join(" · ") : merchant.aliases.filter(alias => alias !== merchant.label).slice(0, 3).join(" · ") || "按商家名称匹配"}</p>
                 <div className="merchant-card-actions"><Button type="button" disabled={disabled} onClick={() => startEditing(merchant)}>编辑</Button><Button type="button" disabled={disabled} onClick={() => void changeStatus(merchant)}>{merchant.enabled ? "停用" : "启用"}</Button>{merchant.builtin && merchant.customized && <Button type="button" disabled={disabled} onClick={() => { setPendingReset(merchant); setError(""); setNotice(""); }}><RotateCcw size={13} aria-hidden="true" />恢复内置</Button>}</div>
               </article>)}</div>}
@@ -274,7 +274,7 @@ export function MerchantManager({ onCatalogChange }: MerchantManagerProps) {
           <div className="merchant-editor-body">
             {editError && <Banner tone="error">{editError}</Banner>}
             <Field label="商家名称 *"><input ref={labelRef} value={draft.label} onChange={event => setDraft(current => ({ ...current, label: event.target.value }))} required maxLength={100} disabled={busy} placeholder="例如：DMIT" /></Field>
-            <fieldset className="merchant-categories"><legend>商家分类 *</legend>{([ ["cloud", "云服务器"], ["app", "App"] ] as const).map(([value, label]) => <label className="check" key={value}><input type="checkbox" disabled={busy} checked={draft.categories.includes(value)} onChange={event => setDraft(current => ({ ...current, categories: event.target.checked ? [...current.categories, value] : current.categories.filter(category => category !== value) }))} /><span>{label}</span></label>)}<p>可同时选择两个分类。</p></fieldset>
+            <fieldset className="merchant-categories"><legend>商家分类 *</legend>{([ ["cloud", "云服务器"], ["app", "App"], ["domain", "域名"] ] as const).map(([value, label]) => <label className="check" key={value}><input type="checkbox" disabled={busy} checked={draft.categories.includes(value)} onChange={event => setDraft(current => ({ ...current, categories: event.target.checked ? [...current.categories, value] : current.categories.filter(category => category !== value) }))} /><span>{label}</span></label>)}<p>可同时选择多个分类。</p></fieldset>
             <Field label="官方网站" help="官网域名自动参与匹配。"><input type="url" value={draft.website} onChange={event => setDraft(current => ({ ...current, website: event.target.value }))} maxLength={2048} disabled={busy} placeholder="https://example.com" /></Field>
             <div className="merchant-icon-field"><h3>商家图标</h3><div className="merchant-icon-previews"><IconPreview draft={draft} merchant={editing} theme="light" /><IconPreview draft={draft} merchant={editing} theme="dark" /></div><div className="merchant-upload-actions"><label className={`button merchant-upload${busy || reading ? " is-disabled" : ""}`}>{reading ? <LoaderCircle size={15} className="spin" aria-hidden="true" /> : <ImagePlus size={15} aria-hidden="true" />}{reading ? "读取中…" : "上传图标"}<input type="file" accept="image/png,image/jpeg,image/webp" disabled={busy || reading} onChange={event => void upload(event)} aria-label="上传商家图标" /></label>{draft.icon && <Button type="button" disabled={busy || reading} onClick={() => { generation.current++; setReading(false); setDraft(current => ({ ...current, icon: "" })); }}>{editing?.builtin ? "使用内置图标" : "移除图片"}</Button>}</div><p>一张透明背景图片即可，外框跟随主题。支持 PNG、JPEG、WebP，最大 64 KB。</p></div>
             <Field label="匹配别名" help="商家名称自动参与匹配。其他别名用逗号或换行分隔。"><textarea value={draft.aliases} onChange={event => setDraft(current => ({ ...current, aliases: event.target.value }))} maxLength={2000} disabled={busy} rows={3} placeholder="例如：干杯 Cloud、USVPS24" /></Field>

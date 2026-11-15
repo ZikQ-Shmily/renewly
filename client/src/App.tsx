@@ -736,7 +736,7 @@ function Management({
             <article className="management-row" key={item.id}>
               <div className={`management-header ${isCloud ? "cloud-management-header" : ""}`}>
                 {isApp || isDomain ? <div className="management-name">
-                  <AppIcon name={isDomain ? item.vendor : item.name} website={item.website} value={item.appIcon} fallbackInitial={isDomain} />
+                  <AppIcon name={isDomain ? item.vendor : item.name} website={item.website} value={isDomain ? item.domainIcon : item.appIcon} fallbackInitial={isDomain} category={isDomain ? "domain" : "app"} />
                   <div className="management-title">
                     <strong>{item.name}</strong>
                     {item.autoRenew && <span className="auto-renew-tag">自动续费</span>}

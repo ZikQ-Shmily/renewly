@@ -421,6 +421,7 @@ export async function createApp(options: AppOptions = {}) {
         v.serverIcon,
       );
       else if (v.type === "app") db.prepare("INSERT INTO app_details(subscription_id,plan,purchase_channel,account,icon) VALUES(?,?,?,?,?)").run(id,v.appPlan,v.appChannel,v.appAccount,v.appIcon);
+      else if (v.type === "domain") db.prepare("INSERT INTO domain_details(subscription_id,icon) VALUES(?,?)").run(id,v.domainIcon);
       db.prepare(
         "INSERT INTO billing_periods(subscription_id,user_id,starts_at,ends_at,paid_minor,currency,created_at) VALUES(?,?,?,?,?,?,?)",
       ).run(
@@ -442,9 +443,10 @@ export async function createApp(options: AppOptions = {}) {
     const old = owned(c.req.param("id"), userId(c));
     const details = db.prepare("SELECT * FROM server_details WHERE subscription_id=?").get(old.id);
     const appDetails = db.prepare("SELECT * FROM app_details WHERE subscription_id=?").get(old.id);
+    const domainDetails = db.prepare("SELECT icon FROM domain_details WHERE subscription_id=?").get(old.id) as { icon: string } | undefined;
     const payload = z.object({}).catchall(z.unknown()).parse(await c.req.json());
     // Preserve stored detail fields omitted by older clients.
-    const v = subscriptionSchema.parse({ ...serverConfiguration(details), ...appConfiguration(appDetails), ...payload });
+    const v = subscriptionSchema.parse({ ...serverConfiguration(details), ...appConfiguration(appDetails), domainIcon: domainDetails?.icon || "auto", ...payload });
     if (v.type !== old.type_key) fail(400, "IMMUTABLE_SUBSCRIPTION_TYPE", "订阅类别不能在编辑时更改，请在对应类别新增记录。");
     const now = clock().toISOString();
     const timeZone = c.get("user").time_zone;
@@ -518,6 +520,7 @@ export async function createApp(options: AppOptions = {}) {
         old.id,
       );
       else if (v.type === "app") db.prepare("INSERT INTO app_details(subscription_id,plan,purchase_channel,account,icon) VALUES(?,?,?,?,?) ON CONFLICT(subscription_id) DO UPDATE SET plan=excluded.plan,purchase_channel=excluded.purchase_channel,account=excluded.account,icon=excluded.icon").run(old.id,v.appPlan,v.appChannel,v.appAccount,v.appIcon);
+      else if (v.type === "domain") db.prepare("INSERT INTO domain_details(subscription_id,icon) VALUES(?,?) ON CONFLICT(subscription_id) DO UPDATE SET icon=excluded.icon").run(old.id,v.domainIcon);
       db.prepare(
         "UPDATE billing_periods SET starts_at=?,ends_at=?,paid_minor=?,currency=? WHERE id=? AND user_id=?",
       ).run(

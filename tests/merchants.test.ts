@@ -28,6 +28,15 @@ test("merchant catalog preserves existing app keys, colors and aliases and all b
       assert.equal(entry.icon, "");
       assert.ok(entry.aliases.includes(entry.label));
     }
+    for (const key of ["merchant-aliyun", "merchant-tencent", "merchant-huawei", "merchant-cloudflare", "merchant-netcup", "merchant-namecheap", "merchant-porkbun", "merchant-dynadot", "merchant-namesilo", "merchant-godaddy"]) {
+      const merchant = catalog.find(entry => entry.key === key);
+      assert.ok(merchant, `${key} missing`);
+      assert.ok(merchant.categories.includes("domain"), `${key} must support domain subscriptions`);
+      assert.ok(merchant.website.startsWith("https://"));
+    }
+    for (const key of ["merchant-aliyun", "merchant-huawei", "merchant-cloudflare", "merchant-netcup"]) {
+      assert.ok(catalog.find(entry => entry.key === key)?.image, `${key} needs a bundled mark`);
+    }
     const microsoft = catalog.find(entry => entry.key === "microsoft")!;
     assert.equal(microsoft.color, "#518ee2");
     assert.equal(microsoft.image, undefined);
@@ -35,6 +44,22 @@ test("merchant catalog preserves existing app keys, colors and aliases and all b
     assert.ok(microsoft.domains.includes("office365.com"));
     assert.ok(catalog.find(entry => entry.key === "merchant-dmit")?.image?.light.startsWith("/app-icons/merchants/"));
     assert.ok(catalog.find(entry => entry.key === "merchant-po0")?.domains.includes("po0.io"));
+    for (const [key, domain] of [["iqiyi", "iqiyi.com"], ["youku", "youku.com"], ["tencent-video", "v.qq.com"], ["qq-music", "y.qq.com"]] as const) {
+      const entry = catalog.find(merchant => merchant.key === key);
+      assert.ok(entry, `Missing ${key}`);
+      assert.deepEqual(entry.categories, ["app"]);
+      assert.ok(entry.domains.includes(domain));
+      assert.equal(new URL(entry.website).hostname, entry.domains[0]);
+    }
+    for (const key of ["iqiyi", "youku", "tencent-video", "bilibili", "mangotv", "qq-music", "kugou", "kuwo", "baidu-pan", "quark-pan"]) {
+      const image = catalog.find(entry => entry.key === key)?.image;
+      assert.ok(image && image.light.startsWith("data:image/png;base64,"), `${key} is missing its bundled image`);
+      assert.equal(image.dark, image.light);
+    }
+    const overridden = updateMerchant(db, "iqiyi", { icon: png });
+    assert.equal(overridden.icon, png);
+    assert.equal(overridden.image, undefined, "User uploaded images take precedence");
+    assert.ok(resetMerchant(db, "iqiyi").image?.light.startsWith("data:image/png;base64,"));
     catalog[0]!.domains.push("mutated.example.com");
     assert.ok(!listMerchants(db)[0]!.domains.includes("mutated.example.com"));
   } finally { db.close(); }
@@ -160,7 +185,7 @@ test("v10 merchant migration preserves populated v9 data, rolls back a failed ma
     migrate(db);
     assert.deepEqual(allRows(db), before);
     assert.deepEqual(db.prepare("SELECT * FROM merchant_overrides").all(), []);
-    assert.equal((db.prepare("SELECT max(version) n FROM schema_migrations").get() as { n: number }).n, 11);
+    assert.equal((db.prepare("SELECT max(version) n FROM schema_migrations").get() as { n: number }).n, 12);
     const saved = createMerchant(db, { label: "升级后商家", icon: png });
     const markerAfter = db.prepare("SELECT * FROM schema_migrations ORDER BY version").all();
     migrate(db);
@@ -178,7 +203,7 @@ test("v11 preserves v10 overrides and rolls back migration failures", () => {
   try {
     updateMerchant(db, "merchant-dmit", { label: "自定义 DMIT", enabled: false });
     const custom = createMerchant(db, { label: "以前创建的商家" });
-    db.exec("ALTER TABLE merchant_overrides DROP COLUMN categories_json; DELETE FROM schema_migrations WHERE version=11");
+    db.exec("ALTER TABLE merchant_overrides DROP COLUMN categories_json; DELETE FROM schema_migrations WHERE version>=11");
     const before = db.prepare("SELECT * FROM merchant_overrides ORDER BY key").all();
     db.exec("CREATE TRIGGER fail_v11 BEFORE INSERT ON schema_migrations WHEN NEW.version=11 BEGIN SELECT RAISE(ABORT,'simulated v11 failure'); END");
     assert.throws(() => migrate(db), /simulated v11 failure/);
@@ -192,6 +217,8 @@ test("v11 preserves v10 overrides and rolls back migration failures", () => {
     assert.deepEqual(entries.find(entry => entry.key === "notion")?.categories, ["app"]);
     assert.deepEqual(updateMerchant(db, custom.key, { categories: ["app"] }).categories, ["app"]);
     assert.throws(() => updateMerchant(db, custom.key, { categories: [] }));
+    assert.deepEqual(updateMerchant(db, custom.key, { categories: ["cloud", "app", "domain"] }).categories, ["cloud", "app", "domain"]);
+    updateMerchant(db, custom.key, { categories: ["app"] });
     migrate(db);
     entries = listMerchants(db);
     assert.deepEqual(entries.find(entry => entry.key === custom.key)?.categories, ["app"]);

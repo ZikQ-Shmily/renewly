@@ -11,11 +11,12 @@ interface AppIconProps {
   value?: string;
   size?: number;
   fallbackInitial?: boolean;
+  category?: "cloud" | "app" | "domain";
 }
 
-export function AppIcon({ name, website, value = "auto", size = 36, fallbackInitial = false }: AppIconProps) {
+export function AppIcon({ name, website, value = "auto", size = 36, fallbackInitial = false, category: categoryProp }: AppIconProps) {
   const catalog = useMerchantCatalog();
-  const category = fallbackInitial ? "cloud" : "app";
+  const category = categoryProp || (fallbackInitial ? "cloud" : "app");
   const scopedCatalog = catalog.filter(p => !p.categories || p.categories.includes(category) || p.key === value);
   const { preset, src } = resolveAppIcon(name, website, value, scopedCatalog);
   const [failedSource, setFailedSource] = useState<string | null>(null);
@@ -84,7 +85,7 @@ interface AppIconPickerProps extends Omit<AppIconProps, "size" | "value"> {
   label?: string;
 }
 
-export function AppIconPicker({ name, website, value, onChange, disabled = false, label = "订阅图标", fallbackInitial = false }: AppIconPickerProps) {
+export function AppIconPicker({ name, website, value, onChange, disabled = false, label = "订阅图标", fallbackInitial = false, category: categoryProp }: AppIconPickerProps) {
   const [error, setError] = useState("");
   const [reading, setReading] = useState(false);
   const request = useRef(0);
@@ -95,7 +96,7 @@ export function AppIconPicker({ name, website, value, onChange, disabled = false
   }, []);
   const uploaded = isUploadedAppIcon(value);
   const catalog = useMerchantCatalog();
-  const category = fallbackInitial ? "cloud" : "app";
+  const category = categoryProp || (fallbackInitial ? "cloud" : "app");
   const scopedCatalog = catalog.filter(p => !p.categories || p.categories.includes(category) || p.key === value);
   const preset = matchedAppIcon(name, website, scopedCatalog);
   const selectedValue = uploaded ? "uploaded" : value || "auto";
@@ -132,7 +133,7 @@ export function AppIconPicker({ name, website, value, onChange, disabled = false
     <div className="app-icon-picker">
       <div className="app-icon-picker-label">{label}</div>
       <div className="app-icon-picker-controls">
-        <AppIcon name={name} website={website} value={value} size={42} fallbackInitial={fallbackInitial} />
+        <AppIcon name={name} website={website} value={value} size={42} fallbackInitial={fallbackInitial} category={category} />
         <Select value={selectedValue} options={options} onValueChange={next => {
           request.current++;
           setReading(false);
@@ -150,12 +151,12 @@ export function AppIconPicker({ name, website, value, onChange, disabled = false
           ? preset
             ? `已匹配 ${preset.label}；修改${fallbackInitial ? "商家或网址" : "名称或官网"}会自动更新。`
             : fallbackInitial
-              ? "按商家或网址匹配；未匹配时尝试网站图标，无法获取时显示商家首字母，未填商家时显示「云」。"
+              ? `按${category === "domain" ? "注册商" : "商家"}或网址匹配；未匹配时尝试网站图标，无法获取时显示名称首字母。`
               : "按名称或官网匹配；未匹配时尝试官网图标，失败则显示通用图标。"
           : uploaded
             ? "使用你上传的图标。"
             : selectedValue === "generic" && fallbackInitial
-              ? "使用商家首字母，未填商家时显示「云」。"
+              ? `使用${category === "domain" ? "注册商" : "商家"}首字母。`
               : "使用手动选择的图标。"}
         <span>上传支持 PNG、JPEG、WebP，最大 64 KB。</span>
       </p>

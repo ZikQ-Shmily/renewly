@@ -53,6 +53,7 @@ type Draft = Omit<
   | "appAccount"
   | "appIcon"
   | "serverIcon"
+  | "domainIcon"
 > & {
   renewalPrice: string;
   billingMonths: string;
@@ -72,6 +73,7 @@ type Draft = Omit<
   appAccount: string;
   appIcon: string;
   serverIcon: string;
+  domainIcon: string;
 };
 function initialDraft(
   item: Subscription | null,
@@ -88,6 +90,7 @@ function initialDraft(
         appAccount: item.appAccount || "",
         appIcon: item.appIcon || "auto",
         serverIcon: item.serverIcon || "auto",
+        domainIcon: item.domainIcon || "auto",
         periodStart: normalizeDateTime(item.periodStart),
         nextRenewal: normalizeDateTime(item.nextRenewal),
         renewalPrice: String(item.renewalPrice),
@@ -125,6 +128,7 @@ function initialDraft(
         appAccount: "",
         appIcon: "auto",
         serverIcon: "auto",
+        domainIcon: "auto",
         region: "",
         model: "",
         cpuCores: "",
@@ -180,7 +184,7 @@ export function SubscriptionEditor({
   const isDomain = draft.type === "domain";
   const categoryName = isApp ? "App 订阅" : isDomain ? "域名" : "云服务器";
   function changeVendor(value: string) {
-    const website = isDomain ? "" : merchantWebsiteForName(value, catalog, isApp ? "app" : "cloud");
+    const website = merchantWebsiteForName(value, catalog, isApp ? "app" : isDomain ? "domain" : "cloud");
     const mayFill = !websiteEdited.current && (!draft.website.trim() || draft.website === autoWebsite.current);
     if (mayFill) autoWebsite.current = website || null;
     setDraft(previous => ({ ...previous, vendor: value, ...(mayFill ? { website } : {}) }));
@@ -417,6 +421,18 @@ export function SubscriptionEditor({
               />
             </div>
           </>}
+          {isDomain && <div className="wide">
+            <AppIconPicker
+              label="注册商图标"
+              name={draft.vendor}
+              website={draft.website}
+              value={draft.domainIcon}
+              onChange={(value) => field("domainIcon", value)}
+              category="domain"
+              fallbackInitial
+              disabled={busy}
+            />
+          </div>}
           {!isApp && !isDomain && <>
           <div className="wide">
             <AppIconPicker

@@ -6,7 +6,7 @@ import type { DB } from "./db.js";
 import merchantCatalog from "../client/src/merchant-icons.json" with { type: "json" };
 import merchantWebsites from "../client/src/merchant-websites.json" with { type: "json" };
 
-export type MerchantCategory = "cloud" | "app";
+export type MerchantCategory = "cloud" | "app" | "domain";
 export interface MerchantCatalogEntry {
   categories: MerchantCategory[];
   key: string;
@@ -113,7 +113,7 @@ const fields = {
   aliases: z.array(labelSchema).max(30).transform(values => [...new Map(values.map(value => [value.normalize("NFKC").toLowerCase().replace(/\s+/g, ""), value])).values()]),
   icon: z.string().max(90_000).refine(isMerchantIcon, "图标须为不超过 64 KB、尺寸不超过 2048 像素的 PNG、JPEG 或 WebP 图片。"),
   enabled: z.boolean(),
-  categories: z.array(z.enum(["cloud", "app"])).min(1).max(2).refine(values => new Set(values).size === values.length, "分类不能重复。"),
+  categories: z.array(z.enum(["cloud", "app", "domain"])).min(1).max(3).refine(values => new Set(values).size === values.length, "分类不能重复。"),
 };
 export const merchantCreateSchema = z.object({
   label: fields.label,
@@ -174,9 +174,21 @@ function websiteDomains(website: string) {
 function complete(entry: MerchantCatalogEntry): MerchantCatalogEntry {
   return { ...entry, domains: unique([...entry.domains, ...websiteDomains(entry.website)]), aliases: unique([entry.label, ...entry.aliases]) };
 }
+// Registration providers share the same editable catalog as other merchants.
+const domainCatalog = [
+  { key: "merchant-huawei", label: "华为云", website: "https://www.huaweicloud.com/", domains: ["huaweicloud.com"], aliases: ["华为云", "Huawei Cloud", "HuaweiCloud"], image: "/app-icons/merchants/domain-huawei.png", categories: ["cloud", "domain"] as MerchantCategory[] },
+  { key: "merchant-cloudflare", label: "Cloudflare", website: "https://www.cloudflare.com/", domains: ["cloudflare.com"], aliases: ["Cloudflare"], image: "/app-icons/merchants/domain-cloudflare.png", categories: ["domain"] as MerchantCategory[] },
+  { key: "merchant-netcup", label: "Netcup", website: "https://www.netcup.com/", domains: ["netcup.com", "netcup.de"], aliases: ["Netcup"], image: "/app-icons/merchants/domain-netcup.png", categories: ["cloud", "domain"] as MerchantCategory[] },
+  { key: "merchant-namecheap", label: "Namecheap", website: "https://www.namecheap.com/", domains: ["namecheap.com"], aliases: ["Namecheap"], categories: ["domain"] as MerchantCategory[] },
+  { key: "merchant-porkbun", label: "Porkbun", website: "https://porkbun.com/", domains: ["porkbun.com"], aliases: ["Porkbun"], categories: ["domain"] as MerchantCategory[] },
+  { key: "merchant-dynadot", label: "Dynadot", website: "https://www.dynadot.com/", domains: ["dynadot.com"], aliases: ["Dynadot"], categories: ["domain"] as MerchantCategory[] },
+  { key: "merchant-namesilo", label: "NameSilo", website: "https://www.namesilo.com/", domains: ["namesilo.com"], aliases: ["NameSilo"], categories: ["domain"] as MerchantCategory[] },
+  { key: "merchant-godaddy", label: "GoDaddy", website: "https://www.godaddy.com/", domains: ["godaddy.com"], aliases: ["GoDaddy"], categories: ["domain"] as MerchantCategory[] },
+];
 const builtinCatalog: MerchantCatalogEntry[] = [
+  ...domainCatalog.map(({ image, ...entry }) => complete({ ...entry, icon: "", ...(image ? { image: { light: image, dark: image } } : {}), color: "currentColor", enabled: true, builtin: true, customized: false })),
   ...appCatalog.map(entry => complete({ ...entry, categories: ["app"], website: `https://${entry.domains[0]}/`, icon: "", ...(appBrandImages[entry.key] ? { image: { light: appBrandImages[entry.key], dark: appBrandImages[entry.key] } } : {}), enabled: true, builtin: true, customized: false })),
-  ...merchantCatalog.map(entry => complete({ key: entry.key, label: entry.label, categories: ["merchant-infuse", "merchant-netease-cloud-music"].includes(entry.key) ? ["app"] : ["cloud"], domains: [...entry.domains], aliases: [...entry.aliases], website: entry.domains.length ? `https://${entry.domains[0]}/` : (merchantWebsites as Record<string, string>)[entry.key] || "", color: "currentColor", image: { light: entry.light, dark: entry.dark }, icon: "", enabled: true, builtin: true, customized: false })),
+  ...merchantCatalog.map(entry => complete({ key: entry.key, label: entry.label, categories: ["merchant-infuse", "merchant-netease-cloud-music"].includes(entry.key) ? ["app"] : ["merchant-tencent", "merchant-aliyun"].includes(entry.key) ? ["cloud", "domain"] : ["cloud"], domains: [...entry.domains], aliases: [...entry.aliases], website: entry.domains.length ? `https://${entry.domains[0]}/` : (merchantWebsites as Record<string, string>)[entry.key] || "", color: "currentColor", image: { light: entry.light, dark: entry.dark }, icon: "", enabled: true, builtin: true, customized: false })),
 ];
 const builtinByKey = new Map(builtinCatalog.map(entry => [entry.key, entry]));
 interface MerchantRow { key: string; label: string; website: string; domains_json: string; aliases_json: string; icon: string; enabled: number; is_custom: number; categories_json: string | null }
