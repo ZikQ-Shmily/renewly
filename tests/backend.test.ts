@@ -337,7 +337,7 @@ test("v1 migration preserves existing subscription and user data and is repeatab
     assert.equal(subscription.serverIcon, "auto");
     assert.deepEqual(subscription.ipAddresses, []);
     assert.equal((db.prepare("SELECT due_date FROM reminder_deliveries").get() as any).due_date, "2027-01-01T00:00");
-    assert.deepEqual(db.prepare("SELECT version FROM schema_migrations ORDER BY version").all(), [{ version: 1 }, { version: 2 }, { version: 3 }, { version: 4 }, { version: 5 }, { version: 6 }, { version: 7 }, { version: 8 }, { version: 9 }, { version: 10 }, { version: 11 }]);
+    assert.deepEqual(db.prepare("SELECT version FROM schema_migrations ORDER BY version").all(), [{ version: 1 }, { version: 2 }, { version: 3 }, { version: 4 }, { version: 5 }, { version: 6 }, { version: 7 }, { version: 8 }, { version: 9 }, { version: 10 }, { version: 11 }, { version: 12 }]);
   } finally { db.close(); }
 });
 
@@ -368,6 +368,46 @@ test("traffic direction persists, validates and survives edits from older client
     const defaulted = await f.request("/subscriptions", "POST", input, cookie);
     assert.equal(defaulted.status, 201);
     assert.equal((await defaulted.json() as any).subscription.trafficDirection, "unknown");
+  } finally { f.cleanup(); }
+});
+
+test("domain icons persist and older clients retain them", async () => {
+  const f = await fixture();
+  try {
+    const { cookie } = await f.seedAccount("domain-icon@example.com");
+    const { cookie: other } = await f.seedAccount("other-domain-icon@example.com");
+    const domain = { ...input, type: "domain", name: "example.com", vendor: "Netcup", website: "https://netcup.com" };
+    const created = await f.request("/subscriptions", "POST", { ...domain, domainIcon: "netcup" }, cookie);
+    assert.equal(created.status, 201, await created.clone().text());
+    const item = (await created.json() as any).subscription;
+    assert.equal(item.domainIcon, "netcup");
+    const updated = await f.request(`/subscriptions/${item.id}`, "PUT", { ...domain, notes: "old client" }, cookie);
+    assert.equal(updated.status, 200, await updated.clone().text());
+    assert.equal((await updated.json() as any).subscription.domainIcon, "netcup");
+    assert.equal((await f.request(`/subscriptions/${item.id}`, "PUT", { ...domain, domainIcon: "other" }, other)).status, 404);
+    assert.equal((await f.request("/subscriptions", "POST", { ...domain, domainIcon: "javascript:alert(1)" }, cookie)).status, 400);
+    assert.equal((await f.request("/subscriptions", "GET", undefined, cookie).then(response => response.json()) as any).subscriptions[0].domainIcon, "netcup");
+  } finally { f.cleanup(); }
+});
+
+test("v12 domain icon migration rolls back and preserves existing domains", async () => {
+  const f = await fixture();
+  try {
+    const { cookie } = await f.seedAccount("domain-migration@example.com");
+    const domain = { ...input, type: "domain", name: "example.com", vendor: "Netcup" };
+    const created = await f.request("/subscriptions", "POST", domain, cookie);
+    assert.equal(created.status, 201);
+    const id = (await created.json() as any).subscription.id;
+    const db = f.runtime.db;
+    db.exec("DROP TABLE domain_details; DELETE FROM schema_migrations WHERE version=12; CREATE TRIGGER fail_v12 BEFORE INSERT ON schema_migrations WHEN NEW.version=12 BEGIN SELECT RAISE(ABORT,'simulated failure'); END");
+    assert.throws(() => migrate(db));
+    assert.equal(db.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='domain_details'").get(), undefined);
+    db.exec("DROP TRIGGER fail_v12");
+    migrate(db);
+    migrate(db);
+    const row = db.prepare("SELECT * FROM subscriptions WHERE id=?").get(id);
+    assert.equal(serializeSubscription(db, row, "Asia/Shanghai", testNow).domainIcon, "auto");
+    assert.equal((db.prepare("SELECT COUNT(*) AS n FROM schema_migrations WHERE version=12").get() as any).n, 1);
   } finally { f.cleanup(); }
 });
 
@@ -870,7 +910,7 @@ test("v8 migration preserves populated v7 Apps and related data, rolls back fail
     migrate(db);
     assert.deepEqual(snapshot(), before);
     assert.deepEqual(db.prepare("SELECT * FROM schema_migrations WHERE version<8 ORDER BY version").all(), oldMigrations);
-    assert.equal((db.prepare("SELECT MAX(version) version FROM schema_migrations").get() as any).version, 11);
+    assert.equal((db.prepare("SELECT MAX(version) version FROM schema_migrations").get() as any).version, 12);
     assert.equal((db.prepare("SELECT COUNT(*) n FROM schema_migrations WHERE version=8").get() as any).n, 1);
     assert.deepEqual(db.prepare("PRAGMA foreign_key_list(app_details)").all(), foreignKeys);
     assert.deepEqual(db.prepare("PRAGMA foreign_key_check").all(), []);
