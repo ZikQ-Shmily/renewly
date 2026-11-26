@@ -152,7 +152,7 @@ export function ReminderSettings({
     <section>
       <div className="page-heading">
         <div>
-          <span className="eyebrow gradient">PERSONAL NOTIFICATIONS</span>
+          <span className="eyebrow">PERSONAL NOTIFICATIONS</span>
           <h1>我的提醒</h1>
           <p>留下收件邮箱，续费提醒就会送到你手边。</p>
         </div>
@@ -283,11 +283,11 @@ export function ReminderSettings({
             <MailCheck size={23} className="accent-icon" />
             <h2>续费提醒，提前到达</h2>
             <p className="muted small">
-              当前有 <strong className="gradient">{nextDueCount}</strong>{" "}
+              当前有 <strong>{nextDueCount}</strong>{" "}
               项订阅将在 30 天内续费。
             </p>
             <div className="mail-sheet">
-              <span className="eyebrow gradient">RENEWLY NOTIFICATION</span>
+              <span className="eyebrow">RENEWLY NOTIFICATION</span>
               <h3>订阅即将到期</h3>
               <p>邮件会包含订阅名称、商家、到期时间（含时区）与原币续费价格。</p>
               <div className="mail-sign">提前安排续费，让服务持续在线。</div>
@@ -480,7 +480,7 @@ export function AdminMail({
     <section>
       <div className="page-heading">
         <div>
-          <span className="eyebrow gradient">SYSTEM MAIL SERVICE</span>
+          <span className="eyebrow">SYSTEM MAIL SERVICE</span>
           <h1>系统邮件服务</h1>
           <p>统一配置发信服务，为用户投递到期提醒。</p>
         </div>

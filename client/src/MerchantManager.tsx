@@ -49,17 +49,17 @@ function validateImage(data: string) {
   });
 }
 
-function IconPreview({ draft, merchant, theme }: { draft: MerchantDraft; merchant: MerchantCatalogEntry | null; theme: "light" | "dark" }) {
+function IconPreview({ draft, merchant }: { draft: MerchantDraft; merchant: MerchantCatalogEntry | null }) {
   const builtin = builtinIconPresets.find(preset => preset.key === merchant?.key);
-  const source = draft.icon || (merchant?.icon ? builtin?.image?.[theme] : merchant?.image?.[theme]);
+  const source = draft.icon || (merchant?.icon ? builtin?.image?.dark : merchant?.image?.dark);
   return (
-    <div className={`merchant-icon-preview merchant-preview-${theme}`}>
+    <div className="merchant-icon-preview">
       <span className="merchant-preview-icon" data-icon={merchant?.key}>
         {source ? <img src={source} width={40} height={40} alt="" referrerPolicy="no-referrer" />
           : builtin && !builtin.image ? <span className="merchant-preview-mask" style={{ backgroundColor: builtin.color, maskImage: `url(/app-icons/${builtin.key}.svg)`, WebkitMaskImage: `url(/app-icons/${builtin.key}.svg)` }} />
             : <span className="merchant-preview-initial">{appIconInitial(draft.label)}</span>}
       </span>
-      <span>{theme === "light" ? "浅色背景" : "深色背景"}</span>
+      <span>图标预览</span>
     </div>
   );
 }
@@ -243,7 +243,7 @@ export function MerchantManager({ onCatalogChange }: MerchantManagerProps) {
   return (
     <section className="merchants-page">
       <div className="page-heading">
-        <div><span className="eyebrow gradient">MERCHANT MANAGEMENT</span><h1>商家管理</h1><p>统一维护商家图标与匹配规则，让订阅自动找到对应商家。</p></div>
+        <div><span className="eyebrow">MERCHANT MANAGEMENT</span><h1>商家管理</h1><p>统一维护商家图标与匹配规则，让订阅自动找到对应商家。</p></div>
         <div className="merchant-heading-actions"><span className="merchant-admin-label"><ShieldCheck size={15} aria-hidden="true" />仅管理员</span><Button type="button" variant="primary" disabled={disabled} onClick={() => startEditing(null)}><Plus size={16} aria-hidden="true" />新增商家</Button></div>
       </div>
       {error && <Banner tone="error">{error}</Banner>}
@@ -270,13 +270,29 @@ export function MerchantManager({ onCatalogChange }: MerchantManagerProps) {
           <p className="merchant-catalog-help">商家配置对所有用户生效；用户为单条订阅上传的图标优先保留。</p>
         </div>
         {editorOpen && <form className="panel merchant-editor" onSubmit={event => void save(event)} ref={editorRef} aria-label={editing ? "编辑商家" : "新增商家"}>
-          <div className="merchant-editor-heading"><div><span className="eyebrow gradient">{editing ? "EDIT MERCHANT" : "NEW MERCHANT"}</span><h2>{editing ? "编辑商家" : "新增商家"}</h2></div><Button type="button" disabled={busy} onClick={closeEditor} aria-label="关闭商家编辑"><ArrowLeft size={15} aria-hidden="true" />返回</Button></div>
+          <div className="merchant-editor-heading"><div><span className="eyebrow">{editing ? "EDIT MERCHANT" : "NEW MERCHANT"}</span><h2>{editing ? "编辑商家" : "新增商家"}</h2></div><Button type="button" disabled={busy} onClick={closeEditor} aria-label="关闭商家编辑"><ArrowLeft size={15} aria-hidden="true" />返回</Button></div>
           <div className="merchant-editor-body">
             {editError && <Banner tone="error">{editError}</Banner>}
             <Field label="商家名称 *"><input ref={labelRef} value={draft.label} onChange={event => setDraft(current => ({ ...current, label: event.target.value }))} required maxLength={100} disabled={busy} placeholder="例如：DMIT" /></Field>
             <fieldset className="merchant-categories"><legend>商家分类 *</legend>{([ ["cloud", "云服务器"], ["app", "App"], ["domain", "域名"] ] as const).map(([value, label]) => <label className="check" key={value}><input type="checkbox" disabled={busy} checked={draft.categories.includes(value)} onChange={event => setDraft(current => ({ ...current, categories: event.target.checked ? [...current.categories, value] : current.categories.filter(category => category !== value) }))} /><span>{label}</span></label>)}<p>可同时选择多个分类。</p></fieldset>
             <Field label="官方网站" help="官网域名自动参与匹配。"><input type="url" value={draft.website} onChange={event => setDraft(current => ({ ...current, website: event.target.value }))} maxLength={2048} disabled={busy} placeholder="https://example.com" /></Field>
-            <div className="merchant-icon-field"><h3>商家图标</h3><div className="merchant-icon-previews"><IconPreview draft={draft} merchant={editing} theme="light" /><IconPreview draft={draft} merchant={editing} theme="dark" /></div><div className="merchant-upload-actions"><label className={`button merchant-upload${busy || reading ? " is-disabled" : ""}`}>{reading ? <LoaderCircle size={15} className="spin" aria-hidden="true" /> : <ImagePlus size={15} aria-hidden="true" />}{reading ? "读取中…" : "上传图标"}<input type="file" accept="image/png,image/jpeg,image/webp" disabled={busy || reading} onChange={event => void upload(event)} aria-label="上传商家图标" /></label>{draft.icon && <Button type="button" disabled={busy || reading} onClick={() => { generation.current++; setReading(false); setDraft(current => ({ ...current, icon: "" })); }}>{editing?.builtin ? "使用内置图标" : "移除图片"}</Button>}</div><p>一张透明背景图片即可，外框跟随主题。支持 PNG、JPEG、WebP，最大 64 KB。</p></div>
+            <div className="merchant-icon-field">
+              <h3>商家图标</h3>
+              <IconPreview draft={draft} merchant={editing} />
+              <div className="merchant-upload-actions">
+                <label className={`button merchant-upload${busy || reading ? " is-disabled" : ""}`}>
+                  {reading ? <LoaderCircle size={15} className="spin" aria-hidden="true" /> : <ImagePlus size={15} aria-hidden="true" />}
+                  {reading ? "读取中…" : "上传图标"}
+                  <input type="file" accept="image/png,image/jpeg,image/webp" disabled={busy || reading} onChange={event => void upload(event)} aria-label="上传商家图标" />
+                </label>
+                {draft.icon && <Button type="button" disabled={busy || reading} onClick={() => {
+                  generation.current++;
+                  setReading(false);
+                  setDraft(current => ({ ...current, icon: "" }));
+                }}>{editing?.builtin ? "使用内置图标" : "移除图片"}</Button>}
+              </div>
+              <p>图标使用深色外框，建议上传透明背景图片。支持 PNG、JPEG、WebP，最大 64 KB。</p>
+            </div>
             <Field label="匹配别名" help="商家名称自动参与匹配。其他别名用逗号或换行分隔。"><textarea value={draft.aliases} onChange={event => setDraft(current => ({ ...current, aliases: event.target.value }))} maxLength={2000} disabled={busy} rows={3} placeholder="例如：干杯 Cloud、USVPS24" /></Field>
             <Field label="其他匹配域名" help="填写 example.com，可匹配其子域名。多个域名用逗号或换行分隔。"><textarea value={draft.domains} onChange={event => setDraft(current => ({ ...current, domains: event.target.value }))} maxLength={2000} disabled={busy} rows={3} placeholder="example.com" /></Field>
             <label className="check merchant-enabled-check"><input type="checkbox" checked={draft.enabled} disabled={busy} onChange={event => setDraft(current => ({ ...current, enabled: event.target.checked }))} /><span>启用商家，参与自动匹配</span></label>

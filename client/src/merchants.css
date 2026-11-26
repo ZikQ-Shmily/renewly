@@ -41,14 +41,9 @@
 .merchants-page .merchant-editor-body input:not([type="checkbox"]):not([type="file"]), .merchants-page .merchant-editor-body textarea { width: 100%; min-width: 0; font-size: 12px; }
 .merchants-page .merchant-editor-body textarea { min-height: 71px; resize: vertical; }
 .merchants-page .merchant-icon-field h3 { color: var(--secondary); font-size: 12px; font-weight: 400; }
-.merchants-page .merchant-icon-previews { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 9px; }
-.merchants-page .merchant-icon-preview { display: flex; flex-direction: column; align-items: center; gap: 9px; border: 1px solid var(--line); border-radius: 10px; padding: 15px 10px 11px; font-size: 10px; }
-.merchants-page .merchant-preview-light { background: #f4f6fb; color: #52627d; border-color: #dfe5f0; }
-.merchants-page .merchant-preview-dark { background: #161e31; color: #aebfdf; border-color: #34435f; }
-.merchants-page .merchant-preview-icon { display: inline-flex; justify-content: center; align-items: center; width: 52px; height: 52px; border: 1px solid; border-radius: 13px; }
-.merchants-page .merchant-preview-light .merchant-preview-icon { background: #eaf0ff; border-color: #d7e0ee; color: #243047; }
-.merchants-page .merchant-preview-dark .merchant-preview-icon { background: #202e48; border-color: #34435f; color: #edf2ff; }
-.merchants-page .merchant-preview-dark .merchant-preview-icon[data-icon="merchant-po0"] { background: #8d9dbb; }
+.merchants-page .merchant-icon-preview { display: flex; align-items: center; gap: 12px; margin-top: 9px; border: 1px solid var(--line); border-radius: 10px; padding: 12px; background: var(--surface-inset, var(--input)); color: var(--muted); font-size: 11px; }
+.merchants-page .merchant-preview-icon { display: inline-flex; flex: none; justify-content: center; align-items: center; width: 52px; height: 52px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-selected, var(--panel-raised)); color: var(--text); }
+.merchants-page .merchant-preview-icon[data-icon="merchant-po0"] { background: var(--muted); }
 .merchants-page .merchant-preview-icon > img { max-width: 40px; max-height: 40px; object-fit: contain; border-radius: 4px; }
 .merchants-page .merchant-preview-mask { display: block; width: 36px; height: 36px; mask-size: contain; -webkit-mask-size: contain; mask-repeat: no-repeat; -webkit-mask-repeat: no-repeat; mask-position: center; -webkit-mask-position: center; }
 .merchants-page .merchant-preview-initial { font-size: 21px; line-height: 1; font-weight: 600; }
