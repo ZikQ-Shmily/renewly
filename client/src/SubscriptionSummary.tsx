@@ -25,7 +25,7 @@ export function SubscriptionSummary({ item, timeZone }: { item: Subscription; ti
   return (
     <article className="subscription-summary">
       <div className="subscription-data-grid">
-        <div className="subscription-identity"><Server size={18} aria-hidden="true" /><div><strong>{item.name}</strong><div className="subscription-vendor"><a href={item.website} target="_blank" rel="noopener noreferrer" className="gradient">{item.vendor}</a>{item.autoRenew && <span className="auto-renew-tag">自动续费</span>}</div></div></div>
+        <div className="subscription-identity"><Server size={18} aria-hidden="true" /><div><strong>{item.name}</strong><div className="subscription-vendor"><a href={item.website} target="_blank" rel="noopener noreferrer">{item.vendor}</a>{item.autoRenew && <span className="auto-renew-tag">自动续费</span>}</div></div></div>
         <span className="subscription-spec">{[item.region, item.model].filter(Boolean).join(" · ") || "未填写配置"}</span>
         <span className={`subscription-bandwidth ${item.bandwidthValue == null ? "muted" : ""}`}><span className="mobile-cell-label">带宽 </span>{bandwidthLabel(item)}</span>
         <span className="subscription-traffic"><span className="mobile-cell-label">流量 </span>{trafficLabel(item)}</span>

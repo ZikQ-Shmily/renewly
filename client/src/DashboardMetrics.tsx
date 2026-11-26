@@ -1,4 +1,3 @@
-import { CalendarClock, Hourglass, Wallet } from "lucide-react";
 import { Banner } from "./components";
 import type { Currency, Dashboard } from "./types";
 import { money } from "./utils";
@@ -9,23 +8,20 @@ export function DashboardMetrics({ dashboard, currency, scope }: {
   scope: string;
 }) {
   return <>
-    <div className="metrics" aria-label={`${scope}价格统计`}>
-      <div className="panel metric">
-        <div className="metric-label">年预计支出<Wallet size={17} /></div>
-        <strong className="metric-value gradient">{money(dashboard?.annualTotal, currency)}</strong>
-        <p>{scope} · {dashboard?.activeCount ?? "—"} 项有效订阅</p>
+    <dl className="panel metrics" aria-label={`${scope}价格统计`}>
+      <div className="metric">
+        <dt className="metric-label">年预计支出</dt>
+        <dd className="metric-value">{money(dashboard?.annualTotal, currency)}</dd>
       </div>
-      <div className="panel metric">
-        <div className="metric-label">剩余使用价值<Hourglass size={17} /></div>
-        <strong className="metric-value gradient">{money(dashboard?.remainingValue, currency)}</strong>
-        <p>{scope} · 已付账期按时间估算</p>
+      <div className="metric">
+        <dt className="metric-label">剩余使用价值</dt>
+        <dd className="metric-value">{money(dashboard?.remainingValue, currency)}</dd>
       </div>
-      <div className="panel metric">
-        <div className="metric-label">30 天待续费<CalendarClock size={17} /></div>
-        <strong className="metric-value gradient">{money(dashboard?.upcomingTotal, currency)}</strong>
-        <p>{scope} · {dashboard?.dueCount ?? "—"} 项即将续费</p>
+      <div className="metric">
+        <dt className="metric-label">30 天待续费</dt>
+        <dd className="metric-value">{money(dashboard?.upcomingTotal, currency)}</dd>
       </div>
-    </div>
+    </dl>
     {dashboard?.totalsPartial && <Banner>部分币种汇率暂不可用（{dashboard.unconvertedCurrencies.join("、")}），汇总仅包含可换算的金额。</Banner>}
   </>;
 }

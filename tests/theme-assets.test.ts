@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createApp } from "../server/app.js";
@@ -8,7 +8,7 @@ import type { Config } from "../server/config.js";
 
 test("theme bootstrap is served as same-origin JavaScript before the SPA fallback", async () => {
   const dir = mkdtempSync(join(tmpdir(), "renewly-theme-assets-"));
-  const script = "document.documentElement.dataset.theme = 'light';";
+  const script = readFileSync(new URL("../client/public/theme-init.js", import.meta.url), "utf8");
   writeFileSync(join(dir, "index.html"), "<!doctype html><title>Renewly</title>");
   writeFileSync(join(dir, "theme-init.js"), script);
   const config: Config = {

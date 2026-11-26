@@ -148,7 +148,7 @@ export function UserManagement({
     <section className="users-page">
       <div className="page-heading">
         <div>
-          <span className="eyebrow gradient">USER MANAGEMENT</span>
+          <span className="eyebrow">USER MANAGEMENT</span>
           <h1>用户管理</h1>
           <p>管理账号角色与状态，各用户的订阅数据独立。</p>
         </div>

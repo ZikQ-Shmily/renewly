@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { ArrowRight, LockKeyhole, RefreshCw } from "lucide-react";
 import { api, errorMessage, json } from "./api";
-import { Banner, Button, Field } from "./components";
-import { ThemeSwitch } from "./ThemeSwitch";
+import { Banner, BrandMark, Button, Field } from "./components";
 import type { AuthConfig, User } from "./types";
 
 export function Auth({
@@ -160,17 +159,16 @@ export function Auth({
   }
   return (
     <main className="auth-layout">
-      <div className="auth-theme-control"><ThemeSwitch /></div>
       <div className="auth-intro">
-        <span className="brand gradient">
-          <img src="/favicon.svg?v=20261112-cards" width={26} height={26} alt="" />
+        <span className="brand">
+          <BrandMark />
           续记 Renewly
         </span>
-        <span className="eyebrow gradient">YOUR SUBSCRIPTIONS, ORGANIZED</span>
+        <span className="eyebrow">YOUR SUBSCRIPTIONS, ORGANIZED</span>
         <h1>
           每一笔订阅，
           <br />
-          <span className="gradient">都心中有数。</span>
+          <span>都心中有数。</span>
         </h1>
         <p>
           集中记录订阅、整理续费预算，

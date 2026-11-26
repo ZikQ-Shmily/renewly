@@ -333,7 +333,7 @@ export function SubscriptionEditor({
     <section aria-label={`${item ? "编辑" : "新增"}${categoryName}`}>
       <div className="page-heading">
         <div>
-          <span className="eyebrow gradient">{isApp ? "APP SUBSCRIPTION" : isDomain ? "DOMAIN DETAILS" : "SERVER DETAILS"}</span>
+          <span className="eyebrow">{isApp ? "APP SUBSCRIPTION" : isDomain ? "DOMAIN DETAILS" : "SERVER DETAILS"}</span>
           <h1>{item ? "编辑" : "新增"}{categoryName}</h1>
           <p>录入一次费用，安排下一次续费。</p>
         </div>
@@ -784,7 +784,7 @@ export function SubscriptionEditor({
             <span>
               年预计支出<small>按当前续费价年化</small>
             </span>
-            <strong className="gradient">
+            <strong>
               {money(
                 previewPrice == null
                   ? null
@@ -874,7 +874,7 @@ export function RenewalForm({
     <section>
       <div className="page-heading">
         <div>
-          <span className="eyebrow gradient">RECORD A RENEWAL</span>
+          <span className="eyebrow">RECORD A RENEWAL</span>
           <h1>登记续费</h1>
           <p>
             {item.name} · {item.vendor}

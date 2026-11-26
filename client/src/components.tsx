@@ -2,12 +2,17 @@ import type { ButtonHTMLAttributes, ReactNode } from "react";
 import {
   AlertCircle,
   CheckCircle2,
+  CopyCheck,
   Info,
   LoaderCircle,
   Server,
 } from "lucide-react";
 import type { Delivery, Subscription } from "./types";
 import { daysUntil, dueLabel, timestamp } from "./utils";
+
+export function BrandMark() {
+  return <span className="brand-mark" aria-hidden="true"><CopyCheck size={16} /></span>;
+}
 
 export function Button({
   children,

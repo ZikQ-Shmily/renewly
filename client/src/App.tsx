@@ -20,14 +20,13 @@ import {
 } from "lucide-react";
 import { ApiError, api, errorMessage, json } from "./api";
 import { Auth } from "./Auth";
-import { Banner, Button, DueBadge, EmptyState } from "./components";
+import { Banner, BrandMark, Button, DueBadge, EmptyState } from "./components";
 import { SubscriptionEditor, RenewalForm } from "./SubscriptionEditor";
 import { AdminMail, ReminderSettings } from "./Settings";
 import { Select } from "./Select";
 import { UserManagement } from "./Users";
 import { TermProgress } from "./SubscriptionSummary";
 import { DashboardMetrics, RatesFooter } from "./DashboardMetrics";
-import { ThemeSwitch } from "./ThemeSwitch";
 import { AppIcon } from "./AppIcon";
 import { MerchantManager } from "./MerchantManager";
 import { clearMerchantCatalog, setMerchantCatalog, type MerchantCatalogEntry } from "./merchant-catalog";
@@ -315,8 +314,8 @@ export default function App() {
   if (booting)
     return (
       <main className="boot">
-        <img src="/favicon.svg?v=20261112-cards" width={35} height={35} alt="" />
-        <span className="brand gradient">续记 Renewly</span>
+        <BrandMark />
+        <span className="brand">续记 Renewly</span>
         <p>
           <LoaderCircle className="spin" size={16} />
           正在连接你的订阅空间…
@@ -372,9 +371,12 @@ export default function App() {
           }}
           aria-label="续记总览"
         >
-          <span className="brand gradient">续记 Renewly</span>
+          <BrandMark />
+          <span className="brand-identity">
+            <span className="brand">续记 Renewly</span>
+            <span className="brand-sub">我的空间</span>
+          </span>
         </button>
-        <p className="brand-sub">你的订阅管理空间</p>
         <p className="nav-caption">订阅分类</p>
         <nav className="nav-group" aria-label="订阅分类">
           <button
@@ -497,7 +499,6 @@ export default function App() {
             <strong>{breadcrumb}</strong>
           </div>
           <div className="topbar-actions">
-            <ThemeSwitch />
             <span className="account-role">
               {user.role === "admin" ? "管理员" : "个人账户"}
             </span>
@@ -529,11 +530,7 @@ export default function App() {
           {notice && <Banner tone="success">{notice}</Banner>}
           <div hidden={page !== "overview"}>
             <div className="page-heading">
-              <div>
-                <span className="eyebrow gradient">SUBSCRIPTION OVERVIEW</span>
-                <h1>全部订阅</h1>
-                <p>所有订阅的支出与续费安排。</p>
-              </div>
+              <h1>全部订阅</h1>
               <Button variant="ghost" onClick={loadData} busy={loading}>
                 <RefreshCw size={15} />刷新
               </Button>
@@ -629,7 +626,7 @@ export default function App() {
           {user.role === "admin" && page === "users" && <UserManagement currentUser={user} onSelfUpdated={setUser} />}
           {user.role === "admin" && page === "merchants" && <MerchantManager onCatalogChange={refreshMerchantCatalog} />}
           <footer className="app-footer">
-            <span className="gradient">续记 Renewly</span>
+            <span>续记 Renewly</span>
             <span>每一笔订阅，都心中有数。</span>
           </footer>
         </main>
@@ -692,45 +689,45 @@ function Management({
       setBusy(null);
     }
   }
+  const addLabel = isApp ? "新增 App 订阅" : isDomain ? "新增域名" : "新增服务器";
   return (
     <section>
       <div className="page-heading">
-        <div>
-          <span className="eyebrow gradient">{isApp ? "APP SUBSCRIPTIONS" : isDomain ? "DOMAIN SUBSCRIPTIONS" : "CLOUD SERVERS"}</span>
-          <h1>{title}<small className="category-count">{subscriptions.filter((item) => item.status !== "archived").length} {isCloud ? "台" : "项"}</small></h1>
-          <p>{isApp ? "从效率工具到影音服务，让每一次续费都有提醒。" : isDomain ? "管理域名、注册商与到期续费。" : "记录配置、IP 与价格，安排每一次续费。"}</p>
-        </div>
+        <h1>{title}<small className="category-count">{subscriptions.filter((item) => item.status !== "archived").length} {isCloud ? "台" : "项"}</small></h1>
         <Button variant="primary" onClick={onAdd}>
-          <Plus size={16} />
-          {isApp ? "新增订阅" : isDomain ? "新增域名" : "新增服务器"}
+          <Plus size={15} aria-hidden="true" />
+          {addLabel}
         </Button>
       </div>
       <DashboardMetrics dashboard={dashboard} currency="CNY" scope={`仅${title}`} />
       {error && <Banner tone="error">{error}</Banner>}
-      <div className="management-toolbar">
-        <label className="search-field">
-          <Search size={16} />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={isApp ? "搜索 App、套餐或账户" : isDomain ? "搜索域名或注册商" : "搜索名称、商家、地区或 IP"}
-            aria-label={isApp ? "搜索 App 订阅" : isDomain ? "搜索域名" : "搜索服务器"}
-          />
-        </label>
-        <Select
-          value={status}
-          onValueChange={setStatus}
-          aria-label="按订阅状态筛选"
-          options={[
-            { value: "current", label: "当前订阅" },
-            { value: "active", label: "生效中" },
-            { value: "paused", label: "已暂停" },
-            { value: "archived", label: "已归档" },
-            { value: "all", label: "全部记录" },
-          ]}
-        />
-      </div>
-      <div className="panel">
+      <section className="panel" aria-labelledby="subscription-list-title">
+        <header className="subscription-list-heading">
+          <h2 id="subscription-list-title">订阅清单</h2>
+          <div className="management-toolbar">
+            <label className="search-field">
+              <Search size={15} aria-hidden="true" />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder={isApp ? "搜索 App、套餐或账户" : isDomain ? "搜索域名或注册商" : "搜索名称、商家、地区或 IP"}
+                aria-label={isApp ? "搜索 App 订阅" : isDomain ? "搜索域名" : "搜索服务器"}
+              />
+            </label>
+            <Select
+              value={status}
+              onValueChange={setStatus}
+              aria-label="按订阅状态筛选"
+              options={[
+                { value: "current", label: "当前订阅" },
+                { value: "active", label: "生效中" },
+                { value: "paused", label: "已暂停" },
+                { value: "archived", label: "已归档" },
+                { value: "all", label: "全部记录" },
+              ]}
+            />
+          </div>
+        </header>
         {list.length ? (
           list.map((item) => (
             <article className="management-row" key={item.id}>
@@ -860,14 +857,14 @@ function Management({
             action={
               query || status !== "current" ? undefined : (
                 <Button onClick={onAdd} variant="primary">
-                  <Plus size={15} />
-                  {isApp ? "新增订阅" : isDomain ? "新增域名" : "新增服务器"}
+                  <Plus size={15} aria-hidden="true" />
+                  {addLabel}
                 </Button>
               )
             }
           />
         )}
-      </div>
+      </section>
       <RatesFooter dashboard={dashboard} />
       <p className="management-note">
         “登记续费”用于记录已完成的付款；归档保留历史，可随时恢复。
